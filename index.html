@@ -1,0 +1,1861 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+<title>Price Manager — Simply Doors Catalog Admin</title>
+<style>
+/* ===========================================================================
+   App A — Price Manager
+   Utilitarian, high-density admin grid. Desktop-primary; scales down via
+   max-width media queries. Pricing grids ALWAYS keep their <table> structure
+   and scroll horizontally on narrow viewports (no card/stacked reflow).
+   =========================================================================== */
+
+:root{
+  --bg:#eef0f3;
+  --panel:#ffffff;
+  --panel-2:#f7f8fa;
+  --ink:#141821;
+  --ink-2:#4a5262;
+  --ink-3:#79808f;
+  --line:#d3d8e0;
+  --line-2:#e6e9ee;
+  --accent:#12508f;
+  --accent-ink:#ffffff;
+  --accent-soft:#e3eefb;
+  --ok:#0f7a3d;
+  --ok-soft:#e2f5e9;
+  --warn:#9a6200;
+  --warn-soft:#fdf1da;
+  --err:#b3261e;
+  --err-soft:#fdeceb;
+  --dirty:#fff8e1;
+  --dirty-line:#e3b341;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --row-h:26px;
+  --col0:38px;
+  --col1:150px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:13px/1.35 var(--sans);
+  -webkit-text-size-adjust:100%;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}
+
+/* ---------- shell ---------- */
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+
+/* ---------- top bar ---------- */
+header.topbar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:6px 10px;background:#101725;color:#e8ecf3;border-bottom:1px solid #000;
+}
+.topbar .brand{font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.topbar .brand small{font-weight:400;opacity:.65;margin-left:6px;letter-spacing:0}
+.topbar .repo{font:11px/1.2 var(--mono);opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38ch}
+.topbar .spacer{flex:1 1 auto}
+.topbar .pill{
+  font:11px/1 var(--mono);padding:4px 7px;border-radius:3px;background:#1e2942;color:#c9d4e6;
+  border:1px solid #2b3853;white-space:nowrap;
+}
+.topbar .pill.dirty{background:#4a3a10;border-color:#7a5f1a;color:#ffd98a}
+.topbar .pill.clean{background:#123322;border-color:#1d5236;color:#8fe0b0}
+.topbar .pill.bad{background:#43191a;border-color:#6d2a2b;color:#ffb3b0}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;justify-content:center;
+  padding:5px 10px;border:1px solid var(--line);border-radius:3px;background:var(--panel);
+  cursor:pointer;white-space:nowrap;line-height:1.2;
+}
+.btn:hover{background:var(--panel-2)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn.primary{background:var(--accent);border-color:#0d3d6e;color:var(--accent-ink);font-weight:600}
+.btn.primary:hover{background:#16609f}
+.btn.danger{border-color:#e0b4b1;color:var(--err);background:#fff}
+.btn.danger:hover{background:var(--err-soft)}
+.btn.ghost{background:transparent;border-color:#33405c;color:#dbe3ef}
+.btn.ghost:hover{background:#1c2740}
+.btn.sm{padding:2px 6px;font-size:11px}
+.btn.xs{padding:0 5px;font-size:11px;height:20px;border-radius:2px}
+
+/* ---------- gate (credentials) ---------- */
+.gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px;z-index:50}
+.gate .card{width:min(760px,100%);background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:18px 20px 20px}
+.gate h1{margin:0 0 2px;font-size:19px;letter-spacing:-.01em}
+.gate .sub{margin:0 0 16px;color:var(--ink-2);font-size:12px}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+.field{display:flex;flex-direction:column;gap:3px;min-width:0}
+.field.wide{grid-column:1/-1}
+.field label{font-size:11px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em}
+.field .hint{font-size:11px;color:var(--ink-3)}
+.field input[type=text],.field input[type=password],.field select{
+  padding:6px 8px;border:1px solid var(--line);border-radius:3px;background:#fff;font-family:var(--mono);font-size:12px;min-width:0;
+}
+.field input:focus,.field select:focus{outline:2px solid var(--accent-soft);outline-offset:-1px;border-color:var(--accent)}
+.checkline{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-2)}
+.notice{
+  border:1px solid var(--warn);background:var(--warn-soft);color:#5c3d00;
+  padding:8px 10px;border-radius:3px;font-size:12px;margin:14px 0 0;
+}
+.notice b{color:#3d2900}
+.gate .actions{display:flex;gap:8px;align-items:center;margin-top:16px;flex-wrap:wrap}
+.gate .err{color:var(--err);font-size:12px;min-height:1em}
+
+/* ---------- toolbar ---------- */
+.toolbar{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:6px 10px;background:var(--panel);border-bottom:1px solid var(--line);
+}
+.tabs{display:flex;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.tabs button{
+  padding:5px 12px;background:var(--panel-2);border:0;border-right:1px solid var(--line);cursor:pointer;
+  font-weight:600;color:var(--ink-2);white-space:nowrap;
+}
+.tabs button:last-child{border-right:0}
+.tabs button[aria-selected=true]{background:var(--accent);color:#fff}
+.toolbar .sep{width:1px;align-self:stretch;background:var(--line);margin:0 2px}
+.search{position:relative;display:flex;align-items:center}
+.search input{
+  padding:5px 8px 5px 24px;border:1px solid var(--line);border-radius:3px;width:230px;background:#fff;
+}
+.search::before{content:"⌕";position:absolute;left:8px;color:var(--ink-3);font-size:14px}
+.count{font:11px/1 var(--mono);color:var(--ink-2);white-space:nowrap}
+
+/* ---------- main split ---------- */
+.main{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;min-width:0}
+.pane{flex:1 1 auto;min-height:0;min-width:0;display:none;flex-direction:column}
+.pane.active{display:flex}
+
+/* ---------- data grid ----------
+   .gridwrap is the ONLY scroller. The table keeps width:max-content so that on
+   phones/tablets it overflows horizontally instead of collapsing. */
+.gridwrap{
+  flex:1 1 auto;min-height:0;overflow:auto;background:var(--panel);
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+}
+table.grid{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;table-layout:fixed;background:var(--panel)}
+table.grid th,table.grid td{
+  border-right:1px solid var(--line-2);border-bottom:1px solid var(--line-2);
+  padding:0;margin:0;vertical-align:middle;background:var(--panel);
+}
+table.grid thead th{
+  position:sticky;top:0;z-index:3;background:var(--panel-2);
+  border-bottom:1px solid var(--line);
+  font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);
+  text-align:left;padding:0 6px;height:30px;white-space:nowrap;cursor:pointer;user-select:none;
+}
+table.grid thead th .th{display:flex;align-items:center;gap:4px;height:30px}
+table.grid thead th .grp{
+  font-size:9px;color:var(--ink-3);
+}
+table.grid thead th[data-sort]:hover{background:#eceff4}
+table.grid thead th .arrow{color:var(--accent);font-size:9px}
+table.grid tbody tr:hover td{background:#f4f8fd}
+table.grid tbody tr.dirty td{background:var(--dirty)}
+table.grid tbody tr.dirty:hover td{background:#fff3cd}
+table.grid tbody tr.dirty td.c0{box-shadow:inset 3px 0 0 var(--dirty-line)}
+table.grid tbody tr.invalid td{background:var(--err-soft)}
+td.c0,th.c0{position:sticky;left:0;z-index:2;width:var(--col0);min-width:var(--col0);max-width:var(--col0);
+  text-align:center;border-right:1px solid var(--line);background:var(--panel-2)}
+th.c0{z-index:4}
+td.c1,th.c1{position:sticky;left:var(--col0);z-index:2;border-right:1px solid var(--line)}
+th.c1{z-index:4}
+td.c0 .rn{font:10px/1 var(--mono);color:var(--ink-3)}
+table.grid tbody td.ro{background:var(--panel-2)}
+table.grid tbody tr:hover td.ro{background:#eef2f7}
+.cellro{
+  display:block;padding:0 6px;height:var(--row-h);line-height:var(--row-h);
+  font-family:var(--mono);font-size:11px;color:var(--ink-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.cellro.lock::after{content:" 🔒";font-size:9px;opacity:.55}
+table.grid input.cell,table.grid select.cell{
+  width:100%;height:var(--row-h);border:0;background:transparent;padding:0 6px;
+  border-radius:0;font-size:12px;min-width:0;
+}
+table.grid input.cell:focus,table.grid select.cell:focus{
+  outline:2px solid var(--accent);outline-offset:-2px;background:#fff;position:relative;z-index:1;
+}
+table.grid input.cell.money{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+table.grid input.cell.num{text-align:right;font-family:var(--mono)}
+table.grid input.cell.mono{font-family:var(--mono);font-size:11px}
+table.grid input.cell.isnull{background:repeating-linear-gradient(135deg,#fafbfc,#fafbfc 4px,#f0f2f5 4px,#f0f2f5 8px)}
+table.grid input.cell.isnull::placeholder{color:#9aa3b2;font-style:italic}
+table.grid input.cell.bad{background:var(--err-soft);outline:2px solid var(--err);outline-offset:-2px}
+table.grid td.chk{text-align:center}
+table.grid input[type=checkbox].cell{width:auto;height:auto;margin:0}
+.rowacts{display:flex;gap:3px;justify-content:center;padding:0 4px}
+
+/* column group tinting keeps 6 price columns visually separated */
+td.g-unf,th.g-unf{background:#f6faf7}
+td.g-pre,th.g-pre{background:#f7f7fc}
+table.grid tbody tr.dirty td.g-unf,table.grid tbody tr.dirty td.g-pre{background:var(--dirty)}
+
+/* ---------- rules pane ---------- */
+.rules{flex:1 1 auto;overflow:auto;padding:14px;background:var(--panel)}
+.rules .card{max-width:820px;border:1px solid var(--line);border-radius:4px;margin:0 0 14px;background:var(--panel)}
+.rules .card > h3{
+  margin:0;padding:7px 10px;background:var(--panel-2);border-bottom:1px solid var(--line);
+  font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);
+}
+.rules .card .body{padding:12px 10px}
+.rules table.kv{width:100%;border-collapse:collapse}
+.rules table.kv td{padding:4px 6px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+.rules table.kv td.k{width:280px;font-family:var(--mono);font-size:11px;color:var(--ink-2)}
+.rules table.kv td.k b{display:block;font-family:var(--sans);font-size:12px;color:var(--ink);font-weight:600}
+.rules table.kv td.v input[type=text]{width:100%;max-width:280px;padding:4px 6px;border:1px solid var(--line);border-radius:3px;font-family:var(--mono);font-size:12px}
+.rules table.kv td.v input.bad{outline:2px solid var(--err);outline-offset:-2px;background:var(--err-soft)}
+.rules table.kv td.n{width:220px;font-size:11px;color:var(--ink-3)}
+
+/* ---------- raw pane ---------- */
+.raw{flex:1 1 auto;overflow:auto;padding:12px;background:var(--panel)}
+.raw h3{margin:0 0 6px;font-size:12px;display:flex;align-items:center;gap:8px}
+.raw pre{
+  margin:0 0 16px;padding:10px;background:#0f1420;color:#d7e0ee;border-radius:4px;
+  font:11px/1.45 var(--mono);overflow:auto;max-height:44vh;white-space:pre;
+}
+
+/* ---------- validation strip ---------- */
+.issues{border-top:1px solid var(--line);background:var(--err-soft);color:#5c1512;padding:6px 10px;font-size:12px;max-height:120px;overflow:auto}
+.issues.warnonly{background:var(--warn-soft);color:#5c3d00}
+.issues ul{margin:4px 0 0;padding-left:18px}
+.issues li{margin:1px 0;font-family:var(--mono);font-size:11px}
+.issues.hidden{display:none}
+
+/* ---------- status console ---------- */
+.console{
+  flex:0 0 auto;height:172px;display:flex;flex-direction:column;
+  background:#0b0f19;color:#cbd5e6;border-top:2px solid #000;
+}
+.console.collapsed{height:28px}
+.console .chead{
+  display:flex;align-items:center;gap:8px;padding:0 8px;height:28px;flex:0 0 28px;
+  background:#131a29;border-bottom:1px solid #000;font:11px/1 var(--mono);color:#8fa0bd;
+  white-space:nowrap;overflow:hidden;
+}
+.console .chead .ttl{font-weight:700;color:#dbe4f3;letter-spacing:.06em}
+.console .chead .spacer{flex:1}
+.console .clog{flex:1 1 auto;overflow:auto;padding:4px 8px 8px;font:11px/1.5 var(--mono)}
+.console.collapsed .clog{display:none}
+.console .ln{display:flex;gap:8px;white-space:pre-wrap;word-break:break-word;border-bottom:1px solid #131a29;padding:1px 0}
+.console .ln .t{color:#5d6b85;flex:0 0 auto}
+.console .ln .tag{flex:0 0 46px;font-weight:700}
+.console .ln.info .tag{color:#7fb0e8}
+.console .ln.req  .tag{color:#c79cf0}
+.console .ln.ok   .tag{color:#5fd39a}
+.console .ln.warn .tag{color:#ffd07b}
+.console .ln.err  .tag{color:#ff8b84}
+.console .ln .m{flex:1 1 auto}
+.console .ln .m b{color:#fff}
+
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;background:rgba(10,15,25,.55);display:flex;align-items:center;justify-content:center;z-index:80;padding:16px}
+.modal .box{background:var(--panel);border-radius:5px;border:1px solid var(--line);width:min(560px,100%);max-height:86vh;overflow:auto}
+.modal .box h3{margin:0;padding:10px 14px;border-bottom:1px solid var(--line);font-size:14px;background:var(--panel-2)}
+.modal .box .body{padding:14px}
+.modal .box .foot{padding:10px 14px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;background:var(--panel-2);flex-wrap:wrap}
+.modal p{margin:0 0 10px}
+.modal ul{margin:0 0 10px;padding-left:20px;font-family:var(--mono);font-size:11px;max-height:200px;overflow:auto}
+.modal input[type=text]{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:3px}
+.legend{font-size:11px;color:var(--ink-3);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.legend .sw{display:inline-block;width:10px;height:10px;border:1px solid var(--line);vertical-align:-1px;margin-right:4px}
+.legend .sw.d{background:var(--dirty);border-color:var(--dirty-line)}
+.legend .sw.n{background:repeating-linear-gradient(135deg,#fafbfc,#fafbfc 3px,#f0f2f5 3px,#f0f2f5 6px)}
+.hide{display:none !important}
+.empty{padding:40px;text-align:center;color:var(--ink-3)}
+
+/* ===========================================================================
+   RESPONSIVE — max-width only. Tables never lose their structure; the
+   .gridwrap scroller handles overflow on tablet/phone.
+   =========================================================================== */
+@media (max-width:1200px){
+  :root{--col1:130px}
+  .search input{width:180px}
+  .rules table.kv td.n{display:none}
+}
+@media (max-width:900px){
+  body{font-size:12px}
+  :root{--row-h:28px}
+  .topbar .repo{max-width:24ch}
+  .formgrid{grid-template-columns:1fr}
+  .rules table.kv td.k{width:190px}
+  .console{height:150px}
+  .console .chead .legend{display:none}
+  .toolbar{gap:6px;padding:6px 8px}
+}
+@media (max-width:640px){
+  :root{--col0:30px;--col1:104px;--row-h:30px}
+  .topbar{padding:5px 8px;gap:6px}
+  .topbar .brand{font-size:13px}
+  .topbar .brand small,.topbar .repo{display:none}
+  .toolbar{padding:5px 8px}
+  .tabs{width:100%}
+  .tabs button{flex:1 1 0;padding:6px 4px;font-size:11px}
+  .search{flex:1 1 100%}
+  .search input{width:100%}
+  .toolbar .sep{display:none}
+  .btn{padding:6px 9px}
+  /* Keep the grid a real table — horizontal scroll only. */
+  table.grid{width:max-content}
+  .gridwrap{overflow-x:auto;overflow-y:auto}
+  table.grid thead th{font-size:9px}
+  .rules{padding:8px}
+  .rules table.kv td.k{width:auto;display:block;border-bottom:0;padding-bottom:0}
+  .rules table.kv td.v{display:block;padding-top:2px}
+  .rules table.kv td.v input[type=text]{max-width:none}
+  .console{height:132px}
+  .console .chead #conMeta{display:none}
+  .modal .box .foot{justify-content:stretch}
+  .modal .box .foot .btn{flex:1 1 auto}
+}
+@media (max-width:640px) and (orientation:landscape){
+  .console{height:96px}
+}
+</style>
+</head>
+<body>
+<div id="app" class="hide">
+
+  <header class="topbar">
+    <div class="brand">PRICE MANAGER<small>App A · catalog admin</small></div>
+    <div class="repo" id="repoLabel">—</div>
+    <div class="spacer"></div>
+    <span class="pill" id="pillUser">not signed in</span>
+    <span class="pill clean" id="pillState">no data</span>
+    <button class="btn ghost sm" id="btnCreds" title="Change GitHub credentials / target repository">Credentials</button>
+  </header>
+
+  <div class="toolbar">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tabProducts"  aria-selected="true"  data-pane="products">Products</button>
+      <button role="tab" id="tabAdders"    aria-selected="false" data-pane="adders">Prehang Adders</button>
+      <button role="tab" id="tabRules"     aria-selected="false" data-pane="rules">Pricing Rules</button>
+      <button role="tab" id="tabRaw"       aria-selected="false" data-pane="raw">Payload</button>
+    </div>
+    <div class="sep"></div>
+    <div class="search"><input type="text" id="q" placeholder="Filter rows…" autocomplete="off" spellcheck="false"></div>
+    <span class="count" id="rowCount">0 / 0</span>
+    <div class="sep"></div>
+    <button class="btn sm" id="btnUnits" title="Toggle money display between dollars and raw integer cents">$ dollars</button>
+    <button class="btn sm" id="btnCols" title="Show or hide columns">Columns</button>
+    <button class="btn sm" id="btnAdd" title="Append a new row">+ Row</button>
+    <div class="sep"></div>
+    <button class="btn sm" id="btnReload" title="Discard local edits and re-fetch from GitHub">Reload</button>
+    <button class="btn sm" id="btnBackup" title="Download the current in-memory JSON as a local backup">Backup</button>
+    <div class="spacer" style="flex:1"></div>
+    <button class="btn primary" id="btnPublish" title="Validate, then commit changed files to the target branch">Publish Catalog</button>
+  </div>
+
+  <div class="main">
+    <section class="pane active" id="paneProducts">
+      <div class="gridwrap" id="wrapProducts"></div>
+    </section>
+    <section class="pane" id="paneAdders">
+      <div class="gridwrap" id="wrapAdders"></div>
+    </section>
+    <section class="pane" id="paneRules">
+      <div class="rules" id="rulesBody"></div>
+    </section>
+    <section class="pane" id="paneRaw">
+      <div class="raw" id="rawBody"></div>
+    </section>
+    <div class="issues hidden" id="issues"></div>
+  </div>
+
+  <section class="console" id="console">
+    <div class="chead">
+      <span class="ttl">STATUS CONSOLE</span>
+      <span id="conMeta">idle</span>
+      <span class="spacer"></span>
+      <span class="legend"><span><span class="sw d"></span>unsaved</span><span><span class="sw n"></span>null · not offered</span></span>
+      <button class="btn ghost xs" id="btnClearLog">clear</button>
+      <button class="btn ghost xs" id="btnToggleLog">hide</button>
+    </div>
+    <div class="clog" id="clog"></div>
+  </section>
+</div>
+
+<!-- ===================== credential gate ===================== -->
+<div class="gate" id="gate">
+  <div class="card">
+    <h1>Price Manager — Administrator Sign-In</h1>
+    <p class="sub">App A writes the master catalog that the customer-facing Quoter reads. Supply a GitHub Personal Access Token with <code>contents:write</code> on the target repository.</p>
+    <div class="formgrid">
+      <div class="field wide">
+        <label for="fTok">GitHub Personal Access Token</label>
+        <input type="password" id="fTok" placeholder="github_pat_… or ghp_…" autocomplete="off" spellcheck="false">
+        <span class="hint">Fine-grained PAT: Repository permissions → <b>Contents: Read and write</b>. Classic PAT: <b>repo</b> scope.</span>
+      </div>
+      <div class="field"><label for="fOwner">Repository Owner</label><input type="text" id="fOwner" placeholder="SimplyDoorsAA" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label for="fRepo">Repository Name</label><input type="text" id="fRepo" placeholder="Claude-Hoelscher-" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label for="fBranch">Branch</label><input type="text" id="fBranch" value="main" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label for="fCatalog">Catalog Path</label><input type="text" id="fCatalog" value="data/catalog.json" autocomplete="off" spellcheck="false"></div>
+      <div class="field wide"><label for="fRules">Pricing Rules Path</label><input type="text" id="fRules" value="data/pricing-rules.json" autocomplete="off" spellcheck="false"></div>
+      <div class="field wide">
+        <div class="checkline"><input type="checkbox" id="fRemember"> <label for="fRemember" style="text-transform:none;letter-spacing:0;font-weight:400">Remember this token on this device (localStorage). Leave unchecked to keep it for this browser tab only.</label></div>
+      </div>
+    </div>
+    <div class="notice">
+      <b>Token handling.</b> The PAT is held in your browser and sent only to <code>api.github.com</code> over HTTPS. This page has no server. Anyone with access to this device (or to a browser extension able to read storage) can read a remembered token — prefer a short-lived, fine-grained PAT scoped to this one repository, and use <b>Clear credentials</b> when you are done.
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="btnConnect">Connect &amp; Load Catalog</button>
+      <button class="btn danger" id="btnClearCreds">Clear credentials</button>
+      <span class="err" id="gateErr"></span>
+    </div>
+  </div>
+</div>
+
+<div id="modalHost"></div>
+
+<script>
+"use strict";
+/* ===========================================================================
+   App A — Price Manager. Single file, vanilla JS, no dependencies.
+
+   DATA CONTRACTS ENFORCED HERE
+   1. Money is INTEGER CENTS. Dollar entry is parsed with string arithmetic
+      (never value*100) so 1728.35 -> 172835, not 172834.99999999999.
+   2. null means "configuration not offered" and round-trips as null. A blank
+      money cell is null; type 0 for a genuine zero price.
+   3. priceBasis stays exactly "list" or "net"; publishing is blocked otherwise.
+   4. id fields are content hashes: read-only, never regenerated for existing
+      rows. Only a brand-new row gets an id minted (SHA-1 of its content,
+      first 10 hex), and it is locked from then on.
+
+   Unknown/unmodelled fields are preserved: we mutate the parsed object graph
+   in place and re-serialize it, so nothing outside the edited leaves is lost.
+   =========================================================================== */
+
+/* ------------------------------ constants ------------------------------- */
+const LS_CFG = "sd.pricemgr.cfg.v1";
+const LS_TOK = "sd.pricemgr.tok.v1";
+const SS_TOK = "sd.pricemgr.tok.session.v1";
+const API    = "https://api.github.com";
+const MAX_CENTS = 1e12;           // sanity bound, well inside MAX_SAFE_INTEGER
+const NULL_PLACEHOLDER = "null";
+
+/* -------------------------------- state --------------------------------- */
+const S = {
+  cfg:{ token:"", owner:"", repo:"", branch:"main",
+        catalogPath:"data/catalog.json", rulesPath:"data/pricing-rules.json", remember:false },
+  user:null,
+  catalog:null, catalogSha:null, catalogText:"",
+  rules:null,   rulesSha:null,   rulesText:"",
+  products:[], adders:[],
+  cols:{ products:[], adders:[] },
+  origin:new WeakMap(),        // row object -> JSON snapshot at load time
+  structDirty:{ products:false, adders:false },  // add/delete/reorder
+  badCells:new Set(),
+  pane:"products",
+  units:"dollars",             // "dollars" | "cents"
+  filter:"",
+  sort:{ products:null, adders:null },   // {path, dir}
+  hidden:{ products:new Set(), adders:new Set() },
+};
+const LS_COLS = "sd.pricemgr.cols.v1";
+
+/* ------------------------------ dom helpers ----------------------------- */
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.prototype.slice.call((r||document).querySelectorAll(s));
+function el(tag, attrs){
+  const n = document.createElement(tag);
+  if(attrs) for(const k in attrs){
+    const v = attrs[k];
+    if(v===null||v===undefined||v===false) continue;
+    if(k==="class") n.className = v;
+    else if(k==="text") n.textContent = v;
+    else if(k==="html") n.innerHTML = v;
+    else if(k.slice(0,2)==="on") n.addEventListener(k.slice(2), v);
+    else if(k==="dataset") for(const d in v) n.dataset[d]=v[d];
+    else if(v===true) n.setAttribute(k,"");
+    else n.setAttribute(k, v);
+  }
+  for(let i=2;i<arguments.length;i++){
+    const c = arguments[i];
+    if(c===null||c===undefined||c===false) continue;
+    n.appendChild(typeof c==="string" ? document.createTextNode(c) : c);
+  }
+  return n;
+}
+
+/* ------------------------------- console -------------------------------- */
+function pad2(n){ return n<10 ? "0"+n : ""+n; }
+function stamp(){ const d=new Date(); return pad2(d.getHours())+":"+pad2(d.getMinutes())+":"+pad2(d.getSeconds()); }
+function log(kind, msg, strongTail){
+  const box = $("#clog");
+  if(!box){ console.log("["+kind+"] "+msg); return; }
+  const line = el("div",{class:"ln "+kind},
+    el("span",{class:"t",text:stamp()}),
+    el("span",{class:"tag",text:kind.toUpperCase()}),
+    el("span",{class:"m"})
+  );
+  const m = line.lastChild;
+  m.appendChild(document.createTextNode(msg));
+  if(strongTail){ m.appendChild(document.createTextNode(" ")); m.appendChild(el("b",{text:strongTail})); }
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+  while(box.childNodes.length>600) box.removeChild(box.firstChild);
+  $("#conMeta").textContent = kind.toUpperCase()+" · "+stamp();
+}
+
+/* --------------------------- money conversions -------------------------- */
+/* Integer-cents in, canonical dollar string out. */
+function centsToDollars(c){
+  if(c===null||c===undefined) return "";
+  const neg = c<0, n = Math.abs(Math.trunc(c));
+  return (neg?"-":"") + Math.floor(n/100) + "." + String(n%100).padStart(2,"0");
+}
+/* Dollar string in, integer cents out. Pure string arithmetic — no floats. */
+function parseMoney(raw, mode){
+  const t = String(raw==null?"":raw).trim().replace(/[$,\s_]/g,"");
+  if(t==="") return { ok:true, value:null };
+  if(mode==="cents"){
+    if(!/^-?\d+$/.test(t)) return { ok:false, err:"Cents mode accepts whole integers only (blank = null)." };
+    const v = parseInt(t,10);
+    if(!Number.isSafeInteger(v) || Math.abs(v)>MAX_CENTS) return { ok:false, err:"Value out of range." };
+    return { ok:true, value:v };
+  }
+  if(/^-?\d+$/.test(t)){
+    const whole = parseInt(t,10);
+    if(Math.abs(whole)>MAX_CENTS/100) return { ok:false, err:"Value out of range." };
+    return { ok:true, value: whole*100 };
+  }
+  const m = /^(-?)(\d*)\.(\d{1,2})$/.exec(t);
+  if(!m) return { ok:false, err:"Enter dollars with at most 2 decimals (e.g. 1728 or 1728.50). Blank = null / not offered." };
+  const sign  = m[1]==="-" ? -1 : 1;
+  const whole = m[2]==="" ? 0 : parseInt(m[2],10);
+  const frac  = parseInt(m[3].padEnd(2,"0"),10);
+  if(Math.abs(whole)>MAX_CENTS/100) return { ok:false, err:"Value out of range." };
+  return { ok:true, value: sign*(whole*100+frac) };   // integer math only
+}
+function moneyDisplay(c){ return S.units==="cents" ? (c===null||c===undefined?"":String(c)) : centsToDollars(c); }
+function fmtMoneyTitle(c){
+  if(c===null) return "null — configuration not offered";
+  if(c===undefined) return "field absent";
+  return c + " cents  ·  $" + centsToDollars(c);
+}
+
+/* ------------------------------ path access ----------------------------- */
+function getPath(obj, path){
+  const parts = path.split(".");
+  let cur = obj;
+  for(let i=0;i<parts.length;i++){
+    if(cur===null||typeof cur!=="object") return undefined;
+    cur = cur[parts[i]];
+  }
+  return cur;
+}
+function setPath(obj, path, val){
+  const parts = path.split(".");
+  let cur = obj;
+  for(let i=0;i<parts.length-1;i++){
+    const k = parts[i];
+    if(cur[k]===null||typeof cur[k]!=="object") cur[k] = {};
+    cur = cur[k];
+  }
+  cur[parts[parts.length-1]] = val;
+}
+function hasPath(obj, path){
+  const parts = path.split(".");
+  let cur = obj;
+  for(let i=0;i<parts.length;i++){
+    if(cur===null||typeof cur!=="object"||!(parts[i] in cur)) return false;
+    cur = cur[parts[i]];
+  }
+  return true;
+}
+
+/* ------------------------------ base64 / utf8 --------------------------- */
+function b64encode(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin=""; const CH=0x8000;
+  for(let i=0;i<bytes.length;i+=CH) bin += String.fromCharCode.apply(null, bytes.subarray(i,i+CH));
+  return btoa(bin);
+}
+function b64decode(b64){
+  const bin = atob(String(b64).replace(/\s/g,""));
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
+/* ------------------------------ content hash ---------------------------- */
+/* SHA-1 of the row's identifying content, truncated to 10 hex chars —
+   used ONLY to mint an id for a brand-new row. Existing ids are never touched. */
+async function contentHash(parts){
+  const src = parts.map(p=> p===null||p===undefined ? "" : String(p)).join("|");
+  if(window.crypto && window.crypto.subtle && window.isSecureContext){
+    const buf = await window.crypto.subtle.digest("SHA-1", new TextEncoder().encode(src));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("").slice(0,10);
+  }
+  // Deterministic fallback (non-secure contexts): 40-bit FNV-1a chain.
+  let h1=0x811c9dc5, h2=0x01000193;
+  for(let i=0;i<src.length;i++){
+    h1 = Math.imul(h1 ^ src.charCodeAt(i), 16777619) >>> 0;
+    h2 = Math.imul(h2 + src.charCodeAt(i) + i, 2654435761) >>> 0;
+  }
+  return (h1.toString(16).padStart(8,"0") + h2.toString(16).padStart(8,"0")).slice(0,10);
+}
+
+/* =========================== credentials / config ======================== */
+function loadCfg(){
+  try{
+    const raw = localStorage.getItem(LS_CFG);
+    if(raw){ const o = JSON.parse(raw); for(const k in S.cfg) if(k!=="token" && o[k]!==undefined) S.cfg[k]=o[k]; }
+  }catch(e){}
+  let tok = "";
+  try{ tok = sessionStorage.getItem(SS_TOK) || localStorage.getItem(LS_TOK) || ""; }catch(e){}
+  S.cfg.token = tok;
+  try{ S.cfg.remember = !!localStorage.getItem(LS_TOK); }catch(e){}
+}
+function saveCfg(){
+  const copy = {};
+  for(const k in S.cfg) if(k!=="token") copy[k]=S.cfg[k];
+  try{
+    localStorage.setItem(LS_CFG, JSON.stringify(copy));
+    if(S.cfg.remember){ localStorage.setItem(LS_TOK, S.cfg.token); try{sessionStorage.removeItem(SS_TOK);}catch(e){} }
+    else { localStorage.removeItem(LS_TOK); sessionStorage.setItem(SS_TOK, S.cfg.token); }
+  }catch(e){ log("warn","Browser storage unavailable; credentials kept in memory for this tab only."); }
+}
+function clearCreds(){
+  try{ localStorage.removeItem(LS_CFG); localStorage.removeItem(LS_TOK); sessionStorage.removeItem(SS_TOK); }catch(e){}
+  S.cfg.token=""; S.user=null;
+  $("#fTok").value=""; $("#fRemember").checked=false;
+  $("#pillUser").textContent="not signed in";
+  log("warn","Credentials cleared from this device.");
+}
+
+/* ================================ GitHub API ============================= */
+function ApiError(status, message, payload){ this.name="ApiError"; this.status=status; this.message=message; this.payload=payload; }
+ApiError.prototype = Object.create(Error.prototype);
+
+async function api(method, path, body){
+  const url = API + path;
+  const headers = { "Accept":"application/vnd.github+json", "X-GitHub-Api-Version":"2022-11-28" };
+  if(S.cfg.token) headers["Authorization"] = "Bearer " + S.cfg.token;
+  if(body !== undefined) headers["Content-Type"] = "application/json";
+  log("req", method + " " + path);
+  let res;
+  try{
+    res = await fetch(url, { method, headers, body: body===undefined ? undefined : JSON.stringify(body), cache:"no-store" });
+  }catch(networkErr){
+    log("err","NETWORK FAILURE — " + method + " " + path + " — " + networkErr.message);
+    throw new ApiError(0, "Network error: " + networkErr.message, null);
+  }
+  const text = await res.text();
+  let data = null;
+  if(text){ try{ data = JSON.parse(text); }catch(e){ data = { raw:text }; } }
+
+  const remain = res.headers.get("x-ratelimit-remaining");
+  const rl = remain===null ? "" : "  [rate-limit " + remain + "/" + (res.headers.get("x-ratelimit-limit")||"?") + "]";
+  const line = "HTTP " + res.status + " " + (res.statusText||"") + " — " + method + " " + path + rl;
+
+  if(res.ok){ log("ok", line); return { res, data, status:res.status }; }
+
+  let msg = (data && (data.message || (data.raw||"").slice(0,180))) || res.statusText || "request failed";
+  if(data && Array.isArray(data.errors) && data.errors.length){
+    msg += " (" + data.errors.map(e=> e.message || (e.resource+"/"+e.field+":"+e.code)).join("; ") + ")";
+  }
+  log("err", line + "  ▸ " + msg);
+  throw new ApiError(res.status, msg, data);
+}
+function contentsPath(p){
+  const enc = String(p).split("/").filter(Boolean).map(encodeURIComponent).join("/");
+  return "/repos/" + encodeURIComponent(S.cfg.owner) + "/" + encodeURIComponent(S.cfg.repo) + "/contents/" + enc;
+}
+async function getFile(path){
+  const q = "?ref=" + encodeURIComponent(S.cfg.branch) + "&t=" + Date.now();
+  const { data, status } = await api("GET", contentsPath(path) + q);
+  if(Array.isArray(data)) throw new ApiError(status, path + " is a directory, not a file.", data);
+  if(data.encoding !== "base64" || typeof data.content !== "string"){
+    throw new ApiError(status, path + " was not returned as base64 content (file may exceed 1 MB — use the Git blob API).", data);
+  }
+  const text = b64decode(data.content);
+  log("info", "Fetched " + path + " · " + data.size + " bytes · sha ", String(data.sha).slice(0,12));
+  return { text, sha:data.sha };
+}
+async function putFile(path, text, sha, message){
+  const body = { message, content:b64encode(text), branch:S.cfg.branch };
+  if(sha) body.sha = sha;
+  const { data, status } = await api("PUT", contentsPath(path), body);
+  return { data, status };
+}
+
+/* ============================ catalog shape ============================== */
+/* Tolerant locator: the catalog may be an array of products or an object
+   wrapping products + prehang adders under any of several conventional keys. */
+const PRODUCT_KEYS = ["products","items","catalog","doors","skus"];
+const ADDER_KEYS   = ["prehangAdders","prehang_adders","prehangadders","adders","prehangs","prehangOptions","options"];
+function locateArrays(catalog){
+  const out = { products:[], adders:[], productsKey:null, addersKey:null };
+  if(Array.isArray(catalog)){ out.products = catalog; out.productsKey="(root array)"; return out; }
+  if(!catalog || typeof catalog!=="object") return out;
+  for(const k of PRODUCT_KEYS) if(Array.isArray(catalog[k])){ out.products=catalog[k]; out.productsKey=k; break; }
+  for(const k of ADDER_KEYS)   if(Array.isArray(catalog[k])){ out.adders=catalog[k];  out.addersKey=k;  break; }
+  if(!out.productsKey){
+    // fall back to the largest array of objects on the root
+    let best=null,bk=null;
+    for(const k in catalog){
+      const v = catalog[k];
+      if(Array.isArray(v) && v.length && typeof v[0]==="object" && (!best || v.length>best.length)){ best=v; bk=k; }
+    }
+    if(best){ out.products=best; out.productsKey=bk; }
+  }
+  return out;
+}
+
+/* ============================ column engine ============================== */
+/* Builds grid columns from the data itself, ordered by a curated preset so the
+   known product schema reads well, with any unmodelled leaf appended after. */
+const PRODUCT_PRESET = [
+  { path:"sku",                         label:"SKU",          kind:"text",   w:150, mono:true },
+  { path:"id",                          label:"ID (hash)",    kind:"ro",     w:104 },
+  { path:"line",                        label:"Line",         kind:"text",   w:104, list:true },
+  { path:"family",                      label:"Family",       kind:"text",   w:138, list:true },
+  { path:"type",                        label:"Type",         kind:"text",   w:78,  list:true },
+  { path:"description",                 label:"Description",  kind:"text",   w:290, required:true },
+  { path:"glazing",                     label:"Glazing",      kind:"text",   w:118, list:true },
+  { path:"size.code",                   label:"Size Code",    kind:"text",   w:82,  mono:true },
+  { path:"size.widthIn",                label:"W in",         kind:"number", w:60 },
+  { path:"size.heightIn",               label:"H in",         kind:"number", w:60 },
+  { path:"size.label",                  label:"Size Label",   kind:"text",   w:104, mono:true },
+  { path:"freightUnits",                label:"Freight Units",kind:"number", w:88 },
+  { path:"priceBasis",                  label:"Price Basis",  kind:"basis",  w:96 },
+  { path:"prices.unfinished.slab",      label:"Slab",         kind:"money",  w:96, grp:"unf", grpLabel:"Unfinished" },
+  { path:"prices.unfinished.singlePH",  label:"Single PH",    kind:"money",  w:96, grp:"unf", grpLabel:"Unfinished" },
+  { path:"prices.unfinished.doublePH",  label:"Double PH",    kind:"money",  w:96, grp:"unf", grpLabel:"Unfinished" },
+  { path:"prices.prefinished.slab",     label:"Slab",         kind:"money",  w:96, grp:"pre", grpLabel:"Prefinished" },
+  { path:"prices.prefinished.singlePH", label:"Single PH",    kind:"money",  w:96, grp:"pre", grpLabel:"Prefinished" },
+  { path:"prices.prefinished.doublePH", label:"Double PH",    kind:"money",  w:96, grp:"pre", grpLabel:"Prefinished" },
+  { path:"notes",                       label:"Notes",        kind:"text",   w:180 }
+];
+const ADDER_PRESET = [
+  { path:"code",          label:"Code",        kind:"text",   w:130, mono:true },
+  { path:"id",            label:"ID (hash)",   kind:"ro",     w:104 },
+  { path:"label",         label:"Label",       kind:"text",   w:250, required:true },
+  { path:"description",   label:"Description", kind:"text",   w:280 },
+  { path:"category",      label:"Category",    kind:"text",   w:120, list:true },
+  { path:"appliesTo",     label:"Applies To",  kind:"csv",    w:170 },
+  { path:"priceBasis",    label:"Price Basis", kind:"basis",  w:96 },
+  { path:"multiplier",    label:"Multiplier",  kind:"number", w:88 },
+  { path:"required",      label:"Req",         kind:"bool",   w:44 }
+];
+
+function leafPaths(obj, prefix, out, depth){
+  out = out || []; depth = depth||0; prefix = prefix||"";
+  if(obj===null || typeof obj!=="object" || Array.isArray(obj) || depth>3){ if(prefix) out.push(prefix); return out; }
+  for(const k in obj){
+    const p = prefix ? prefix+"."+k : k;
+    const v = obj[k];
+    if(v!==null && typeof v==="object" && !Array.isArray(v) && depth<3) leafPaths(v, p, out, depth+1);
+    else out.push(p);
+  }
+  return out;
+}
+function isMoneyPath(path){
+  const leaf = path.split(".").pop();
+  return /^prices?(\.|$)/.test(path) || /(^|\.)prices?\./.test(path) || /cents$/i.test(leaf) || /^(list|net)Price$/.test(leaf);
+}
+function inferKind(path, samples){
+  if(/(^|\.)id$/.test(path)) return "ro";
+  if(path==="priceBasis" || /\.priceBasis$/.test(path)) return "basis";
+  if(isMoneyPath(path)) return "money";
+  let sawBool=false, sawNum=false, sawArr=false;
+  for(const v of samples){
+    if(typeof v==="boolean") sawBool=true;
+    else if(typeof v==="number") sawNum=true;
+    else if(Array.isArray(v)) sawArr=true;
+  }
+  if(sawArr) return "csv";
+  if(sawBool && !sawNum) return "bool";
+  if(sawNum) return "number";
+  return "text";
+}
+function buildColumns(rows, preset){
+  const seen = Object.create(null);
+  const order = [];
+  rows.forEach(r=> leafPaths(r).forEach(p=>{ if(!seen[p]){ seen[p]=[]; order.push(p); } }));
+  rows.forEach(r=> order.forEach(p=>{ const v=getPath(r,p); if(v!==undefined) seen[p].push(v); }));
+
+  const cols = [];
+  const used = Object.create(null);
+  preset.forEach(pc=>{
+    if(!seen[pc.path] && rows.length) return;       // preset field absent from data → skip
+    used[pc.path]=1;
+    cols.push(finishCol(Object.assign({}, pc), seen[pc.path]||[]));
+  });
+  order.forEach(p=>{
+    if(used[p]) return;
+    const samples = seen[p];
+    cols.push(finishCol({ path:p, label:p, kind:inferKind(p,samples), w: isMoneyPath(p)?96:150, extra:true }, samples));
+  });
+  return cols;
+}
+function finishCol(col, samples){
+  col.nullable = samples.some(v=> v===null);
+  if(col.kind==="ro") col.nullable=false;
+  if(col.list){
+    const vals = Array.from(new Set(samples.filter(v=> typeof v==="string" && v!=="")));
+    vals.sort();
+    col.options = vals;
+  }
+  if(!col.w) col.w = 150;
+  return col;
+}
+
+/* ========================= column visibility control ===================== */
+function visibleCols(kind){
+  const h = S.hidden[kind];
+  const cols = S.cols[kind].filter(c=> !h.has(c.path));
+  return cols.length ? cols : S.cols[kind];     // never render a zero-column grid
+}
+const COL_PRESETS = {
+  products:{
+    all:      [],
+    pricing:  ["line","family","type","glazing","size.widthIn","size.heightIn","size.label","freightUnits","notes"],
+    identity: ["prices.unfinished.slab","prices.unfinished.singlePH","prices.unfinished.doublePH",
+               "prices.prefinished.slab","prices.prefinished.singlePH","prices.prefinished.doublePH"]
+  },
+  adders:{
+    all:      [],
+    pricing:  ["category","appliesTo","required","notes"],
+    identity: []
+  }
+};
+function applyPreset(kind, name){
+  S.hidden[kind] = new Set(COL_PRESETS[kind][name] || []);
+  saveColPrefs(); renderGrid(kind);
+}
+function saveColPrefs(){
+  try{ localStorage.setItem(LS_COLS, JSON.stringify({
+    products:Array.from(S.hidden.products), adders:Array.from(S.hidden.adders) })); }catch(e){}
+}
+function loadColPrefs(){
+  try{
+    const o = JSON.parse(localStorage.getItem(LS_COLS)||"null");
+    if(o){ S.hidden.products = new Set(o.products||[]); S.hidden.adders = new Set(o.adders||[]); }
+  }catch(e){}
+}
+function openColumnPicker(){
+  const kind = S.pane==="adders" ? "adders" : "products";
+  const all = S.cols[kind];
+  if(!all.length){ log("warn","No columns to configure — load a catalog first."); return; }
+  const list = el("div",{style:"display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:2px 14px"});
+  const boxes = [];
+  all.forEach(c=>{
+    const cb = el("input",{type:"checkbox"});
+    cb.checked = !S.hidden[kind].has(c.path);
+    cb.disabled = c.path==="sku" || c.path==="code";     // keep the sticky anchor column
+    boxes.push({cb, path:c.path});
+    list.appendChild(el("label",{class:"checkline",style:"font-size:12px",title:c.path},
+      cb, document.createTextNode((c.grpLabel? c.grpLabel+" › ":"") + c.label)));
+  });
+  const setAll = v => boxes.forEach(b=>{ if(!b.cb.disabled) b.cb.checked = v; });
+  const body = el("div",{},
+    el("p",{class:"legend",text:"Hidden columns are display-only — their values are still published untouched."}),
+    el("div",{style:"display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px"},
+      el("button",{class:"btn sm",onclick:()=>setAll(true)},"Select all"),
+      el("button",{class:"btn sm",onclick:()=>{ setAll(false);
+        boxes.forEach(b=>{ if((COL_PRESETS[kind].pricing||[]).indexOf(b.path)<0) b.cb.checked = true; }); }},"Pricing focus"),
+      el("button",{class:"btn sm",onclick:()=>{ setAll(false);
+        boxes.forEach(b=>{ if((COL_PRESETS[kind].identity||[]).indexOf(b.path)<0) b.cb.checked = true; }); }},"Specs only")
+    ),
+    list
+  );
+  openModal("Columns — " + (kind==="products"?"Products":"Prehang Adders"), body, [
+    { label:"Cancel", value:false },
+    { label:"Apply", value:true, cls:"primary" }
+  ]).then(v=>{
+    if(!v) return;
+    S.hidden[kind] = new Set(boxes.filter(b=>!b.cb.checked).map(b=>b.path));
+    saveColPrefs();
+    renderGrid(kind);
+    log("info", S.hidden[kind].size + " column(s) hidden on the " + kind + " grid.");
+  });
+}
+
+/* =============================== grid render ============================= */
+function snapshot(rows){ rows.forEach(r=> S.origin.set(r, JSON.stringify(r))); }
+function isRowDirty(row){ const o = S.origin.get(row); return o===undefined || o !== JSON.stringify(row); }
+
+function visibleRows(kind){
+  const rows = kind==="products" ? S.products : S.adders;
+  const q = S.filter.trim().toLowerCase();
+  let view = rows.map((row,idx)=>({row,idx}));
+  if(q){
+    const terms = q.split(/\s+/);
+    view = view.filter(v=>{
+      const hay = JSON.stringify(v.row).toLowerCase();
+      return terms.every(t=> hay.indexOf(t)>=0);
+    });
+  }
+  const s = S.sort[kind];
+  if(s){
+    view.sort((a,b)=>{
+      const av = getPath(a.row, s.path), bv = getPath(b.row, s.path);
+      const an = av===null||av===undefined, bn = bv===null||bv===undefined;
+      if(an && bn) return a.idx-b.idx;
+      if(an) return 1;
+      if(bn) return -1;
+      let c;
+      if(typeof av==="number" && typeof bv==="number") c = av-bv;
+      else c = String(av).localeCompare(String(bv), undefined, {numeric:true, sensitivity:"base"});
+      return s.dir==="asc" ? c : -c;
+    });
+  }
+  return view;
+}
+
+function renderGrid(kind){
+  const wrap = kind==="products" ? $("#wrapProducts") : $("#wrapAdders");
+  const rows = kind==="products" ? S.products : S.adders;
+  const cols = visibleCols(kind);
+  wrap.textContent = "";
+  if(!rows.length){
+    wrap.appendChild(el("div",{class:"empty"},
+      el("p",{text: kind==="products" ? "No products in this catalog file." : "No prehang adders in this catalog file."}),
+      el("p",{text:"Use “+ Row” to append one."})
+    ));
+    updateCounts(); return;
+  }
+  const view = visibleRows(kind);
+
+  const table = el("table",{class:"grid"});
+  const cg = el("colgroup");
+  cg.appendChild(el("col",{style:"width:var(--col0)"}));
+  cols.forEach((c,i)=> cg.appendChild(el("col",{style:"width:"+ (i===0 ? "var(--col1)" : c.w+"px")})));
+  cg.appendChild(el("col",{style:"width:72px"}));
+  table.appendChild(cg);
+
+  /* head */
+  const thead = el("thead");
+  const tr = el("tr");
+  tr.appendChild(el("th",{class:"c0",title:"Row number (file order)"},"#"));
+  cols.forEach((c,i)=>{
+    const s = S.sort[kind];
+    const arrow = s && s.path===c.path ? (s.dir==="asc" ? "▲" : "▼") : "";
+    const th = el("th",{
+      class:(i===0?"c1 ":"") + (c.grp?("g-"+c.grp+" "):""),
+      "data-sort":c.path,
+      title:c.path + (c.extra ? "  (field not in the reference schema — preserved as-is)" : ""),
+      onclick:()=>{
+        const cur = S.sort[kind];
+        S.sort[kind] = (cur && cur.path===c.path && cur.dir==="asc") ? {path:c.path,dir:"desc"}
+                     : (cur && cur.path===c.path && cur.dir==="desc") ? null
+                     : {path:c.path,dir:"asc"};
+        renderGrid(kind);
+      }
+    });
+    const inner = el("div",{class:"th"});
+    if(c.grpLabel) inner.appendChild(el("span",{class:"grp",text:c.grpLabel+" ›"}));
+    inner.appendChild(document.createTextNode(c.label));
+    if(c.kind==="money") inner.appendChild(el("span",{class:"grp",text: S.units==="cents"?"¢":"$"}));
+    if(arrow) inner.appendChild(el("span",{class:"arrow",text:arrow}));
+    th.appendChild(inner);
+    tr.appendChild(th);
+  });
+  tr.appendChild(el("th",{},"Actions"));
+  thead.appendChild(tr);
+  table.appendChild(thead);
+
+  /* datalists for free-text columns with a known vocabulary */
+  cols.forEach((c,ci)=>{
+    if(!c.options || !c.options.length) return;
+    const id = "dl_"+kind+"_"+ci;
+    c.listId = id;
+    const dl = el("datalist",{id});
+    c.options.forEach(o=> dl.appendChild(el("option",{value:o})));
+    wrap.appendChild(dl);
+  });
+
+  /* body */
+  const tbody = el("tbody");
+  view.forEach((v, rIdx)=>{
+    const trr = el("tr",{dataset:{r:String(rIdx)}});
+    trr.__row = v.row;
+    trr.appendChild(el("td",{class:"c0"}, el("span",{class:"rn",text:String(v.idx+1)})));
+    cols.forEach((c,ci)=> trr.appendChild(buildCell(kind, v.row, c, rIdx, ci)));
+    trr.appendChild(el("td",{},
+      el("div",{class:"rowacts"},
+        el("button",{class:"btn xs",title:"Duplicate this row (a new content-hash id is minted for the copy)",
+          onclick:()=>duplicateRow(kind, v.row)}, "⧉"),
+        el("button",{class:"btn xs danger",title:"Delete this row",
+          onclick:()=>deleteRow(kind, v.row)}, "✕")
+      )
+    ));
+    if(isRowDirty(v.row)) trr.classList.add("dirty");
+    tbody.appendChild(trr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  updateCounts();
+}
+
+function buildCell(kind, row, col, r, c){
+  const cls = (c===0?"c1 ":"") + (col.grp?("g-"+col.grp+" "):"") + (col.kind==="ro"?"ro ":"") + (col.kind==="bool"?"chk ":"");
+  const td = el("td",{class:cls.trim()});
+  const val = getPath(row, col.path);
+
+  if(col.kind==="ro"){
+    td.appendChild(el("span",{class:"cellro lock", text: val===null||val===undefined ? "—" : String(val),
+      title:"Read-only content hash. Saved quotes reference this id; it is never edited or regenerated."}));
+    return td;
+  }
+
+  if(col.kind==="bool"){
+    const cb = el("input",{type:"checkbox",class:"cell",dataset:{r:String(r),c:String(c)}});
+    cb.checked = val===true;
+    cb.addEventListener("change",()=>{ setPath(row,col.path,cb.checked); afterEdit(kind,row); });
+    td.appendChild(cb); return td;
+  }
+
+  if(col.kind==="basis"){
+    const sel = el("select",{class:"cell mono",dataset:{r:String(r),c:String(c)},
+      title:'priceBasis must be exactly "list" or "net".'});
+    const cur = val===undefined ? "" : String(val);
+    const opts = ["list","net"];
+    if(cur && opts.indexOf(cur)<0) opts.push(cur);           // surface an invalid stored value
+    if(col.nullable || val===null) opts.unshift("");
+    opts.forEach(o=> sel.appendChild(el("option",{value:o, text:o===""?"(null)":o})));
+    sel.value = val===null ? "" : cur;
+    if(cur && cur!=="list" && cur!=="net") sel.classList.add("bad");
+    sel.addEventListener("change",()=>{
+      const v = sel.value;
+      setPath(row, col.path, v==="" ? null : v);
+      sel.classList.toggle("bad", v!=="" && v!=="list" && v!=="net");
+      afterEdit(kind,row);
+    });
+    td.appendChild(sel); return td;
+  }
+
+  const input = el("input",{ type:"text", class:"cell", dataset:{r:String(r), c:String(c)},
+                             autocomplete:"off", spellcheck:"false" });
+  if(col.listId){ input.setAttribute("list", col.listId); }
+
+  if(col.kind==="money"){
+    input.classList.add("money");
+    input.inputMode = "decimal";
+    input.value = moneyDisplay(val);
+    input.placeholder = NULL_PLACEHOLDER;
+    input.title = fmtMoneyTitle(val);
+    if(val===null||val===undefined) input.classList.add("isnull");
+    input.addEventListener("input", ()=>{
+      const p = parseMoney(input.value, S.units);
+      if(!p.ok){ flagBad(input, p.err); return; }
+      clearBad(input);
+      setPath(row, col.path, p.value);
+      input.classList.toggle("isnull", p.value===null);
+      input.title = fmtMoneyTitle(p.value);
+      afterEdit(kind,row);
+    });
+    input.addEventListener("blur", ()=>{
+      if(S.badCells.has(input)) return;
+      input.value = moneyDisplay(getPath(row,col.path));
+    });
+  } else if(col.kind==="number"){
+    input.classList.add("num");
+    input.inputMode = "decimal";
+    input.value = val===null||val===undefined ? "" : String(val);
+    input.placeholder = col.nullable ? NULL_PLACEHOLDER : "";
+    if(val===null||val===undefined) input.classList.add("isnull");
+    input.addEventListener("input", ()=>{
+      const t = input.value.trim();
+      if(t===""){ clearBad(input); setPath(row,col.path,col.nullable?null:0); input.classList.add("isnull"); afterEdit(kind,row); return; }
+      if(!/^-?\d*\.?\d*$/.test(t) || !isFinite(Number(t))){ flagBad(input,"Numeric values only."); return; }
+      clearBad(input); input.classList.remove("isnull");
+      setPath(row, col.path, Number(t));
+      afterEdit(kind,row);
+    });
+  } else if(col.kind==="csv"){
+    input.classList.add("mono");
+    input.value = Array.isArray(val) ? val.join(", ") : (val===null||val===undefined ? "" : String(val));
+    input.placeholder = "comma,separated";
+    input.title = "Comma-separated list";
+    input.addEventListener("input", ()=>{
+      const parts = input.value.split(",").map(s=>s.trim()).filter(s=>s!=="");
+      setPath(row, col.path, parts);
+      afterEdit(kind,row);
+    });
+  } else {
+    if(col.mono) input.classList.add("mono");
+    input.value = val===null||val===undefined ? "" : String(val);
+    if(col.nullable) input.placeholder = NULL_PLACEHOLDER;
+    if(val===null) input.classList.add("isnull");
+    input.addEventListener("input", ()=>{
+      const t = input.value;
+      if(t===""){
+        setPath(row, col.path, col.nullable ? null : "");
+        input.classList.toggle("isnull", col.nullable);
+      } else {
+        setPath(row, col.path, t);
+        input.classList.remove("isnull");
+      }
+      if(col.required) input.classList.toggle("bad", input.value.trim()==="");
+      afterEdit(kind,row);
+    });
+    if(col.required && input.value.trim()==="") input.classList.add("bad");
+  }
+
+  input.addEventListener("keydown", gridKeys);
+  if(col.kind==="money" || col.kind==="number"){
+    input.addEventListener("focus", ()=> setTimeout(()=>{ try{ input.select(); }catch(e){} }, 0));
+  }
+  td.appendChild(input);
+  return td;
+}
+
+function flagBad(input, msg){
+  input.classList.add("bad");
+  input.title = msg;
+  if(!S.badCells.has(input)){ S.badCells.add(input); log("warn","Cell rejected: " + msg); }
+  updateState();
+}
+function clearBad(input){
+  const had = S.badCells.has(input);
+  if(had) S.badCells.delete(input);
+  input.classList.remove("bad");
+  if(had) updateState();
+}
+function afterEdit(kind, row){
+  const wrap = kind==="products" ? $("#wrapProducts") : $("#wrapAdders");
+  const trs = $$("tbody tr", wrap);
+  for(const tr of trs){ if(tr.__row===row){ tr.classList.toggle("dirty", isRowDirty(row)); break; } }
+  scheduleUpdate();
+}
+
+/* keyboard navigation tuned for PC data entry */
+function gridKeys(ev){
+  const t = ev.target;
+  const r = parseInt(t.dataset.r,10), c = parseInt(t.dataset.c,10);
+  if(isNaN(r)||isNaN(c)) return;
+  let dr=0, dc=0;
+  if(ev.key==="ArrowDown" || (ev.key==="Enter" && !ev.shiftKey)) dr=1;
+  else if(ev.key==="ArrowUp" || (ev.key==="Enter" && ev.shiftKey)) dr=-1;
+  else if(ev.key==="ArrowLeft"  && (ev.ctrlKey||ev.metaKey||ev.altKey)) dc=-1;
+  else if(ev.key==="ArrowRight" && (ev.ctrlKey||ev.metaKey||ev.altKey)) dc=1;
+  else return;
+  const scope = t.closest(".gridwrap");
+  if(!scope) return;
+  const next = scope.querySelector('[data-r="'+(r+dr)+'"][data-c="'+(c+dc)+'"]');
+  if(next){ ev.preventDefault(); next.focus(); if(next.select) try{next.select();}catch(e){} }
+}
+
+/* ============================= add / dup / delete ======================== */
+function newProductTemplate(){
+  return { id:null, sku:"", line:"", family:"", type:"door", description:"", glazing:null,
+    size:{ code:"", widthIn:0, heightIn:0, label:"" },
+    freightUnits:1.0, priceBasis:"list",
+    prices:{ unfinished:{ slab:null, singlePH:null, doublePH:null },
+             prefinished:{ slab:null, singlePH:null, doublePH:null } },
+    notes:null };
+}
+function newAdderTemplate(){
+  return { id:null, code:"", label:"", category:"", appliesTo:["singlePH","doublePH"],
+           priceBasis:"list", prices:{ singlePH:null, doublePH:null }, notes:null };
+}
+function hashInputsFor(kind, row){
+  return kind==="products"
+    ? [row.sku, row.line, row.type, row.size && row.size.code, row.description, row.glazing]
+    : [row.code, row.label, row.category, JSON.stringify(row.appliesTo||null)];
+}
+async function mintId(kind, row){
+  row.id = await contentHash(hashInputsFor(kind,row).concat([String(Date.now()), String(Math.random())]));
+  return row.id;
+}
+async function addRow(kind){
+  const rows = kind==="products" ? S.products : S.adders;
+  const tpl = kind==="products" ? newProductTemplate() : newAdderTemplate();
+  // Match the shape of existing rows so the new row carries the same fields.
+  if(rows.length){
+    const proto = rows[0];
+    leafPaths(proto).forEach(p=>{ if(!hasPath(tpl,p)) setPath(tpl,p,null); });
+  }
+  await mintId(kind,tpl);
+  rows.push(tpl);
+  S.structDirty[kind] = true;
+  S.cols[kind] = buildColumns(rows, kind==="products"?PRODUCT_PRESET:ADDER_PRESET);
+  log("info","New " + (kind==="products"?"product":"adder") + " row appended · id minted ", tpl.id);
+  renderGrid(kind); updateState(); renderRaw();
+  const wrap = kind==="products" ? $("#wrapProducts") : $("#wrapAdders");
+  const last = wrap.querySelector("tbody tr:last-child [data-c]");
+  if(last) last.focus();
+}
+async function duplicateRow(kind, row){
+  const rows = kind==="products" ? S.products : S.adders;
+  const copy = JSON.parse(JSON.stringify(row));
+  await mintId(kind, copy);
+  if(copy.sku) copy.sku = copy.sku + "-COPY";
+  if(copy.code) copy.code = copy.code + "-COPY";
+  rows.splice(rows.indexOf(row)+1, 0, copy);
+  S.structDirty[kind]=true;
+  log("info","Row duplicated · new id ", copy.id);
+  renderGrid(kind); updateState(); renderRaw();
+}
+function deleteRow(kind, row){
+  const label = row.sku || row.code || row.label || row.id || "(row)";
+  confirmModal("Delete row",
+    el("div",{},
+      el("p",{},"Remove ", el("b",{text:String(label)}), " from the catalog?"),
+      el("p",{class:"legend",text:"Saved quotes that reference this id will no longer resolve against the published catalog. This only takes effect once you publish."})
+    ),
+    "Delete row", ()=>{
+      const rows = kind==="products" ? S.products : S.adders;
+      const i = rows.indexOf(row);
+      if(i>=0) rows.splice(i,1);
+      S.structDirty[kind]=true;
+      log("warn","Row removed: " + label);
+      renderGrid(kind); updateState(); renderRaw();
+    });
+}
+
+/* ============================== rules editor ============================= */
+const RULE_META = {
+  "netMultiplier":                        { label:"Net Multiplier",         kind:"float", note:"List × this = net. e.g. 0.48" },
+  "currency":                             { label:"Currency",               kind:"text",  note:"ISO 4217 code, e.g. USD" },
+  "roundingMode":                         { label:"Rounding Mode",          kind:"text",  note:"e.g. half-up-to-cent" },
+  "freight.zone":                         { label:"Freight Zone",           kind:"text",  note:"Descriptive label" },
+  "freight.prehangChargeCentsPerUnit":    { label:"Prehang Freight Charge", kind:"money", note:"Integer cents per freight unit" },
+  "freight.prehangChargeAlwaysApplies":   { label:"Charge Always Applies",  kind:"bool",  note:"Apply even when freight units are 0" },
+  "defaults.marginPercent":               { label:"Default Margin",         kind:"float", note:"Fraction, e.g. 0.35 = 35%" },
+  "defaults.laborCentsPerPrehungUnit":    { label:"Labor / Prehung Unit",   kind:"money", note:"Integer cents" },
+  "defaults.laborCentsPerSlab":           { label:"Labor / Slab",           kind:"money", note:"Integer cents" }
+};
+function ruleKind(path, val){
+  const m = RULE_META[path];
+  if(m) return m.kind;
+  if(typeof val==="boolean") return "bool";
+  if(/cents/i.test(path.split(".").pop())) return "money";
+  if(typeof val==="number") return Number.isInteger(val) ? "int" : "float";
+  return "text";
+}
+function renderRules(){
+  const host = $("#rulesBody");
+  host.textContent = "";
+  if(!S.rules || typeof S.rules!=="object"){
+    host.appendChild(el("div",{class:"empty",text:"pricing-rules.json not loaded."}));
+    return;
+  }
+  const paths = leafPaths(S.rules);
+  const groups = new Map();
+  paths.forEach(p=>{
+    const g = p.indexOf(".")>0 ? p.split(".")[0] : "root";
+    if(!groups.has(g)) groups.set(g,[]);
+    groups.get(g).push(p);
+  });
+  const order = ["root"].concat(Array.from(groups.keys()).filter(k=>k!=="root"));
+  order.forEach(g=>{
+    if(!groups.has(g)) return;
+    const card = el("div",{class:"card"});
+    card.appendChild(el("h3",{text: g==="root" ? "Global" : g}));
+    const body = el("div",{class:"body"});
+    const tbl = el("table",{class:"kv"});
+    groups.get(g).forEach(p=> tbl.appendChild(ruleRow(p)));
+    body.appendChild(tbl);
+    card.appendChild(body);
+    host.appendChild(card);
+  });
+  host.appendChild(el("div",{class:"legend",style:"max-width:820px",
+    text:"Multipliers and percentages are stored as decimal fractions. Every field whose name ends in “Cents” is stored as an integer number of cents and is entered here in dollars."}));
+}
+function ruleRow(path){
+  const val = getPath(S.rules, path);
+  const meta = RULE_META[path] || {};
+  const kind = ruleKind(path, val);
+  const tr = el("tr");
+  tr.appendChild(el("td",{class:"k"}, el("b",{text: meta.label || path.split(".").pop()}), document.createTextNode(path)));
+  const vtd = el("td",{class:"v"});
+
+  if(kind==="bool"){
+    const cb = el("input",{type:"checkbox"});
+    cb.checked = val===true;
+    cb.addEventListener("change",()=>{ setPath(S.rules,path,cb.checked); scheduleUpdate(); });
+    vtd.appendChild(cb);
+  } else if(kind==="money"){
+    const inp = el("input",{type:"text",inputmode:"decimal",placeholder:NULL_PLACEHOLDER,
+      title:fmtMoneyTitle(val)});
+    inp.value = moneyDisplay(val);
+    inp.addEventListener("input",()=>{
+      const p = parseMoney(inp.value, S.units);
+      if(!p.ok){ flagBad(inp,p.err); return; }
+      clearBad(inp);
+      setPath(S.rules,path,p.value);
+      inp.title = fmtMoneyTitle(p.value);
+      scheduleUpdate();
+    });
+    inp.addEventListener("blur",()=>{ if(!S.badCells.has(inp)) inp.value = moneyDisplay(getPath(S.rules,path)); });
+    vtd.appendChild(inp);
+    vtd.appendChild(el("span",{class:"legend",style:"margin-left:8px",
+      text:(S.units==="cents"?"integer cents":"dollars → stored as integer cents")}));
+  } else if(kind==="float" || kind==="int"){
+    const inp = el("input",{type:"text",inputmode:"decimal"});
+    inp.value = val===null||val===undefined ? "" : String(val);
+    inp.addEventListener("input",()=>{
+      const t = inp.value.trim();
+      if(t===""){ setPath(S.rules,path,null); clearBad(inp); scheduleUpdate(); return; }
+      if(!/^-?\d*\.?\d*$/.test(t) || !isFinite(Number(t))){ flagBad(inp,"Numeric values only."); return; }
+      if(kind==="int" && !Number.isInteger(Number(t))){ flagBad(inp,"Whole numbers only."); return; }
+      clearBad(inp);
+      setPath(S.rules,path,Number(t));
+      scheduleUpdate();
+    });
+    vtd.appendChild(inp);
+  } else {
+    const inp = el("input",{type:"text"});
+    inp.value = val===null||val===undefined ? "" : String(val);
+    inp.addEventListener("input",()=>{
+      setPath(S.rules,path, inp.value===""&&val===null ? null : inp.value);
+      scheduleUpdate();
+    });
+    vtd.appendChild(inp);
+  }
+  tr.appendChild(vtd);
+  tr.appendChild(el("td",{class:"n",text: meta.note || ""}));
+  return tr;
+}
+
+/* ============================== serialization =========================== */
+function serialize(obj){ return JSON.stringify(obj, null, 2) + "\n"; }
+function serializeCatalog(){ return S.catalog===null ? "" : serialize(S.catalog); }
+function serializeRules(){ return S.rules===null ? "" : serialize(S.rules); }
+
+function renderRaw(){
+  const host = $("#rawBody");
+  if(S.pane!=="raw") return;
+  host.textContent = "";
+  const cat = serializeCatalog(), rul = serializeRules();
+  const block = (title, path, text, changed)=>{
+    host.appendChild(el("h3",{},
+      document.createTextNode(title + " — "),
+      el("code",{text:path}),
+      el("span",{class:"legend",style:"margin-left:8px",
+        text:(changed?"● modified · ":"○ unchanged · ") + text.length + " bytes"}),
+      el("button",{class:"btn sm",style:"margin-left:8px",onclick:()=>copyText(text)},"Copy")
+    ));
+    host.appendChild(el("pre",{text:text || "(not loaded)"}));
+  };
+  block("Catalog payload", S.cfg.catalogPath, cat, cat!==S.catalogText);
+  block("Pricing rules payload", S.cfg.rulesPath, rul, rul!==S.rulesText);
+}
+function copyText(t){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>log("ok","Payload copied to clipboard."),
+                                          ()=>log("warn","Clipboard write was blocked by the browser."));
+  } else log("warn","Clipboard API unavailable in this browser.");
+}
+
+/* ================================ validation ============================ */
+function moneyLeavesOf(row){
+  return leafPaths(row).filter(isMoneyPath);
+}
+function validate(){
+  const errors = [], warnings = [];
+  if(S.badCells.size) errors.push(S.badCells.size + " cell(s) contain input that could not be parsed — clear the red cells first.");
+
+  const seenIds = new Map();
+  const check = (kind, rows, labelOf)=>{
+    rows.forEach((row,i)=>{
+      const tag = kind + " #" + (i+1) + " " + labelOf(row);
+      const id = row.id;
+      if(typeof id!=="string" || id.trim()===""){
+        errors.push(tag + ": missing id (content hash). Existing ids must never be blanked.");
+      } else if(seenIds.has(id)){
+        errors.push(tag + ': duplicate id "' + id + '" (also used by ' + seenIds.get(id) + ").");
+      } else seenIds.set(id, tag);
+
+      if("priceBasis" in row){
+        if(row.priceBasis!=="list" && row.priceBasis!=="net")
+          errors.push(tag + ': priceBasis must be exactly "list" or "net" (found ' + JSON.stringify(row.priceBasis) + ").");
+      } else if(kind==="Product"){
+        errors.push(tag + ": priceBasis is required and must be \"list\" or \"net\".");
+      }
+
+      let anyPrice = false;
+      moneyLeavesOf(row).forEach(p=>{
+        const v = getPath(row,p);
+        if(v===null || v===undefined) return;
+        if(typeof v!=="number" || !Number.isInteger(v)){
+          errors.push(tag + ": " + p + " must be an integer number of cents or null (found " + JSON.stringify(v) + ").");
+        } else {
+          anyPrice = true;
+          if(v<0) warnings.push(tag + ": " + p + " is negative (" + v + " cents).");
+          if(Math.abs(v)>MAX_CENTS) errors.push(tag + ": " + p + " is out of range.");
+        }
+      });
+      if(!anyPrice) warnings.push(tag + ": every price is null — this item is not offered in any configuration.");
+
+      if(kind==="Product"){
+        if(typeof row.sku!=="string" || row.sku.trim()==="") errors.push(tag + ": sku is required.");
+        if(typeof row.description!=="string" || row.description.trim()==="") errors.push(tag + ": description is required.");
+        if("freightUnits" in row && (typeof row.freightUnits!=="number" || !isFinite(row.freightUnits)))
+          errors.push(tag + ": freightUnits must be a number.");
+        if(row.size){
+          ["widthIn","heightIn"].forEach(k=>{
+            if(k in row.size && (typeof row.size[k]!=="number" || !isFinite(row.size[k])))
+              warnings.push(tag + ": size." + k + " is not numeric.");
+          });
+        }
+      } else {
+        if(!(row.code||row.label||row.description)) warnings.push(tag + ": adder has no code or label.");
+      }
+    });
+  };
+  check("Product", S.products, r=> r.sku || r.id || "");
+  check("Adder",   S.adders,   r=> r.code || r.label || r.id || "");
+
+  if(S.rules && typeof S.rules==="object"){
+    const nm = S.rules.netMultiplier;
+    if(typeof nm!=="number" || !isFinite(nm) || nm<=0) errors.push("pricing-rules: netMultiplier must be a positive number.");
+    else if(nm>1) warnings.push("pricing-rules: netMultiplier is greater than 1 (net above list?).");
+    if(typeof S.rules.currency!=="string" || !S.rules.currency) errors.push("pricing-rules: currency is required.");
+    if("roundingMode" in S.rules && typeof S.rules.roundingMode!=="string") errors.push("pricing-rules: roundingMode must be a string.");
+    leafPaths(S.rules).forEach(p=>{
+      if(!/cents/i.test(p.split(".").pop())) return;
+      const v = getPath(S.rules,p);
+      if(v===null||v===undefined) return;
+      if(typeof v!=="number" || !Number.isInteger(v)) errors.push("pricing-rules: " + p + " must be an integer number of cents.");
+    });
+    const mp = S.rules.defaults && S.rules.defaults.marginPercent;
+    if(mp!==undefined && mp!==null && (typeof mp!=="number" || !isFinite(mp))) errors.push("pricing-rules: defaults.marginPercent must be a number.");
+  }
+  return { errors, warnings };
+}
+function showIssues(errors, warnings){
+  const box = $("#issues");
+  box.textContent = "";
+  const items = errors.map(e=>({t:"E",m:e})).concat(warnings.map(w=>({t:"W",m:w})));
+  if(!items.length){ box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  box.classList.toggle("warnonly", errors.length===0);
+  box.appendChild(el("div",{},
+    el("b",{text: errors.length + " blocking error" + (errors.length===1?"":"s") + " · " + warnings.length + " warning" + (warnings.length===1?"":"s")}),
+    el("button",{class:"btn xs",style:"margin-left:10px",onclick:()=>box.classList.add("hidden")},"dismiss")
+  ));
+  const ul = el("ul");
+  items.slice(0,120).forEach(i=> ul.appendChild(el("li",{text:"["+i.t+"] "+i.m})));
+  if(items.length>120) ul.appendChild(el("li",{text:"… " + (items.length-120) + " more"}));
+  box.appendChild(ul);
+}
+
+/* ================================= modals =============================== */
+function openModal(title, bodyNode, buttons){
+  return new Promise(resolve=>{
+    const host = $("#modalHost");
+    const overlay = el("div",{class:"modal"});
+    const box = el("div",{class:"box"});
+    box.appendChild(el("h3",{text:title}));
+    const body = el("div",{class:"body"});
+    body.appendChild(bodyNode);
+    box.appendChild(body);
+    const foot = el("div",{class:"foot"});
+    buttons.forEach(b=>{
+      foot.appendChild(el("button",{class:"btn "+(b.cls||""),onclick:()=>{ close(b.value); }},b.label));
+    });
+    box.appendChild(foot);
+    overlay.appendChild(box);
+    host.appendChild(overlay);
+    function close(v){ document.removeEventListener("keydown",onKey); host.removeChild(overlay); resolve(v); }
+    function onKey(e){ if(e.key==="Escape") close(false); }
+    document.addEventListener("keydown",onKey);
+    overlay.addEventListener("mousedown", e=>{ if(e.target===overlay) close(false); });
+    const first = box.querySelector("input,select,textarea") || foot.querySelector(".btn.primary") || foot.lastChild;
+    if(first) setTimeout(()=>first.focus(),20);
+  });
+}
+function confirmModal(title, bodyNode, okLabel, onOk){
+  openModal(title, bodyNode, [
+    { label:"Cancel", value:false },
+    { label:okLabel, value:true, cls:"primary" }
+  ]).then(v=>{ if(v) onOk(); });
+}
+
+/* ================================== load ================================ */
+async function connectAndLoad(){
+  const gerr = $("#gateErr");
+  gerr.textContent = "";
+  S.cfg.token       = $("#fTok").value.trim();
+  S.cfg.owner       = $("#fOwner").value.trim();
+  S.cfg.repo        = $("#fRepo").value.trim().replace(/\.git$/,"");
+  S.cfg.branch      = $("#fBranch").value.trim() || "main";
+  S.cfg.catalogPath = $("#fCatalog").value.trim() || "data/catalog.json";
+  S.cfg.rulesPath   = $("#fRules").value.trim()   || "data/pricing-rules.json";
+  S.cfg.remember    = $("#fRemember").checked;
+  if(!S.cfg.token || !S.cfg.owner || !S.cfg.repo){
+    gerr.textContent = "Token, owner and repository are all required.";
+    return;
+  }
+  const btn = $("#btnConnect"); btn.disabled = true; btn.textContent = "Connecting…";
+  $("#app").classList.remove("hide");
+  try{
+    const me = await api("GET","/user");
+    S.user = me.data;
+    $("#pillUser").textContent = "@" + (me.data.login||"?");
+    log("ok","Authenticated as " + me.data.login + (me.data.name ? " ("+me.data.name+")" : ""));
+    saveCfg();
+    $("#gate").classList.add("hide");
+    await loadAll();
+  }catch(err){
+    $("#app").classList.add("hide");
+    const hint = err.status===401 ? "Token is invalid, expired, or revoked."
+              : err.status===403 ? "Token lacks permission (or rate limit exceeded)."
+              : err.status===404 ? "Not found — check owner/repo/branch/path and that the token can see this repository."
+              : err.message;
+    gerr.textContent = "HTTP " + err.status + " — " + hint;
+    log("err","Connect failed: " + hint);
+  }finally{
+    btn.disabled = false; btn.textContent = "Connect & Load Catalog";
+  }
+}
+
+async function loadAll(){
+  setBusy(true, "Loading…");
+  try{
+    log("info","Loading " + S.cfg.owner + "/" + S.cfg.repo + "@" + S.cfg.branch);
+    $("#repoLabel").textContent = S.cfg.owner + "/" + S.cfg.repo + " @ " + S.cfg.branch;
+
+    const cat = await getFile(S.cfg.catalogPath);
+    S.catalogText = cat.text; S.catalogSha = cat.sha;
+    try{ S.catalog = JSON.parse(cat.text); }
+    catch(e){ throw new ApiError(0, S.cfg.catalogPath + " is not valid JSON: " + e.message, null); }
+
+    const found = locateArrays(S.catalog);
+    S.products = found.products; S.adders = found.adders;
+    log("info","Catalog parsed · products key: " + (found.productsKey||"none") + " (" + S.products.length + ")"
+              + " · adders key: " + (found.addersKey||"none") + " (" + S.adders.length + ")");
+
+    let rulesOk = true;
+    try{
+      const rul = await getFile(S.cfg.rulesPath);
+      S.rulesText = rul.text; S.rulesSha = rul.sha;
+      S.rules = JSON.parse(rul.text);
+    }catch(e){
+      rulesOk = false;
+      S.rules = null; S.rulesText = ""; S.rulesSha = null;
+      log("warn","Pricing rules unavailable (" + (e.message||e) + ") — the Pricing Rules tab is disabled.");
+    }
+
+    S.origin = new WeakMap();
+    snapshot(S.products); snapshot(S.adders);
+    S.structDirty = { products:false, adders:false };
+    S.badCells = new Set();
+    S.cols.products = buildColumns(S.products, PRODUCT_PRESET);
+    S.cols.adders   = buildColumns(S.adders,   ADDER_PRESET);
+
+    renderGrid("products"); renderGrid("adders"); renderRules(); renderRaw();
+    $("#tabRules").disabled = !rulesOk;
+    const v = validate();
+    showIssues(v.errors, v.warnings);
+    log(v.errors.length ? "warn" : "ok",
+        "Load complete — " + S.products.length + " products, " + S.adders.length + " adders, "
+        + v.errors.length + " errors, " + v.warnings.length + " warnings.");
+    updateState();
+  }catch(err){
+    log("err","Load failed: " + (err.message||err));
+    await openModal("Load failed", el("div",{},
+      el("p",{text:"HTTP " + (err.status===undefined?"—":err.status) + " — " + (err.message||String(err))}),
+      el("p",{class:"legend",text:"Verify the repository, branch and file paths on the Credentials screen. Both files must already exist on the branch."})
+    ), [{label:"Close", value:true, cls:"primary"}]);
+  }finally{
+    setBusy(false);
+  }
+}
+
+/* ================================= publish ============================== */
+async function publish(){
+  const v = validate();
+  showIssues(v.errors, v.warnings);
+  if(v.errors.length){
+    const ul = el("ul");
+    v.errors.slice(0,40).forEach(e=> ul.appendChild(el("li",{text:e})));
+    if(v.errors.length>40) ul.appendChild(el("li",{text:"… " + (v.errors.length-40) + " more"}));
+    await openModal("Publish blocked — data contract violations", el("div",{},
+      el("p",{text:"Nothing was committed. Fix these before publishing:"}), ul), [{label:"Close",value:true,cls:"primary"}]);
+    log("err","Publish aborted — " + v.errors.length + " validation error(s).");
+    return;
+  }
+
+  const catText = serializeCatalog(), rulText = serializeRules();
+  const targets = [];
+  if(S.catalog!==null && catText !== S.catalogText)
+    targets.push({ name:"catalog", path:S.cfg.catalogPath, text:catText, shaKey:"catalogSha", textKey:"catalogText" });
+  if(S.rules!==null && rulText !== S.rulesText)
+    targets.push({ name:"pricing rules", path:S.cfg.rulesPath, text:rulText, shaKey:"rulesSha", textKey:"rulesText" });
+
+  if(!targets.length){
+    log("info","Nothing to publish — working copy matches the last loaded revision.");
+    await openModal("No changes", el("p",{text:"The in-memory catalog is byte-identical to the revision loaded from GitHub."}),
+      [{label:"Close",value:true,cls:"primary"}]);
+    return;
+  }
+
+  const msgInput = el("input",{type:"text",value:defaultCommitMessage()});
+  const body = el("div",{},
+    el("p",{text:"Files to commit to " + S.cfg.owner + "/" + S.cfg.repo + " @ " + S.cfg.branch + ":"}),
+    el("ul",{}, ...targets.map(t=> el("li",{text: t.path + "  (" + t.text.length + " bytes)"}))),
+    v.warnings.length ? el("p",{class:"legend",text: v.warnings.length + " non-blocking warning(s) — see the strip above the console."}) : null,
+    el("div",{class:"field"}, el("label",{text:"Commit message"}), msgInput)
+  );
+  const go = await openModal("Publish Catalog", body, [
+    { label:"Cancel", value:false },
+    { label:"Commit to " + S.cfg.branch, value:true, cls:"primary" }
+  ]);
+  if(!go) { log("info","Publish cancelled by administrator."); return; }
+
+  const message = msgInput.value.trim() || defaultCommitMessage();
+  setBusy(true,"Publishing…");
+  try{
+    for(const t of targets){
+      log("info","Publishing " + t.path + " …");
+      // 1. Re-read the head SHA so we commit against the current tip.
+      let liveSha = null;
+      try{
+        const live = await getFile(t.path);
+        liveSha = live.sha;
+        if(live.text !== S[t.textKey]){
+          const proceed = await openModal("Remote file changed", el("div",{},
+            el("p",{}, el("b",{text:t.path}), document.createTextNode(" was modified on " + S.cfg.branch + " after you loaded it.")),
+            el("p",{text:"Committing now replaces the remote version with your working copy. Their changes will be overwritten."}),
+            el("p",{class:"legend",text:"Safer: cancel, download a Backup, then Reload and re-apply your edits."})
+          ), [
+            { label:"Cancel", value:false },
+            { label:"Overwrite anyway", value:true, cls:"danger" }
+          ]);
+          if(!proceed){ log("warn","Publish of " + t.path + " cancelled — remote is ahead."); continue; }
+          log("warn","Overwriting remote changes to " + t.path + " at administrator's direction.");
+        }
+      }catch(e){
+        if(e.status===404){ liveSha = null; log("warn", t.path + " does not exist on " + S.cfg.branch + " — it will be created."); }
+        else throw e;
+      }
+
+      // 2. PUT the new content against that SHA.
+      const { data, status } = await putFile(t.path, t.text, liveSha, message);
+      const commitSha = data && data.commit && data.commit.sha ? data.commit.sha : "(none)";
+      const blobSha   = data && data.content && data.content.sha ? data.content.sha : "(none)";
+      S[t.shaKey]  = blobSha;
+      S[t.textKey] = t.text;
+      log("ok","COMMITTED " + t.path + " · HTTP " + status + " · commit ", commitSha);
+      log("info","  blob sha " + blobSha + (data && data.commit && data.commit.html_url ? "  ·  " + data.commit.html_url : ""));
+      if(data && data.commit && data.commit.html_url){
+        const box = $("#clog");
+        box.appendChild(el("div",{class:"ln ok"},
+          el("span",{class:"t",text:stamp()}), el("span",{class:"tag",text:"LINK"}),
+          el("span",{class:"m"}, el("a",{href:data.commit.html_url,target:"_blank",rel:"noopener",style:"color:#8fd0ff",
+            text:data.commit.html_url}))
+        ));
+        box.scrollTop = box.scrollHeight;
+      }
+    }
+
+    // 3. Re-baseline the working copy so dirty flags clear.
+    S.origin = new WeakMap();
+    snapshot(S.products); snapshot(S.adders);
+    S.structDirty = { products:false, adders:false };
+    renderGrid(S.pane==="adders" ? "adders" : "products");
+    renderGrid(S.pane==="adders" ? "products" : "adders");
+    updateState(); renderRaw();
+    log("ok","Publish complete. The Quoter will serve the new catalog once GitHub Pages / raw caches refresh.");
+  }catch(err){
+    const hint = err.status===409 ? "SHA conflict — the branch moved again. Reload and re-apply."
+              : err.status===422 ? "GitHub rejected the payload (bad SHA, protected branch, or empty commit)."
+              : err.status===403 ? "Token lacks contents:write on this repository, or the branch is protected."
+              : err.status===404 ? "Repository, branch or path not found for this token."
+              : err.message;
+    log("err","PUBLISH FAILED — HTTP " + err.status + " — " + hint);
+    await openModal("Publish failed", el("div",{},
+      el("p",{text:"HTTP " + err.status + " — " + hint}),
+      el("p",{class:"legend",text:"Nothing further was committed. Your edits are still in this browser tab; use Backup to save them locally."})
+    ), [{label:"Close",value:true,cls:"primary"}]);
+  }finally{
+    setBusy(false);
+  }
+}
+function defaultCommitMessage(){
+  const d = new Date();
+  const parts = [];
+  const dp = S.products.filter(isRowDirty).length, da = S.adders.filter(isRowDirty).length;
+  if(dp) parts.push(dp + " product" + (dp===1?"":"s"));
+  if(da) parts.push(da + " adder" + (da===1?"":"s"));
+  if(serializeRules() !== S.rulesText && S.rules) parts.push("pricing rules");
+  const what = parts.length ? parts.join(", ") : "catalog data";
+  return "chore(pricing): update " + what + " — " + d.toISOString().slice(0,16).replace("T"," ") + "Z";
+}
+
+/* ============================== state / chrome ========================== */
+let updTimer = null;
+function scheduleUpdate(){
+  if(updTimer) clearTimeout(updTimer);
+  updTimer = setTimeout(()=>{ updTimer=null; updateState(); renderRaw(); }, 140);
+}
+function dirtyCounts(){
+  const dp = S.products.filter(isRowDirty).length;
+  const da = S.adders.filter(isRowDirty).length;
+  const dr = (S.rules!==null && serializeRules()!==S.rulesText) ? 1 : 0;
+  const struct = (S.structDirty.products?1:0) + (S.structDirty.adders?1:0);
+  return { dp, da, dr, struct, total: dp+da+dr+struct };
+}
+function updateState(){
+  const d = dirtyCounts();
+  const pill = $("#pillState");
+  if(S.badCells.size){
+    pill.className = "pill bad";
+    pill.textContent = S.badCells.size + " invalid cell" + (S.badCells.size===1?"":"s");
+  } else if(d.total){
+    pill.className = "pill dirty";
+    const bits = [];
+    if(d.dp) bits.push(d.dp+"p");
+    if(d.da) bits.push(d.da+"a");
+    if(d.dr) bits.push("rules");
+    if(d.struct) bits.push("±rows");
+    pill.textContent = "unsaved: " + bits.join(" ");
+  } else {
+    pill.className = "pill clean";
+    pill.textContent = S.catalog ? "in sync" : "no data";
+  }
+  $("#btnPublish").disabled = !S.catalog || S.badCells.size>0;
+  updateCounts();
+}
+function updateCounts(){
+  const kind = S.pane==="adders" ? "adders" : "products";
+  const total = (kind==="products" ? S.products : S.adders).length;
+  const shown = S.pane==="products" || S.pane==="adders" ? visibleRows(kind).length : total;
+  $("#rowCount").textContent = shown + " / " + total;
+}
+function setBusy(on, label){
+  ["btnPublish","btnReload","btnAdd","btnBackup","btnCols"].forEach(id=>{ const b=$("#"+id); if(b) b.disabled = on; });
+  const p = $("#btnPublish");
+  if(on){ p.dataset.prev = p.textContent; p.textContent = label || "Working…"; }
+  else if(p.dataset.prev){ p.textContent = p.dataset.prev; delete p.dataset.prev; updateState(); }
+}
+function setPane(name){
+  S.pane = name;
+  $$(".tabs button").forEach(b=> b.setAttribute("aria-selected", String(b.dataset.pane===name)));
+  $$(".pane").forEach(p=> p.classList.remove("active"));
+  $("#pane" + name.charAt(0).toUpperCase() + name.slice(1)).classList.add("active");
+  const gridPane = (name==="products"||name==="adders");
+  $("#btnAdd").disabled = !gridPane || !S.catalog;
+  $("#btnCols").disabled = !gridPane || !S.catalog;
+  $("#q").disabled = !gridPane;
+  if(name==="raw") renderRaw();
+  updateCounts();
+}
+function downloadBackup(){
+  const bundle = {
+    exportedAt: new Date().toISOString(),
+    source: { owner:S.cfg.owner, repo:S.cfg.repo, branch:S.cfg.branch,
+              catalogPath:S.cfg.catalogPath, rulesPath:S.cfg.rulesPath,
+              catalogSha:S.catalogSha, rulesSha:S.rulesSha },
+    catalog: S.catalog, pricingRules: S.rules
+  };
+  const blob = new Blob([serialize(bundle)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = el("a",{href:url, download:"price-manager-backup-" + new Date().toISOString().replace(/[:.]/g,"-") + ".json"});
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  log("ok","Local backup downloaded (catalog + pricing rules).");
+}
+
+/* ================================= wiring =============================== */
+function wire(){
+  $("#btnConnect").addEventListener("click", connectAndLoad);
+  $("#btnClearCreds").addEventListener("click", clearCreds);
+  ["fTok","fOwner","fRepo","fBranch","fCatalog","fRules"].forEach(id=>{
+    $("#"+id).addEventListener("keydown", e=>{ if(e.key==="Enter") connectAndLoad(); });
+  });
+
+  $("#btnCreds").addEventListener("click", ()=>{
+    $("#fTok").value = S.cfg.token; $("#fOwner").value = S.cfg.owner; $("#fRepo").value = S.cfg.repo;
+    $("#fBranch").value = S.cfg.branch; $("#fCatalog").value = S.cfg.catalogPath; $("#fRules").value = S.cfg.rulesPath;
+    $("#fRemember").checked = S.cfg.remember;
+    $("#gateErr").textContent = "";
+    $("#gate").classList.remove("hide");
+  });
+
+  $$(".tabs button").forEach(b=> b.addEventListener("click", ()=> setPane(b.dataset.pane)));
+
+  let qTimer=null;
+  $("#q").addEventListener("input", ()=>{
+    if(qTimer) clearTimeout(qTimer);
+    qTimer = setTimeout(()=>{
+      S.filter = $("#q").value;
+      renderGrid(S.pane==="adders" ? "adders" : "products");
+    }, 160);
+  });
+
+  $("#btnUnits").addEventListener("click", ()=>{
+    S.units = S.units==="dollars" ? "cents" : "dollars";
+    $("#btnUnits").textContent = S.units==="dollars" ? "$ dollars" : "¢ cents";
+    $("#btnUnits").title = S.units==="dollars"
+      ? "Money shown in dollars; stored as integer cents. Click for raw cents."
+      : "Money shown as the raw integer cents actually stored. Click for dollars.";
+    S.badCells = new Set();
+    renderGrid("products"); renderGrid("adders"); renderRules();
+    log("info","Money display switched to " + (S.units==="dollars" ? "dollars (stored as integer cents)" : "raw integer cents") + ".");
+    updateState();
+  });
+
+  $("#btnCols").addEventListener("click", openColumnPicker);
+  $("#btnAdd").addEventListener("click", ()=> addRow(S.pane==="adders" ? "adders" : "products"));
+  $("#btnBackup").addEventListener("click", downloadBackup);
+  $("#btnPublish").addEventListener("click", publish);
+
+  $("#btnReload").addEventListener("click", ()=>{
+    const d = dirtyCounts();
+    if(!d.total){ loadAll(); return; }
+    confirmModal("Discard local edits?", el("div",{},
+      el("p",{text:"Reloading fetches the published files again and throws away every unsaved change in this tab."}),
+      el("p",{class:"legend",text:"Unsaved: " + d.dp + " product row(s), " + d.da + " adder row(s)"
+        + (d.dr?", pricing rules":"") + (d.struct?", added/removed rows":"") + "."})
+    ), "Discard and reload", ()=>{ log("warn","Discarding local edits and re-fetching."); loadAll(); });
+  });
+
+  $("#btnClearLog").addEventListener("click", ()=>{ $("#clog").textContent=""; log("info","Console cleared."); });
+  $("#btnToggleLog").addEventListener("click", ()=>{
+    const c = $("#console"); c.classList.toggle("collapsed");
+    $("#btnToggleLog").textContent = c.classList.contains("collapsed") ? "show" : "hide";
+  });
+
+  document.addEventListener("keydown", e=>{
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="s"){ e.preventDefault(); if(!$("#btnPublish").disabled) publish(); }
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="f" && (S.pane==="products"||S.pane==="adders")){
+      e.preventDefault(); $("#q").focus(); $("#q").select();
+    }
+  });
+
+  window.addEventListener("beforeunload", e=>{
+    if(dirtyCounts().total){ e.preventDefault(); e.returnValue = ""; return ""; }
+  });
+}
+
+/* ================================== init ================================ */
+function init(){
+  wire();
+  loadCfg();
+  loadColPrefs();
+  $("#fOwner").value   = S.cfg.owner   || "SimplyDoorsAA";
+  $("#fRepo").value    = S.cfg.repo    || "Claude-Hoelscher-";
+  $("#fBranch").value  = S.cfg.branch  || "main";
+  $("#fCatalog").value = S.cfg.catalogPath;
+  $("#fRules").value   = S.cfg.rulesPath;
+  $("#fTok").value     = S.cfg.token   || "";
+  $("#fRemember").checked = !!S.cfg.remember;
+  $("#btnUnits").textContent = "$ dollars";
+  setPane("products");
+  log("info","Price Manager ready. " + (S.cfg.token ? "Stored credentials found — press Connect." : "Enter a PAT to begin."));
+  if(S.cfg.token && S.cfg.owner && S.cfg.repo) connectAndLoad();
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

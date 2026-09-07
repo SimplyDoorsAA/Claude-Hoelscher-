@@ -1,0 +1,527 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "2026.09.07",
+  "generatedAt": "2026-09-07T00:00:00Z",
+  "currency": "USD",
+  "priceUnit": "integer-cents",
+  "products": [
+    {
+      "id": "5a762b97f5",
+      "sku": "FG1LVCLE3080",
+      "line": "fiberglass",
+      "family": "Fiberglass Doors",
+      "type": "door",
+      "description": "3080 Contemporary 1 Lite Vertical - Mahogany Grain Skin",
+      "glazing": "Clear Low E",
+      "size": {
+        "code": "3080",
+        "widthIn": 36,
+        "heightIn": 96,
+        "label": "3'0\" x 8'0\""
+      },
+      "freightUnits": 1.0,
+      "priceBasis": "list",
+      "prices": {
+        "unfinished": {
+          "slab": 172800,
+          "singlePH": 251600,
+          "doublePH": 448000
+        },
+        "prefinished": {
+          "slab": 233400,
+          "singlePH": 382800,
+          "doublePH": 710400
+        }
+      },
+      "notes": null
+    },
+    {
+      "id": "ec17ad3315",
+      "sku": "FG1LVCLE3068",
+      "line": "fiberglass",
+      "family": "Fiberglass Doors",
+      "type": "door",
+      "description": "3068 Contemporary 1 Lite Vertical - Mahogany Grain Skin",
+      "glazing": "Clear Low E",
+      "size": {
+        "code": "3068",
+        "widthIn": 36,
+        "heightIn": 80,
+        "label": "3'0\" x 6'8\""
+      },
+      "freightUnits": 1.0,
+      "priceBasis": "list",
+      "prices": {
+        "unfinished": {
+          "slab": 154200,
+          "singlePH": 224800,
+          "doublePH": 401600
+        },
+        "prefinished": {
+          "slab": 208900,
+          "singlePH": 342600,
+          "doublePH": 635200
+        }
+      },
+      "notes": null
+    },
+    {
+      "id": "98d4efaaf5",
+      "sku": "FG3LVRSG3080",
+      "line": "fiberglass",
+      "family": "Fiberglass Doors",
+      "type": "door",
+      "description": "3080 Contemporary 3 Lite Vertical - Rain Glass - Smooth Skin",
+      "glazing": "Rain Obscure",
+      "size": {
+        "code": "3080",
+        "widthIn": 36,
+        "heightIn": 96,
+        "label": "3'0\" x 8'0\""
+      },
+      "freightUnits": 1.0,
+      "priceBasis": "list",
+      "prices": {
+        "unfinished": {
+          "slab": 186500,
+          "singlePH": 271900,
+          "doublePH": 484300
+        },
+        "prefinished": {
+          "slab": 251900,
+          "singlePH": 413200,
+          "doublePH": 767600
+        }
+      },
+      "notes": null
+    },
+    {
+      "id": "3c4b67d276",
+      "sku": "FGFLUSH3080",
+      "line": "fiberglass",
+      "family": "Fiberglass Doors",
+      "type": "door",
+      "description": "3080 Flush Panel - Smooth Skin - No Glass",
+      "glazing": null,
+      "size": {
+        "code": "3080",
+        "widthIn": 36,
+        "heightIn": 96,
+        "label": "3'0\" x 8'0\""
+      },
+      "freightUnits": 1.0,
+      "priceBasis": "list",
+      "prices": {
+        "unfinished": {
+          "slab": 98700,
+          "singlePH": 168400,
+          "doublePH": 301200
+        },
+        "prefinished": {
+          "slab": 133900,
+          "singlePH": 262800,
+          "doublePH": 509800
+        }
+      },
+      "notes": null
+    },
+    {
+      "id": "6bf4a0ff6b",
+      "sku": "KMSHK2PN3080",
+      "line": "knotty-alder",
+      "family": "Knotty Alder Doors",
+      "type": "door",
+      "description": "3080 Shaker 2 Panel Square Top - Knotty Alder",
+      "glazing": null,
+      "size": {
+        "code": "3080",
+        "widthIn": 36,
+        "heightIn": 96,
+        "label": "3'0\" x 8'0\""
+      },
+      "freightUnits": 1.2,
+      "priceBasis": "list",
+      "prices": {
+        "unfinished": {
+          "slab": 214600,
+          "singlePH": 301400,
+          "doublePH": 538900
+        },
+        "prefinished": {
+          "slab": 289700,
+          "singlePH": 447600,
+          "doublePH": 842300
+        }
+      },
+      "notes": null
+    },
+    {
+      "id": "e7f3008349",
+      "sku": "KM1LTCLE3080",
+      "line": "knotty-alder",
+      "family": "Knotty Alder Doors",
+      "type": "door",
+      "description": "3080 Full Lite Clear - Knotty Alder - Wrought Iron Ready",
+      "glazing": "Clear Tempered",
+      "size": {
+        "code": "3080",
+        "widthIn": 36,
+        "heightIn": 96,
+        "label": "3'0\" x 8'0\""
+      },
+      "freightUnits": 1.2,
+      "priceBasis": "list",
+      "prices": {
+        "unfinished": {
+          "slab": 246300,
+          "singlePH": 338700,
+          "doublePH": null
+        },
+        "prefinished": {
+          "slab": 332500,
+          "singlePH": 503100,
+          "doublePH": null
+        }
+      },
+      "notes": "Double prehang not offered in this profile."
+    },
+    {
+      "id": "c9e517c6bc",
+      "sku": "MHTDL8L3080",
+      "line": "mahogany",
+      "family": "Mahogany Doors",
+      "type": "door",
+      "description": "3080 True Divided 8 Lite - Honduran Mahogany",
+      "glazing": "Clear Tempered",
+      "size": {
+        "code": "3080",
+        "widthIn": 36,
+        "heightIn": 96,
+        "label": "3'0\" x 8'0\""
+      },
+      "freightUnits": 1.4,
+      "priceBasis": "list",
+      "prices": {
+        "unfinished": {
+          "slab": 389400,
+          "singlePH": 502100,
+          "doublePH": 921700
+        },
+        "prefinished": {
+          "slab": 498600,
+          "singlePH": 714300,
+          "doublePH": 1362800
+        }
+      },
+      "notes": null
+    },
+    {
+      "id": "295dc174d8",
+      "sku": "STL6PN3068",
+      "line": "steel",
+      "family": "Steel Doors",
+      "type": "door",
+      "description": "3068 Six Panel Embossed - 24ga Steel",
+      "glazing": null,
+      "size": {
+        "code": "3068",
+        "widthIn": 36,
+        "heightIn": 80,
+        "label": "3'0\" x 6'8\""
+      },
+      "freightUnits": 0.8,
+      "priceBasis": "list",
+      "prices": {
+        "unfinished": {
+          "slab": 61200,
+          "singlePH": 118900,
+          "doublePH": 214700
+        },
+        "prefinished": {
+          "slab": 84300,
+          "singlePH": 161500,
+          "doublePH": 299400
+        }
+      },
+      "notes": null
+    },
+    {
+      "id": "3b5eb9794d",
+      "sku": "STLHFLT3068",
+      "line": "steel",
+      "family": "Steel Doors",
+      "type": "door",
+      "description": "3068 Half Lite Clear - 24ga Steel",
+      "glazing": "Clear Low E",
+      "size": {
+        "code": "3068",
+        "widthIn": 36,
+        "heightIn": 80,
+        "label": "3'0\" x 6'8\""
+      },
+      "freightUnits": 0.8,
+      "priceBasis": "list",
+      "prices": {
+        "unfinished": {
+          "slab": 79800,
+          "singlePH": 141600,
+          "doublePH": 258300
+        },
+        "prefinished": {
+          "slab": 104900,
+          "singlePH": 189700,
+          "doublePH": 352600
+        }
+      },
+      "notes": null
+    },
+    {
+      "id": "5aeb42d9ce",
+      "sku": "FGSDLT1480",
+      "line": "fiberglass",
+      "family": "Sidelites",
+      "type": "sidelite",
+      "description": "1480 Contemporary 1 Lite Vertical Sidelite - Mahogany Grain Skin",
+      "glazing": "Clear Low E",
+      "size": {
+        "code": "1480",
+        "widthIn": 16,
+        "heightIn": 96,
+        "label": "1'4\" x 8'0\""
+      },
+      "freightUnits": 0.5,
+      "priceBasis": "list",
+      "prices": {
+        "unfinished": {
+          "slab": 86400,
+          "singlePH": null,
+          "doublePH": null
+        },
+        "prefinished": {
+          "slab": 116700,
+          "singlePH": null,
+          "doublePH": null
+        }
+      },
+      "notes": "Sidelites are priced as slabs; prehang is carried by the door unit."
+    }
+  ],
+  "prehangAdders": [
+    {
+      "id": "b618c193ab",
+      "code": "JAMB-4916-FJ",
+      "label": "4-9/16\" Primed Finger-Joint Jamb",
+      "category": "jamb",
+      "appliesTo": [
+        "singlePH",
+        "doublePH"
+      ],
+      "priceBasis": "list",
+      "multiplier": null,
+      "required": true,
+      "prices": {
+        "singlePH": 9800,
+        "doublePH": 16400
+      },
+      "notes": null
+    },
+    {
+      "id": "21368e884b",
+      "code": "JAMB-6916-FJ",
+      "label": "6-9/16\" Primed Finger-Joint Jamb",
+      "category": "jamb",
+      "appliesTo": [
+        "singlePH",
+        "doublePH"
+      ],
+      "priceBasis": "list",
+      "multiplier": null,
+      "required": false,
+      "prices": {
+        "singlePH": 13600,
+        "doublePH": 22900
+      },
+      "notes": null
+    },
+    {
+      "id": "4b58aac18a",
+      "code": "JAMB-4916-OAK",
+      "label": "4-9/16\" Solid Red Oak Jamb",
+      "category": "jamb",
+      "appliesTo": [
+        "singlePH",
+        "doublePH"
+      ],
+      "priceBasis": "list",
+      "multiplier": null,
+      "required": false,
+      "prices": {
+        "singlePH": 24700,
+        "doublePH": 41200
+      },
+      "notes": null
+    },
+    {
+      "id": "00da675e14",
+      "code": "SILL-ADJ-BRZ",
+      "label": "Adjustable Aluminum Sill - Dark Bronze",
+      "category": "sill",
+      "appliesTo": [
+        "singlePH",
+        "doublePH"
+      ],
+      "priceBasis": "list",
+      "multiplier": null,
+      "required": false,
+      "prices": {
+        "singlePH": 7400,
+        "doublePH": 11900
+      },
+      "notes": null
+    },
+    {
+      "id": "2b44d7f793",
+      "code": "SILL-OAK-INS",
+      "label": "Oak Threshold with Composite Substrate",
+      "category": "sill",
+      "appliesTo": [
+        "singlePH",
+        "doublePH"
+      ],
+      "priceBasis": "list",
+      "multiplier": null,
+      "required": false,
+      "prices": {
+        "singlePH": 12800,
+        "doublePH": 20600
+      },
+      "notes": null
+    },
+    {
+      "id": "9595d10e76",
+      "code": "BORE-2375",
+      "label": "2-3/8\" Backset Bore - Single Bore",
+      "category": "machining",
+      "appliesTo": [
+        "singlePH",
+        "doublePH"
+      ],
+      "priceBasis": "list",
+      "multiplier": null,
+      "required": true,
+      "prices": {
+        "singlePH": 2200,
+        "doublePH": 4400
+      },
+      "notes": null
+    },
+    {
+      "id": "a172951aa0",
+      "code": "BORE-MULTI",
+      "label": "Multipoint Lock Prep",
+      "category": "machining",
+      "appliesTo": [
+        "singlePH",
+        "doublePH"
+      ],
+      "priceBasis": "list",
+      "multiplier": null,
+      "required": false,
+      "prices": {
+        "singlePH": 18900,
+        "doublePH": 37800
+      },
+      "notes": null
+    },
+    {
+      "id": "e6c49581e6",
+      "code": "HINGE-BB-ORB",
+      "label": "Ball Bearing Hinges - Oil Rubbed Bronze (per unit)",
+      "category": "hardware",
+      "appliesTo": [
+        "singlePH",
+        "doublePH"
+      ],
+      "priceBasis": "list",
+      "multiplier": null,
+      "required": false,
+      "prices": {
+        "singlePH": 6300,
+        "doublePH": 12600
+      },
+      "notes": null
+    },
+    {
+      "id": "fafbe7ac59",
+      "code": "WSTRIP-QLON",
+      "label": "Q-Lon Weatherstrip Upgrade",
+      "category": "weatherstrip",
+      "appliesTo": [
+        "singlePH",
+        "doublePH"
+      ],
+      "priceBasis": "list",
+      "multiplier": null,
+      "required": false,
+      "prices": {
+        "singlePH": 3900,
+        "doublePH": 6500
+      },
+      "notes": null
+    },
+    {
+      "id": "8bf9bb6c31",
+      "code": "BRICKMLD-PVC",
+      "label": "PVC Brickmould Applied",
+      "category": "trim",
+      "appliesTo": [
+        "singlePH",
+        "doublePH"
+      ],
+      "priceBasis": "list",
+      "multiplier": null,
+      "required": false,
+      "prices": {
+        "singlePH": 11200,
+        "doublePH": 18700
+      },
+      "notes": null
+    },
+    {
+      "id": "de2fc82a28",
+      "code": "PAINT-FACTORY",
+      "label": "Factory Finish Upcharge (applied to slab list)",
+      "category": "finish",
+      "appliesTo": [
+        "singlePH",
+        "doublePH"
+      ],
+      "priceBasis": "list",
+      "multiplier": 0.18,
+      "required": false,
+      "prices": {
+        "singlePH": null,
+        "doublePH": null
+      },
+      "notes": "Percentage adder: slab list x multiplier. Cent prices are null because this line is multiplier-driven."
+    },
+    {
+      "id": "0212a81b06",
+      "code": "OVERSIZE-8FT",
+      "label": "8'0\" Oversize Handling",
+      "category": "handling",
+      "appliesTo": [
+        "singlePH",
+        "doublePH"
+      ],
+      "priceBasis": "list",
+      "multiplier": null,
+      "required": false,
+      "prices": {
+        "singlePH": 4500,
+        "doublePH": 9000
+      },
+      "notes": null
+    }
+  ]
+}
