@@ -1,0 +1,1082 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>SimplyDoors — Quote Builder</title>
+<meta name="description" content="Millwork catalog and quote builder for SimplyDoors sales staff and customers.">
+<script src="https://cdn.tailwindcss.com"
+        onerror="document.documentElement.classList.add('no-tw')"></script>
+<script>
+/* The play CDN is a single point of failure for a tool used in the field, so
+   the page must stay usable when it cannot be reached. Guard the config, and
+   flag the document so the structural fallback stylesheet takes over. */
+if (!window.tailwind) { document.documentElement.classList.add('no-tw'); window.tailwind = {}; }
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        ink:    { DEFAULT:'#1c1917', soft:'#44403c', mute:'#78716c', faint:'#a8a29e' },
+        paper:  { DEFAULT:'#faf9f7', card:'#ffffff', rail:'#f3f1ed', line:'#e4e0d9' },
+        brass:  { DEFAULT:'#9a7b4f', deep:'#7a6039', pale:'#f3ecdf' },
+        forest: { DEFAULT:'#2f4538', deep:'#22332a' }
+      },
+      fontFamily: {
+        display: ['"Cormorant Garamond"','Georgia','Cambria','"Times New Roman"','serif'],
+        sans: ['Inter','system-ui','-apple-system','"Segoe UI"','Roboto','sans-serif'],
+        mono: ['ui-monospace','SFMono-Regular','Menlo','Consolas','monospace']
+      },
+      boxShadow: {
+        card:'0 1px 2px rgba(28,25,23,.04), 0 8px 24px -12px rgba(28,25,23,.18)',
+        lift:'0 2px 6px rgba(28,25,23,.06), 0 24px 48px -20px rgba(28,25,23,.28)',
+        drawer:'-24px 0 60px -30px rgba(28,25,23,.45)'
+      }
+    }
+  }
+};
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html { -webkit-text-size-adjust:100%; }
+  /* Scrims are inert until JS opens them. This is functional state, so it must
+     not depend on Tailwind utilities being available. */
+  #scrim, #detailScrim { opacity:0; pointer-events:none; }
+  /* ---------------------------------------------------------------------
+     Structural fallback: applied only when the Tailwind CDN did not load.
+     Not a reskin — just enough layout that the catalog, drawer and totals
+     remain usable and the page never scrolls sideways.
+     --------------------------------------------------------------------- */
+  .no-tw *, .no-tw *::before, .no-tw *::after { box-sizing:border-box; }
+  .no-tw body { margin:0; overflow-x:hidden; font:15px/1.45 Inter, system-ui, sans-serif; color:#1c1917; }
+  .no-tw img, .no-tw svg { max-width:100%; }
+  .no-tw header, .no-tw section, .no-tw main { display:block; width:100%; }
+  .no-tw header > div, .no-tw main, .no-tw section > div { max-width:1600px; margin:0 auto; padding:.75rem 1rem; }
+  .no-tw header { position:sticky; top:0; background:#faf9f7; border-bottom:1px solid #e4e0d9; z-index:30; }
+  .no-tw header .flex { display:flex; align-items:center; gap:.75rem; }
+  .no-tw #catalog article { border:1px solid #e4e0d9; border-radius:10px; overflow:hidden; background:#fff; }
+  .no-tw #catalog article button { display:flex; flex-direction:column; width:100%; text-align:left;
+                                   background:none; border:0; padding:0; font:inherit; cursor:pointer; }
+  .no-tw #catalog article > button > div:last-child { padding:.75rem; }
+  .no-tw #drawer { position:fixed; inset:auto 0 0 0; height:86vh; background:#fff; z-index:50;
+                   display:flex; flex-direction:column; border-top:1px solid #e4e0d9; }
+  .no-tw #quoteLines { flex:1 1 auto; min-height:0; overflow-y:auto; padding:1rem; }
+  .no-tw #quoteTotals { flex:0 0 auto; border-top:1px solid #e4e0d9; padding:1rem; }
+  .no-tw #drawer > div:first-child { flex:0 0 auto; display:flex; align-items:center; gap:.75rem;
+                                     padding:1rem; border-bottom:1px solid #e4e0d9; }
+  .no-tw #quoteLines > div { border:1px solid #e4e0d9; border-radius:10px; padding:.75rem; margin-bottom:.6rem; }
+  .no-tw #detail { position:fixed; inset:auto 0 0 0; max-height:92vh; overflow:auto; background:#fff; z-index:60; }
+  .no-tw #detail.hidden, .no-tw .hidden { display:none !important; }
+  .no-tw #mobileBar { position:fixed; inset:auto 0 0 0; z-index:30; }
+  .no-tw #mobileBar button { width:100%; background:#2f4538; color:#fff; border:0; padding:.9rem 1rem;
+                             display:flex; justify-content:space-between; align-items:center; font:inherit; }
+  .no-tw #scrim, .no-tw #detailScrim { position:fixed; inset:0; background:rgba(28,25,23,.45); z-index:40; }
+  .no-tw select, .no-tw input { font:inherit; padding:.45rem .6rem; border:1px solid #e4e0d9;
+                                border-radius:8px; background:#fff; max-width:100%; }
+  .no-tw .opt { border:1px solid #e4e0d9; border-radius:8px; padding:.45rem .7rem; background:#fff; margin:0 .35rem .35rem 0; }
+  .no-tw .opt[aria-pressed="true"] { background:#2f4538; color:#fff; }
+  @media (min-width:768px){
+    .no-tw #drawer { inset:0 0 0 auto; width:420px; height:100%; border-left:1px solid #e4e0d9; border-top:0; }
+    .no-tw #mobileBar { display:none; }
+  }
+  body { background:#faf9f7; }
+  /* Hairline rules that stay crisp on retina */
+  .rule { box-shadow: inset 0 -1px 0 #e4e0d9; }
+  .tnum { font-variant-numeric: tabular-nums; }
+  /* Catalog grid — CSS Grid, auto-fill so it reflows on every viewport */
+  .catalog-grid {
+    display:grid; gap:1rem;
+    /* Density matters at 589 products: keep columns tight so several rows of
+       doors are visible at once rather than two oversized cards. */
+    grid-template-columns: repeat(auto-fill, minmax(min(186px, 100%), 1fr));
+  }
+  @media (min-width:1600px){ .catalog-grid { grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); } }
+  @media (max-width:640px){ .catalog-grid { grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:.75rem; } }
+  .door-frame { aspect-ratio: 3 / 5; }
+  /* Drawer */
+  .drawer { transition: transform .32s cubic-bezier(.22,.61,.36,1); }
+  .drawer[data-open="false"] { transform: translateX(101%); }
+  .drawer[data-open="true"]  { transform: translateX(0); }
+  @media (max-width:768px){
+    .drawer[data-open="false"] { transform: translateY(101%); }
+    .drawer[data-open="true"]  { transform: translateY(0); }
+  }
+  .scrim { transition: opacity .28s ease; }
+  /* Respect users who prefer less motion */
+  @media (prefers-reduced-motion: reduce){ .drawer,.scrim{ transition:none; } }
+  /* Option buttons */
+  .opt[aria-pressed="true"] { background:#2f4538; color:#fff; border-color:#2f4538; }
+  .opt:disabled { opacity:.32; cursor:not-allowed; text-decoration:line-through; }
+  /* Hide number spinners */
+  input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  input[type=number]{ -moz-appearance:textfield; }
+  .safe-b { padding-bottom: env(safe-area-inset-bottom, 0px); }
+</style>
+</head>
+<body class="font-sans text-ink antialiased">
+
+<!-- ============================== HEADER ============================== -->
+<header class="sticky top-0 z-30 bg-paper/90 backdrop-blur-md rule">
+  <div class="mx-auto max-w-[1600px] px-4 sm:px-6">
+    <div class="flex items-center gap-3 h-16">
+      <div class="min-w-0">
+        <h1 class="font-display text-2xl sm:text-3xl leading-none tracking-tight">Simply<span class="text-brass">Doors</span></h1>
+        <p class="hidden sm:block text-[11px] uppercase tracking-[.18em] text-ink-mute mt-0.5">Millwork Catalog &amp; Quote Builder</p>
+      </div>
+
+      <div class="flex-1"></div>
+
+      <!-- price context toggle -->
+      <button id="modeToggle" type="button"
+        class="group flex items-center gap-2 rounded-full border border-paper-line bg-paper-card px-3 py-1.5 text-xs font-medium hover:border-brass transition-colors"
+        aria-pressed="false" title="Switch between customer pricing and internal cost">
+        <span id="modeIcon" class="text-brass" aria-hidden="true"></span>
+        <span id="modeLabel" class="tracking-wide">Customer</span>
+      </button>
+
+      <button id="openQuote" type="button"
+        class="flex items-center gap-2 rounded-full bg-forest px-4 py-2 text-sm font-medium text-white hover:bg-forest-deep transition-colors">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M3 3h2l.5 3M7 13h10l3-8H5.5M7 13l-1.5-7M7 13l-2 5h14" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="hidden sm:inline">Quote</span>
+        <span id="quoteCount" class="tnum rounded-full bg-white/20 px-2 py-0.5 text-xs">0</span>
+      </button>
+    </div>
+  </div>
+  <div id="costBanner" class="hidden bg-brass-deep text-white text-[11px] tracking-wide text-center py-1">
+    INTERNAL COST VIEW — figures below are cost, not customer pricing
+  </div>
+</header>
+
+<!-- ============================== FILTERS ============================== -->
+<section class="sticky top-16 z-20 bg-paper/95 backdrop-blur rule">
+  <div class="mx-auto max-w-[1600px] px-4 sm:px-6 py-3">
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="relative flex-1 min-w-[180px]">
+        <svg class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5" stroke-linecap="round"/>
+        </svg>
+        <input id="q" type="search" placeholder="Search description, SKU or size…" autocomplete="off"
+          class="w-full rounded-lg border border-paper-line bg-paper-card pl-9 pr-3 py-2 text-sm placeholder:text-ink-faint focus:border-brass focus:outline-none focus:ring-2 focus:ring-brass/20">
+      </div>
+      <select id="fLine"    class="max-w-[11rem] truncate rounded-lg border border-paper-line bg-paper-card px-3 py-2 text-sm focus:border-brass focus:outline-none"></select>
+      <select id="fFamily"  class="max-w-[12rem] truncate rounded-lg border border-paper-line bg-paper-card px-3 py-2 text-sm focus:border-brass focus:outline-none"></select>
+      <select id="fGlazing" class="max-w-[12rem] truncate rounded-lg border border-paper-line bg-paper-card px-3 py-2 text-sm focus:border-brass focus:outline-none"></select>
+      <select id="fType"    class="max-w-[10rem] truncate rounded-lg border border-paper-line bg-paper-card px-3 py-2 text-sm focus:border-brass focus:outline-none"></select>
+      <button id="clearFilters" type="button" class="rounded-lg px-3 py-2 text-sm text-ink-mute hover:text-ink hover:bg-paper-rail">Clear</button>
+      <span id="resultCount" class="tnum ml-auto text-xs text-ink-mute"></span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== CATALOG ============================== -->
+<main class="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 pb-28 md:pb-10">
+  <div id="loading" class="py-24 text-center">
+    <div class="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-paper-line border-t-brass"></div>
+    <p class="mt-4 text-sm text-ink-mute">Loading catalog…</p>
+  </div>
+  <div id="loadError" class="hidden mx-auto max-w-xl rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+    <p class="font-medium text-red-800">Catalog unavailable</p>
+    <p id="loadErrorMsg" class="mt-2 text-sm text-red-700"></p>
+  </div>
+  <div id="catalog" class="catalog-grid"></div>
+  <div id="sentinel" class="h-16"></div>
+  <p id="emptyState" class="hidden py-24 text-center text-ink-mute">No doors match these filters.</p>
+</main>
+
+<!-- ======================= MOBILE STICKY QUOTE BAR ===================== -->
+<div id="mobileBar" class="hidden md:hidden fixed inset-x-0 bottom-0 z-30 safe-b">
+  <button id="openQuoteMobile" type="button" class="w-full bg-forest text-white px-5 py-3.5 flex items-center justify-between">
+    <span class="text-sm"><span id="mobileCount" class="tnum font-semibold">0</span> in quote</span>
+    <span class="flex items-center gap-2">
+      <span id="mobileTotal" class="tnum font-display text-xl"></span>
+      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+  </button>
+</div>
+
+<!-- ============================== DRAWER ============================== -->
+<div id="scrim" class="scrim fixed inset-0 z-40 bg-ink/40 opacity-0 pointer-events-none" aria-hidden="true"></div>
+<aside id="drawer" data-open="false" role="dialog" aria-modal="true" aria-labelledby="drawerTitle"
+  class="drawer fixed z-50 bg-paper-card shadow-drawer flex flex-col
+         inset-x-0 bottom-0 h-[86vh] rounded-t-2xl
+         md:inset-y-0 md:left-auto md:right-0 md:h-full md:w-[440px] md:rounded-none">
+  <div class="flex items-center gap-3 px-5 py-4 rule">
+    <h2 id="drawerTitle" class="font-display text-2xl">Your Quote</h2>
+    <button id="drawerMode" type="button" aria-pressed="false"
+      title="Switch between customer pricing and internal cost"
+      class="rounded-full bg-paper-rail px-2.5 py-1 text-[10px] uppercase tracking-widest text-ink-mute hover:bg-brass-pale hover:text-brass-deep transition-colors"></button>
+    <div class="flex-1"></div>
+    <button id="closeQuote" type="button" class="rounded-full p-2 hover:bg-paper-rail" aria-label="Close quote">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div id="quoteLines" class="flex-1 overflow-y-auto px-5 py-4 space-y-3"></div>
+  <div id="quoteTotals" class="rule border-t border-paper-line px-5 py-4 safe-b"></div>
+</aside>
+
+<!-- ========================== PRODUCT DETAIL ========================== -->
+<div id="detailScrim" class="scrim fixed inset-0 z-50 bg-ink/50 opacity-0 pointer-events-none"></div>
+<section id="detail" role="dialog" aria-modal="true" aria-labelledby="detailTitle"
+  class="fixed z-[60] hidden inset-x-0 bottom-0 max-h-[92vh] overflow-y-auto rounded-t-2xl bg-paper-card shadow-lift
+         md:inset-0 md:m-auto md:h-fit md:max-h-[90vh] md:w-[min(940px,94vw)] md:rounded-2xl"></section>
+
+<script type="module">
+/* ===========================================================================
+   App B — SimplyDoors Quote Builder
+   Vanilla ES modules. All money maths is delegated to the pricing engine;
+   this file only holds state, fetches data, and renders.
+
+   Layout of this file:
+     1. CONFIG          — paths and constants
+     2. STATE           — the single mutable store + helpers
+     3. DATA            — fetching and engine construction
+     4. SELECTORS       — derived views over state (filtering, quote pricing)
+     5. RENDER          — pure-ish DOM builders, one per region
+     6. EVENTS          — wiring, then boot
+   =========================================================================== */
+
+import {
+  createEngine, formatCents, applyMargin,
+  FINISHES, CONFIGS, CONFIG_LABELS, FINISH_LABELS
+} from "../packages/pricing-engine/index.js";
+
+/* ------------------------------- 1. CONFIG ------------------------------- */
+
+const CONFIG = {
+  catalogUrl: "../data/catalog.json",
+  rulesUrl:   "../data/pricing-rules.json",
+  imageBase:  "./assets/doors/",     // ./assets/doors/{sku}.webp
+  imageExt:   ".webp",
+  pageSize:   48                     // cards rendered per chunk while scrolling
+};
+
+const LINE_LABELS = {
+  fiberglass: "Fiberglass", mahogany: "Mahogany",
+  knotty_alder: "Knotty Alder", barn: "Barn"
+};
+const TYPE_LABELS = { door: "Doors", sidelite: "Sidelites", barn_slab: "Barn Slabs" };
+const titleize = s => String(s == null ? "" : s).replace(/[_-]+/g, " ").replace(/\b\w/g, m => m.toUpperCase());
+
+/* -------------------------------- 2. STATE ------------------------------- */
+
+const state = {
+  engine: null,
+  ready: false,
+  mode: "customer",                       // "customer" | "cost"
+  filters: { q: "", line: "", family: "", glazing: "", type: "" },
+  rendered: 0,                            // how many cards are in the DOM
+  quote: { lines: [] },                   // [{ uid, productId, finish, config, qty, accessories[] }]
+  drawerOpen: false,
+  draft: null                             // the product-detail working copy
+};
+
+let uidSeq = 1;
+const nextUid = () => "L" + (uidSeq++);
+
+const isCost = () => state.mode === "cost";
+
+/** Persist the quote so a refresh on a job site does not lose it. */
+const STORE_KEY = "simplydoors.quote.v1";
+function saveQuote() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({ lines: state.quote.lines, uidSeq })); } catch (e) {}
+}
+function restoreQuote() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const o = JSON.parse(raw);
+    if (o && Array.isArray(o.lines)) {
+      // drop lines whose product is no longer in the published catalog
+      state.quote.lines = o.lines.filter(l => state.engine.productById(l.productId));
+      uidSeq = Number(o.uidSeq) || state.quote.lines.length + 1;
+    }
+  } catch (e) {}
+}
+
+/* -------------------------------- 3. DATA -------------------------------- */
+
+async function fetchJson(url) {
+  const res = await fetch(url, { cache: "no-cache" });
+  if (!res.ok) throw new Error(url.split("/").pop() + " — HTTP " + res.status);
+  return res.json();
+}
+
+async function loadData() {
+  const [catalog, rules] = await Promise.all([
+    fetchJson(CONFIG.catalogUrl),
+    fetchJson(CONFIG.rulesUrl)
+  ]);
+  state.engine = createEngine(catalog, rules);
+  state.ready = true;
+  return state.engine;
+}
+
+/* ------------------------------ 4. SELECTORS ----------------------------- */
+
+function filteredProducts() {
+  const { q, line, family, glazing, type } = state.filters;
+  const terms = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  return state.engine.products.filter(p => {
+    if (line && p.line !== line) return false;
+    if (family && p.family !== family) return false;
+    if (glazing && p.glazing !== glazing) return false;
+    if (type && p.type !== type) return false;
+    if (!terms.length) return true;
+    const hay = (p.description + " " + p.sku + " " + (p.size && p.size.label || "") + " " + (p.glazing || "")).toLowerCase();
+    return terms.every(t => hay.includes(t));
+  });
+}
+
+/** The whole quote, priced by the engine. Never compute money outside this. */
+function pricedQuote() {
+  return state.engine.priceQuote({ lines: state.quote.lines });
+}
+
+/** Card price: the cheapest offered configuration, in the active context. */
+function fromPrice(product) {
+  const opts = state.engine.availableOptions(product.id);
+  const first = opts.firstOffered();
+  if (!first) return null;
+  let best = null;
+  for (const f of FINISHES) for (const c of CONFIGS) {
+    if (!opts.isOffered(f, c)) continue;
+    const l = state.engine.priceLine({ productId: product.id, finish: f, config: c, qty: 1 });
+    const v = isCost() ? l.unitCostCents : l.unitSellCents;
+    if (v !== null && (best === null || v < best)) best = v;
+  }
+  return best;
+}
+
+/* ------------------------------- 5. RENDER ------------------------------- */
+
+const $ = sel => document.querySelector(sel);
+const el = (tag, cls, text) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+};
+
+/* --- 5a. architectural SVG silhouette, used when a photo is missing ------ */
+/* Drawn from the product itself so a wall of fallbacks still reads as a
+   catalog rather than as a wall of broken images. */
+function doorSilhouette(product) {
+  const d = (product.description || "").toLowerCase();
+  const glazed = !!product.glazing && product.type !== "barn_slab";
+  const full   = /full lite|1 lite|full glass/.test(d);
+  const half   = /1\/2 lite|half lite|3\/4 lite|2\/3/.test(d);
+  const lites  = /(\d+)\s*lite/.exec(d);
+  const nLite  = lites ? Math.min(12, parseInt(lites[1], 10)) : 1;
+  const arched = /arch|circle top|radius/.test(d);
+  const slim   = product.type === "sidelite";
+
+  const W = 120, H = 200, m = slim ? 34 : 14;          // sidelites read narrower
+  const x0 = m, x1 = W - m, y0 = 12, y1 = H - 10;
+  const iw = x1 - x0;
+  const svgns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgns, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("class", "h-full w-full");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", product.description || "Door illustration");
+
+  const add = (name, attrs) => {
+    const n = document.createElementNS(svgns, name);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    svg.appendChild(n);
+    return n;
+  };
+
+  add("rect", { x: 0, y: 0, width: W, height: H, fill: "#f6f3ee" });
+  // frame
+  add("rect", { x: x0 - 5, y: y0 - 5, width: iw + 10, height: (y1 - y0) + 10,
+                fill: "none", stroke: "#d8d1c5", "stroke-width": 1.5 });
+  // slab
+  add("rect", { x: x0, y: y0, width: iw, height: y1 - y0, fill: "#efe9de",
+                stroke: "#c9c0b0", "stroke-width": 1.2 });
+
+  // glazing region
+  const gx = x0 + 9, gw = iw - 18;
+  if (glazed) {
+    const gy = full ? y0 + 10 : (half ? y0 + 10 : y0 + 12);
+    const gh = full ? (y1 - y0) - 34 : (half ? (y1 - y0) * 0.52 : (y1 - y0) * 0.34);
+    if (arched) {
+      const r = gw / 2;
+      const p = add("path", {
+        d: `M ${gx} ${gy + gh} L ${gx} ${gy + r} A ${r} ${r} 0 0 1 ${gx + gw} ${gy + r} L ${gx + gw} ${gy + gh} Z`,
+        fill: "#dfe6e6", stroke: "#b9b1a2", "stroke-width": 1 });
+      p.setAttribute("opacity", ".9");
+    } else {
+      add("rect", { x: gx, y: gy, width: gw, height: gh, fill: "#dfe6e6",
+                    stroke: "#b9b1a2", "stroke-width": 1 });
+    }
+    // muntins for multi-lite doors
+    if (nLite > 1) {
+      const cols = nLite <= 3 ? 1 : 2;
+      const rows = Math.max(1, Math.ceil(nLite / cols));
+      for (let i = 1; i < cols; i++)
+        add("line", { x1: gx + (gw / cols) * i, y1: gy, x2: gx + (gw / cols) * i, y2: gy + gh,
+                      stroke: "#b9b1a2", "stroke-width": 1 });
+      for (let j = 1; j < rows; j++)
+        add("line", { x1: gx, y1: gy + (gh / rows) * j, x2: gx + gw, y2: gy + (gh / rows) * j,
+                      stroke: "#b9b1a2", "stroke-width": 1 });
+    }
+    // lower panel
+    if (!full) {
+      const py = gy + gh + 10;
+      add("rect", { x: gx, y: py, width: gw, height: Math.max(10, y1 - py - 10),
+                    fill: "none", stroke: "#c9c0b0", "stroke-width": 1 });
+    }
+  } else if (product.type === "barn_slab") {
+    add("line", { x1: x0, y1: y0, x2: x1, y2: y1, stroke: "#c9c0b0", "stroke-width": 1 });
+    add("line", { x1: x1, y1: y0, x2: x0, y2: y1, stroke: "#c9c0b0", "stroke-width": 1 });
+    add("rect", { x: gx, y: y0 + 8, width: gw, height: (y1 - y0) - 16, fill: "none",
+                  stroke: "#c9c0b0", "stroke-width": 1 });
+  } else {
+    // solid panel door: two stacked panels
+    const ph = ((y1 - y0) - 30) / 2;
+    add("rect", { x: gx, y: y0 + 10, width: gw, height: ph, fill: "none", stroke: "#c9c0b0", "stroke-width": 1 });
+    add("rect", { x: gx, y: y0 + 20 + ph, width: gw, height: ph, fill: "none", stroke: "#c9c0b0", "stroke-width": 1 });
+  }
+
+  // handle
+  add("circle", { cx: x1 - 8, cy: (y0 + y1) / 2, r: 1.8, fill: "#9a7b4f" });
+  return svg;
+}
+
+/* --- 5b. catalog cards --------------------------------------------------- */
+
+function productCard(product) {
+  const card = el("article",
+    "group relative flex flex-col overflow-hidden rounded-xl border border-paper-line bg-paper-card shadow-card transition-shadow hover:shadow-lift");
+
+  const btn = el("button", "text-left flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-brass/40 rounded-xl");
+  btn.type = "button";
+  btn.addEventListener("click", () => openDetail(product.id));
+
+  const frame = el("div", "door-frame relative w-full overflow-hidden bg-paper-rail");
+  const img = document.createElement("img");
+  img.src = CONFIG.imageBase + encodeURIComponent(product.sku) + CONFIG.imageExt;
+  img.alt = product.description || product.sku;
+  img.loading = "lazy";
+  img.decoding = "async";
+  img.className = "h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]";
+  // Required fallback: swap a missing photo for the drawn silhouette.
+  img.addEventListener("error", function onImgError() {
+    img.removeEventListener("error", onImgError);
+    const svg = doorSilhouette(product);
+    svg.classList.add("transition-transform", "duration-500", "group-hover:scale-[1.03]");
+    img.replaceWith(svg);
+  }, { once: true });
+  frame.appendChild(img);
+
+  if (product.type !== "door") {
+    const tag = el("span",
+      "absolute left-2 top-2 rounded-full bg-ink/75 px-2 py-0.5 text-[10px] uppercase tracking-widest text-white",
+      product.type === "sidelite" ? "Sidelite" : "Barn");
+    frame.appendChild(tag);
+  }
+  btn.appendChild(frame);
+
+  const body = el("div", "flex flex-1 flex-col gap-1 p-3");
+  body.appendChild(el("p", "text-[10px] uppercase tracking-[.14em] text-brass",
+    LINE_LABELS[product.line] || titleize(product.line)));
+  body.appendChild(el("h3", "font-display text-[17px] leading-snug line-clamp-2", product.description));
+  const meta = el("p", "text-xs text-ink-mute",
+    [product.size && product.size.label, product.glazing].filter(Boolean).join(" · "));
+  body.appendChild(meta);
+
+  const foot = el("div", "mt-auto flex items-end justify-between pt-2");
+  const from = fromPrice(product);
+  const priceWrap = el("div", "");
+  priceWrap.appendChild(el("p", "text-[10px] uppercase tracking-widest text-ink-faint",
+    isCost() ? "Cost from" : "From"));
+  priceWrap.appendChild(el("p", "tnum font-display text-xl leading-none", formatCents(from)));
+  foot.appendChild(priceWrap);
+  foot.appendChild(el("span", "text-xs font-mono text-ink-faint", product.sku));
+  body.appendChild(foot);
+
+  btn.appendChild(body);
+  card.appendChild(btn);
+  return card;
+}
+
+function renderCatalog(reset = true) {
+  const grid = $("#catalog");
+  const list = filteredProducts();
+  if (reset) { grid.textContent = ""; state.rendered = 0; }
+
+  const slice = list.slice(state.rendered, state.rendered + CONFIG.pageSize);
+  const frag = document.createDocumentFragment();
+  slice.forEach(p => frag.appendChild(productCard(p)));
+  grid.appendChild(frag);
+  state.rendered += slice.length;
+
+  $("#resultCount").textContent =
+    list.length.toLocaleString() + " of " + state.engine.products.length.toLocaleString() + " products";
+  $("#emptyState").classList.toggle("hidden", list.length > 0);
+  return list.length;
+}
+
+/* --- 5c. filters --------------------------------------------------------- */
+
+function fillSelect(sel, values, allLabel, labeller) {
+  sel.textContent = "";
+  const first = el("option", null, allLabel);
+  first.value = "";
+  sel.appendChild(first);
+  values.forEach(v => {
+    const o = el("option", null, labeller ? labeller(v) : v);
+    o.value = v;
+    sel.appendChild(o);
+  });
+}
+
+function renderFilters() {
+  const f = state.engine.facets();
+  fillSelect($("#fLine"), f.lines, "All lines", v => LINE_LABELS[v] || titleize(v));
+  fillSelect($("#fFamily"), f.families, "All families");
+  fillSelect($("#fGlazing"), f.glazings, "All glass");
+  fillSelect($("#fType"), f.types, "All types", v => TYPE_LABELS[v] || titleize(v));
+}
+
+/* --- 5d. product detail sheet -------------------------------------------- */
+
+function optionButton(label, pressed, disabled, onClick, title) {
+  const b = el("button",
+    "opt rounded-lg border border-paper-line bg-paper-card px-3 py-2 text-sm transition-colors hover:border-brass disabled:hover:border-paper-line",
+    label);
+  b.type = "button";
+  b.setAttribute("aria-pressed", String(!!pressed));
+  b.disabled = !!disabled;
+  if (title) b.title = title;
+  if (!disabled) b.addEventListener("click", onClick);
+  return b;
+}
+
+function openDetail(productId) {
+  const product = state.engine.productById(productId);
+  if (!product) return;
+  const opts = state.engine.availableOptions(productId);
+  const first = opts.firstOffered();
+  state.draft = {
+    productId, qty: 1,
+    finish: first ? first.finish : "unfinished",
+    config: first ? first.config : "slab",
+    accessories: []
+  };
+  renderDetail();
+  $("#detail").classList.remove("hidden");
+  requestAnimationFrame(() => {
+    $("#detailScrim").style.opacity = "1";
+    $("#detailScrim").style.pointerEvents = "auto";
+  });
+  document.body.style.overflow = "hidden";
+}
+
+function closeDetail() {
+  $("#detail").classList.add("hidden");
+  $("#detailScrim").style.opacity = "0";
+  $("#detailScrim").style.pointerEvents = "none";
+  state.draft = null;
+  if (!state.drawerOpen) document.body.style.overflow = "";
+}
+
+function renderDetail() {
+  const d = state.draft;
+  if (!d) return;
+  const product = state.engine.productById(d.productId);
+  const opts = state.engine.availableOptions(d.productId);
+  const line = state.engine.priceLine({
+    productId: d.productId, finish: d.finish, config: d.config, qty: d.qty, accessories: d.accessories
+  });
+
+  const root = $("#detail");
+  root.textContent = "";
+
+  const wrap = el("div", "grid md:grid-cols-[minmax(0,340px)_minmax(0,1fr)]");
+
+  /* image column */
+  const imgCol = el("div", "relative bg-paper-rail p-6 hidden md:flex items-center justify-center");
+  const holder = el("div", "door-frame w-full max-w-[260px] overflow-hidden rounded-lg bg-paper-card shadow-card");
+  const img = document.createElement("img");
+  img.src = CONFIG.imageBase + encodeURIComponent(product.sku) + CONFIG.imageExt;
+  img.alt = product.description;
+  img.className = "h-full w-full object-cover";
+  img.addEventListener("error", function onErr() {
+    img.removeEventListener("error", onErr);
+    img.replaceWith(doorSilhouette(product));
+  }, { once: true });
+  holder.appendChild(img);
+  imgCol.appendChild(holder);
+
+  /* body column */
+  const body = el("div", "p-5 sm:p-6 flex flex-col gap-5");
+
+  const head = el("div", "flex items-start gap-3");
+  const headText = el("div", "min-w-0 flex-1");
+  headText.appendChild(el("p", "text-[10px] uppercase tracking-[.16em] text-brass",
+    (LINE_LABELS[product.line] || titleize(product.line)) + " · " + product.family));
+  const h = el("h2", "font-display text-2xl sm:text-3xl leading-tight", product.description);
+  h.id = "detailTitle";
+  headText.appendChild(h);
+  headText.appendChild(el("p", "mt-1 text-sm text-ink-mute",
+    [product.size && product.size.label, product.glazing, "SKU " + product.sku].filter(Boolean).join(" · ")));
+  head.appendChild(headText);
+  const close = el("button", "rounded-full p-2 hover:bg-paper-rail shrink-0");
+  close.type = "button";
+  close.setAttribute("aria-label", "Close");
+  close.innerHTML = '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>';
+  close.addEventListener("click", closeDetail);
+  head.appendChild(close);
+  body.appendChild(head);
+
+  /* finish */
+  const finishBlock = el("div", "");
+  finishBlock.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-mute", "Finish"));
+  const finishRow = el("div", "flex flex-wrap gap-2");
+  FINISHES.forEach(f => {
+    const anyConfig = CONFIGS.some(c => opts.isOffered(f, c));
+    finishRow.appendChild(optionButton(
+      FINISH_LABELS[f], d.finish === f, !anyConfig,
+      () => {
+        d.finish = f;
+        if (!opts.isOffered(f, d.config)) {
+          const c = CONFIGS.find(c => opts.isOffered(f, c));
+          if (c) d.config = c;
+        }
+        renderDetail();
+      },
+      anyConfig ? "" : "Not offered in this finish"));
+  });
+  finishBlock.appendChild(finishRow);
+  body.appendChild(finishBlock);
+
+  /* configuration */
+  const cfgBlock = el("div", "");
+  cfgBlock.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-mute", "Configuration"));
+  const cfgRow = el("div", "flex flex-wrap gap-2");
+  CONFIGS.forEach(c => {
+    const offered = opts.isOffered(d.finish, c);
+    cfgRow.appendChild(optionButton(
+      CONFIG_LABELS[c], d.config === c, !offered,
+      () => { d.config = c; renderDetail(); },
+      offered ? "" : "Not offered in " + FINISH_LABELS[d.finish].toLowerCase()));
+  });
+  cfgBlock.appendChild(cfgRow);
+  if (!opts.isOffered(d.finish, d.config)) {
+    cfgBlock.appendChild(el("p", "mt-2 text-xs text-red-700",
+      "This combination is not offered — pick another."));
+  }
+  body.appendChild(cfgBlock);
+
+  /* accessories */
+  body.appendChild(accessoryBlock(product, d));
+
+  /* quantity + price + add */
+  const foot = el("div", "mt-auto rounded-xl bg-paper-rail p-4");
+  const qtyRow = el("div", "flex items-center gap-3");
+  qtyRow.appendChild(el("span", "text-[11px] uppercase tracking-widest text-ink-mute", "Quantity"));
+  const dec = el("button", "h-8 w-8 rounded-lg border border-paper-line bg-paper-card text-lg leading-none", "−");
+  dec.type = "button";
+  dec.addEventListener("click", () => { d.qty = Math.max(1, d.qty - 1); renderDetail(); });
+  const qty = document.createElement("input");
+  qty.type = "number"; qty.min = "1"; qty.value = String(d.qty);
+  qty.className = "tnum w-16 rounded-lg border border-paper-line bg-paper-card px-2 py-1 text-center";
+  qty.addEventListener("change", () => { d.qty = Math.max(1, parseInt(qty.value, 10) || 1); renderDetail(); });
+  const inc = el("button", "h-8 w-8 rounded-lg border border-paper-line bg-paper-card text-lg leading-none", "+");
+  inc.type = "button";
+  inc.addEventListener("click", () => { d.qty += 1; renderDetail(); });
+  qtyRow.append(dec, qty, inc);
+  foot.appendChild(qtyRow);
+
+  const priceRow = el("div", "mt-4 flex items-end justify-between gap-4");
+  const pv = el("div", "");
+  pv.appendChild(el("p", "text-[10px] uppercase tracking-widest text-ink-faint",
+    isCost() ? "Unit cost" : "Unit price"));
+  pv.appendChild(el("p", "tnum font-display text-3xl leading-none",
+    formatCents(isCost() ? line.unitCostCents : line.unitSellCents)));
+  if (d.qty > 1) {
+    pv.appendChild(el("p", "tnum mt-1 text-xs text-ink-mute",
+      d.qty + " × — " + formatCents(isCost() ? line.totalCostCents : line.totalSellCents) + " total"));
+  }
+  priceRow.appendChild(pv);
+
+  const add = el("button",
+    "rounded-xl bg-forest px-5 py-3 text-sm font-medium text-white hover:bg-forest-deep disabled:opacity-40 disabled:hover:bg-forest",
+    "Add to quote");
+  add.type = "button";
+  add.disabled = line.notOffered;
+  add.addEventListener("click", () => {
+    state.quote.lines.push({
+      uid: nextUid(), productId: d.productId, finish: d.finish, config: d.config,
+      qty: d.qty, accessories: d.accessories.slice()
+    });
+    saveQuote();
+    closeDetail();
+    renderQuote();
+    openDrawer();
+  });
+  priceRow.appendChild(add);
+  foot.appendChild(priceRow);
+
+  if (line.freightCents > 0) {
+    foot.appendChild(el("p", "mt-3 text-[11px] text-ink-mute",
+      "Includes " + formatCents(line.freightCents) + " prehang freight per unit."));
+  }
+  body.appendChild(foot);
+
+  wrap.append(imgCol, body);
+  root.appendChild(wrap);
+}
+
+/* --- 5e. accessories ----------------------------------------------------- */
+
+function accessoryBlock(product, draft) {
+  const block = el("div", "");
+  block.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-mute", "Add to this opening"));
+
+  const chosen = el("div", "mb-2 flex flex-col gap-1.5");
+  draft.accessories.forEach((acc, i) => {
+    const priced = state.engine.priceLine({
+      productId: draft.productId, finish: draft.finish, config: draft.config, qty: 1, accessories: [acc]
+    }).accessories[0];
+    const row = el("div", "flex items-center gap-2 rounded-lg border border-paper-line bg-paper-card px-3 py-2");
+    row.appendChild(el("span", "flex-1 truncate text-sm", priced.label));
+    row.appendChild(el("span", "tnum text-sm text-ink-mute",
+      formatCents(isCost() ? priced.costCents : applyMargin(priced.costCents, state.engine.defaultMarginPercent))));
+    const rm = el("button", "rounded p-1 text-ink-faint hover:text-red-700", "✕");
+    rm.type = "button";
+    rm.setAttribute("aria-label", "Remove " + priced.label);
+    rm.addEventListener("click", () => { draft.accessories.splice(i, 1); renderDetail(); });
+    row.appendChild(rm);
+    chosen.appendChild(row);
+  });
+  block.appendChild(chosen);
+
+  const picker = el("div", "flex flex-wrap gap-2");
+  const sel = document.createElement("select");
+  sel.className = "flex-1 min-w-[200px] rounded-lg border border-paper-line bg-paper-card px-3 py-2 text-sm";
+
+  const optgroup = (label) => { const g = document.createElement("optgroup"); g.label = label; sel.appendChild(g); return g; };
+  const placeholder = el("option", null, "Choose a sidelite, component or hardware…");
+  placeholder.value = "";
+  sel.appendChild(placeholder);
+
+  // sidelites of the same line read first — they are what actually pairs
+  const sidelites = state.engine.products
+    .filter(p => p.type === "sidelite" && p.line === product.line)
+    .slice(0, 80);
+  if (sidelites.length) {
+    const g = optgroup("Sidelites — " + (LINE_LABELS[product.line] || titleize(product.line)));
+    sidelites.forEach(p => {
+      const o = el("option", null, p.description);
+      o.value = "product:" + p.id;
+      g.appendChild(o);
+    });
+  }
+  const hw = state.engine.hardwareList();
+  if (hw.length) {
+    const g = optgroup("Hardware");
+    hw.forEach(h => {
+      const variants = h.finishVariantsCents ? Object.keys(h.finishVariantsCents) : [];
+      if (variants.length > 1) {
+        variants.forEach(v => {
+          const o = el("option", null, (h.description || h.sku) + " — " + titleize(v));
+          o.value = "hardware:" + h.id + ":" + v;
+          g.appendChild(o);
+        });
+      } else {
+        const o = el("option", null, h.description || h.sku);
+        o.value = "hardware:" + h.id + (variants.length ? ":" + variants[0] : "");
+        g.appendChild(o);
+      }
+    });
+  }
+  const comps = state.engine.componentList();
+  if (comps.length) {
+    const g = optgroup("Components");
+    comps.forEach(c => {
+      const o = el("option", null, c.description);
+      o.value = "component:" + c.id;
+      g.appendChild(o);
+    });
+  }
+  picker.appendChild(sel);
+
+  const addBtn = el("button",
+    "rounded-lg border border-forest px-4 py-2 text-sm font-medium text-forest hover:bg-forest hover:text-white transition-colors", "Add");
+  addBtn.type = "button";
+  addBtn.addEventListener("click", () => {
+    if (!sel.value) return;
+    const [kind, id, variant] = sel.value.split(":");
+    const acc = { kind, id, qty: 1 };
+    if (variant) acc.variant = variant;
+    if (kind === "product") { acc.finish = draft.finish; acc.config = "slab"; }
+    draft.accessories.push(acc);
+    sel.value = "";
+    renderDetail();
+  });
+  picker.appendChild(addBtn);
+  block.appendChild(picker);
+
+  if (!state.engine.products.some(p => p.type === "transom")) {
+    block.appendChild(el("p", "mt-2 text-[11px] text-ink-faint",
+      "The published catalog contains no transoms; sidelites, components and hardware are shown."));
+  }
+  return block;
+}
+
+/* --- 5f. quote drawer ---------------------------------------------------- */
+
+function renderQuote() {
+  const q = pricedQuote();
+  const host = $("#quoteLines");
+  host.textContent = "";
+
+  $("#quoteCount").textContent = String(q.unitCount);
+  $("#mobileCount").textContent = String(q.unitCount);
+  $("#mobileTotal").textContent = formatCents(isCost() ? q.totalCostCents : q.grandTotalSellCents);
+  $("#mobileBar").classList.toggle("hidden", q.lineCount === 0);
+  const dm = $("#drawerMode");
+  dm.textContent = isCost() ? "Cost view" : "Customer";
+  dm.setAttribute("aria-pressed", String(isCost()));
+
+  if (!q.lineCount) {
+    const empty = el("div", "py-16 text-center");
+    empty.appendChild(el("p", "font-display text-xl text-ink-mute", "No doors yet"));
+    empty.appendChild(el("p", "mt-1 text-sm text-ink-faint", "Choose a door from the catalog to begin a quote."));
+    host.appendChild(empty);
+    $("#quoteTotals").textContent = "";
+    return;
+  }
+
+  q.lines.forEach((l, i) => {
+    const spec = state.quote.lines[i];
+    const row = el("div", "rounded-xl border border-paper-line p-3");
+    const top = el("div", "flex gap-3");
+
+    const thumb = el("div", "h-16 w-11 shrink-0 overflow-hidden rounded bg-paper-rail");
+    if (l.product) {
+      const im = document.createElement("img");
+      im.src = CONFIG.imageBase + encodeURIComponent(l.sku) + CONFIG.imageExt;
+      im.alt = ""; im.className = "h-full w-full object-cover";
+      im.addEventListener("error", function onE() {
+        im.removeEventListener("error", onE);
+        im.replaceWith(doorSilhouette(l.product));
+      }, { once: true });
+      thumb.appendChild(im);
+    }
+    top.appendChild(thumb);
+
+    const info = el("div", "min-w-0 flex-1");
+    info.appendChild(el("p", "font-display text-[15px] leading-snug line-clamp-2", l.description));
+    info.appendChild(el("p", "mt-0.5 text-xs text-ink-mute",
+      FINISH_LABELS[l.finish] + " · " + CONFIG_LABELS[l.config]));
+    if (l.notOffered) {
+      info.appendChild(el("p", "mt-1 text-xs font-medium text-red-700",
+        "No longer offered in this combination — remove or reconfigure."));
+    }
+    l.accessories.forEach(a => {
+      info.appendChild(el("p", "mt-0.5 text-xs text-ink-faint",
+        "+ " + a.label + (a.notOffered ? " (unavailable)" : "")));
+    });
+    top.appendChild(info);
+
+    const money = el("div", "text-right shrink-0");
+    money.appendChild(el("p", "tnum font-display text-lg leading-none",
+      formatCents(isCost() ? l.totalCostCents : l.totalSellCents)));
+    if (l.qty > 1) {
+      money.appendChild(el("p", "tnum mt-0.5 text-[11px] text-ink-faint",
+        l.qty + " × " + formatCents(isCost() ? l.unitCostCents : l.unitSellCents)));
+    }
+    top.appendChild(money);
+    row.appendChild(top);
+
+    const ctrl = el("div", "mt-2 flex items-center gap-2");
+    const dec = el("button", "h-7 w-7 rounded border border-paper-line text-sm", "−");
+    dec.type = "button";
+    dec.addEventListener("click", () => { spec.qty = Math.max(1, spec.qty - 1); saveQuote(); renderQuote(); });
+    const n = el("span", "tnum w-8 text-center text-sm", String(l.qty));
+    const inc = el("button", "h-7 w-7 rounded border border-paper-line text-sm", "+");
+    inc.type = "button";
+    inc.addEventListener("click", () => { spec.qty += 1; saveQuote(); renderQuote(); });
+    const spacer = el("div", "flex-1");
+    const rm = el("button", "text-xs text-ink-faint hover:text-red-700", "Remove");
+    rm.type = "button";
+    rm.addEventListener("click", () => {
+      state.quote.lines = state.quote.lines.filter(x => x.uid !== spec.uid);
+      saveQuote(); renderQuote();
+    });
+    ctrl.append(dec, n, inc, spacer, rm);
+    row.appendChild(ctrl);
+    host.appendChild(row);
+  });
+
+  renderTotals(q);
+}
+
+function renderTotals(q) {
+  const box = $("#quoteTotals");
+  box.textContent = "";
+
+  const line = (label, value, cls) => {
+    const r = el("div", "flex items-baseline justify-between " + (cls || ""));
+    r.appendChild(el("span", "text-sm text-ink-mute", label));
+    r.appendChild(el("span", "tnum text-sm", value));
+    return r;
+  };
+
+  if (isCost()) {
+    box.appendChild(line("Freight (prehang)", formatCents(q.totalFreightCents)));
+    if (q.totalLaborCents) box.appendChild(line("Labour", formatCents(q.totalLaborCents)));
+    box.appendChild(line("Margin @ " + Math.round(q.marginPercent * 100) + "%", formatCents(q.marginCents)));
+    const total = el("div", "mt-2 flex items-baseline justify-between border-t border-paper-line pt-2");
+    total.appendChild(el("span", "font-display text-xl", "Total cost"));
+    total.appendChild(el("span", "tnum font-display text-2xl", formatCents(q.totalCostCents)));
+    box.appendChild(total);
+    box.appendChild(el("p", "mt-1 text-[11px] text-ink-faint",
+      "Customer price would be " + formatCents(q.grandTotalSellCents) + "."));
+  } else {
+    box.appendChild(line("Includes prehang freight", formatCents(q.totalFreightCents)));
+    const total = el("div", "mt-2 flex items-baseline justify-between border-t border-paper-line pt-2");
+    total.appendChild(el("span", "font-display text-xl", "Total"));
+    total.appendChild(el("span", "tnum font-display text-2xl", formatCents(q.grandTotalSellCents)));
+    box.appendChild(total);
+    box.appendChild(el("p", "mt-1 text-[11px] text-ink-faint",
+      q.unitCount + " unit" + (q.unitCount === 1 ? "" : "s") + " · prices exclude tax and installation."));
+  }
+
+  if (q.unavailableCount) {
+    box.appendChild(el("p", "mt-2 rounded-lg bg-red-50 px-3 py-2 text-[11px] text-red-800",
+      q.unavailableCount + " line" + (q.unavailableCount === 1 ? " is" : "s are") +
+      " not offered in the chosen configuration and are excluded from the total."));
+  }
+
+  const actions = el("div", "mt-3 flex gap-2");
+  const print = el("button", "flex-1 rounded-xl border border-paper-line py-2.5 text-sm hover:bg-paper-rail", "Print");
+  print.type = "button";
+  print.addEventListener("click", () => window.print());
+  const clear = el("button", "rounded-xl border border-paper-line px-4 py-2.5 text-sm text-ink-mute hover:bg-paper-rail", "Clear");
+  clear.type = "button";
+  clear.addEventListener("click", () => {
+    if (!state.quote.lines.length) return;
+    state.quote.lines = [];
+    saveQuote(); renderQuote();
+  });
+  actions.append(print, clear);
+  box.appendChild(actions);
+}
+
+/* --- 5g. header mode ----------------------------------------------------- */
+
+const LOCK_CLOSED = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
+const LOCK_OPEN   = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.5-2"/></svg>';
+
+function renderMode() {
+  $("#modeIcon").innerHTML = isCost() ? LOCK_OPEN : LOCK_CLOSED;
+  $("#modeLabel").textContent = isCost() ? "Cost" : "Customer";
+  $("#modeToggle").setAttribute("aria-pressed", String(isCost()));
+  $("#modeToggle").classList.toggle("border-brass", isCost());
+  $("#modeToggle").classList.toggle("bg-brass-pale", isCost());
+  $("#costBanner").classList.toggle("hidden", !isCost());
+}
+
+/* --- 5h. drawer open/close ---------------------------------------------- */
+
+function openDrawer() {
+  state.drawerOpen = true;
+  $("#drawer").dataset.open = "true";
+  $("#scrim").style.opacity = "1";
+  $("#scrim").style.pointerEvents = "auto";
+  document.body.style.overflow = "hidden";
+}
+function closeDrawer() {
+  state.drawerOpen = false;
+  $("#drawer").dataset.open = "false";
+  $("#scrim").style.opacity = "0";
+  $("#scrim").style.pointerEvents = "none";
+  if (!state.draft) document.body.style.overflow = "";
+}
+
+/* -------------------------------- 6. EVENTS ------------------------------ */
+
+function wire() {
+  const toggleMode = () => {
+    state.mode = isCost() ? "customer" : "cost";
+    renderMode();
+    renderCatalog(true);
+    renderQuote();
+    if (state.draft) renderDetail();
+  };
+  // The header toggle is covered while the drawer is open, and the drawer is
+  // exactly where cost-vs-price gets compared, so it carries its own switch.
+  $("#modeToggle").addEventListener("click", toggleMode);
+  $("#drawerMode").addEventListener("click", toggleMode);
+
+  const onFilter = () => {
+    state.filters.q = $("#q").value;
+    state.filters.line = $("#fLine").value;
+    state.filters.family = $("#fFamily").value;
+    state.filters.glazing = $("#fGlazing").value;
+    state.filters.type = $("#fType").value;
+    renderCatalog(true);
+  };
+  let qt = null;
+  $("#q").addEventListener("input", () => { clearTimeout(qt); qt = setTimeout(onFilter, 160); });
+  ["#fLine", "#fFamily", "#fGlazing", "#fType"].forEach(s => $(s).addEventListener("change", onFilter));
+  $("#clearFilters").addEventListener("click", () => {
+    $("#q").value = ""; $("#fLine").value = ""; $("#fFamily").value = "";
+    $("#fGlazing").value = ""; $("#fType").value = "";
+    onFilter();
+  });
+
+  $("#openQuote").addEventListener("click", openDrawer);
+  $("#openQuoteMobile").addEventListener("click", openDrawer);
+  $("#closeQuote").addEventListener("click", closeDrawer);
+  $("#scrim").addEventListener("click", closeDrawer);
+  $("#detailScrim").addEventListener("click", closeDetail);
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    if (state.draft) closeDetail();
+    else if (state.drawerOpen) closeDrawer();
+  });
+
+  // infinite scroll for the catalog
+  const io = new IntersectionObserver(entries => {
+    if (!state.ready) return;
+    if (entries.some(e => e.isIntersecting)) {
+      const total = filteredProducts().length;
+      if (state.rendered < total) renderCatalog(false);
+    }
+  }, { rootMargin: "600px" });
+  io.observe($("#sentinel"));
+}
+
+async function boot() {
+  wire();
+  renderMode();
+  try {
+    await loadData();
+  } catch (err) {
+    $("#loading").classList.add("hidden");
+    $("#loadError").classList.remove("hidden");
+    $("#loadErrorMsg").textContent =
+      err.message + ". The published catalog could not be read, so no pricing is shown.";
+    return;
+  }
+  restoreQuote();
+  renderFilters();
+  $("#loading").classList.add("hidden");
+  renderCatalog(true);
+  renderQuote();
+}
+
+boot();
+</script>
+</body>
+</html>

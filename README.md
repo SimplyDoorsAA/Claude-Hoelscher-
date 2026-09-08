@@ -5,9 +5,17 @@ against GitHub and edits the master door catalog in place. It is the **write sid
 two-app architecture:
 
 ```
-App A  Price Manager  ──PUT──▶  data/catalog.json          ──raw fetch──▶  App B  Quoter
-(this repo, /index.html)        data/pricing-rules.json     (read-only)     (customer facing)
+App A  Price Manager  ──PUT──▶  data/catalog.json          ──fetch──▶  App B  Quoter
+(/index.html)                   data/pricing-rules.json                (/quoter/)
+                                          │                                 │
+                                          └──────▶ packages/pricing-engine ─┘
+                                                   (all money maths)
 ```
+
+| App | URL | Audience |
+| --- | --- | --- |
+| A — Price Manager | `/` | Pricing administrator (PAT required) |
+| B — Quote Builder | `/quoter/` | Sales staff and customers (no auth) |
 
 Everything lives in `index.html` — HTML, CSS and vanilla JavaScript. No build step,
 no framework, no server. Drop it on GitHub Pages and it works.
@@ -114,7 +122,11 @@ you commit anything.
 
 | Path | Purpose |
 | --- | --- |
-| `index.html` | The entire application |
+| `index.html` | App A — Price Manager |
+| `quoter/index.html` | App B — Quote Builder |
+| `packages/pricing-engine/index.js` | Shared money maths — the only place prices are computed |
+| `packages/pricing-engine/engine.test.mjs` | 32 unit tests, incl. a full-catalogue sweep |
+| `quoter/assets/doors/` | Optional product photography, `{SKU}.webp` |
 | `data/catalog.json` | Master catalog — `products[]`, `prehangAdders[]`, `components[]`, `hardware[]` |
 | `data/pricing-rules.json` | Net multiplier, currency, rounding, freight and defaults |
 | `.nojekyll` | Serve files verbatim from Pages |
@@ -182,3 +194,42 @@ The workbook's `Open Items` sheet lists the remaining vendor questions:
 unpriced 3680 iron-grille and Craftsman variants, the Impact glass SKUs absent
 from the product catalog, brickmould length (100" vs 104"), and several
 Speakeasy + Iron Mask bundles with no combined part number.
+
+## App B — Quote Builder
+
+`/quoter/` is a static, unauthenticated page: Tailwind via CDN, vanilla ES
+modules, no build step. It fetches the two published data files and delegates
+every calculation to `packages/pricing-engine`.
+
+**Pricing engine.** The engine did not exist when App B was written; it is
+derived from `pricing-rules.json`, which is authoritative, and unit-tested
+against the live catalogue. Two judgement calls the rules file does not settle
+are isolated in an exported `ASSUMPTIONS` object at the top of the module:
+
+| Assumption | Default | If wrong |
+| --- | --- | --- |
+| `marginMode` | `margin-on-sell` — sell = cost / (1 − m) | Markup instead would price a $1,000 cost at $1,350, not $1,538.46 |
+| `doublePrehangUnits` | `1` — the prehang freight charge is per opening | Per leaf would add $100.00 to every double opening |
+
+Both are one-line changes. Everything else — the 0.48 multiplier and the
+sections it covers, the $100.00 prehang charge, labour defaults, half-up-to-cent
+rounding — is read from `pricing-rules.json` at load and changes when App A
+publishes.
+
+**Cost vs customer pricing.** A lock control in the header, mirrored inside the
+quote drawer, switches the whole app between `grandTotalSellCents` /
+`unitSellCents` and `totalCostCents` / `unitCostCents`. Cost mode paints a
+banner across the header so it cannot be shown to a customer by accident. It is
+a display switch only — no credential, no gate. Anyone who opens the page can
+flip it, and cost is derived from data the page already downloads, so treat the
+published catalogue as public.
+
+**Images.** Products look for `quoter/assets/doors/{SKU}.webp`. A missing file
+triggers the `onerror` fallback, which draws an architectural silhouette from
+the product's own description — lite count, arch, sidelite proportion, barn
+slab. With no photography loaded the catalogue still reads as a catalogue.
+
+**CDN resilience.** If `cdn.tailwindcss.com` is unreachable — a locked-down job
+site network, a CDN outage — the page flags itself and a structural fallback
+stylesheet keeps the catalogue, drawer and totals usable. Scrim inert state is
+plain CSS rather than a Tailwind utility, so the app never becomes unclickable.
