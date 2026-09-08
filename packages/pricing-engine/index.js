@@ -89,7 +89,16 @@ export function createEngine(catalog, rules, overrides = {}) {
 
   const A = Object.assign({}, ASSUMPTIONS, overrides.assumptions || {});
 
-  const products  = Array.isArray(catalog.products) ? catalog.products : [];
+  /* Doors may live in one products[] array or, as the catalogue is split by
+     line, in several: fiberglassProducts[], woodProducts[]. Pricing treats them
+     identically — the split is for editing, not for money — so they are merged
+     here and the netMultiplier scope keeps the single logical name "products". */
+  const productKeys = Object.keys(catalog)
+    .filter(k => /products?$/i.test(k) && Array.isArray(catalog[k]));
+  const products = productKeys.length
+    ? productKeys.reduce((all, k) => all.concat(catalog[k]), [])
+    : [];
+  const productSections = productKeys.slice();
   const adders    = Array.isArray(catalog.prehangAdders) ? catalog.prehangAdders : [];
   const components= Array.isArray(catalog.components) ? catalog.components : [];
   const hardware  = Array.isArray(catalog.hardware) ? catalog.hardware : [];
@@ -427,7 +436,7 @@ export function createEngine(catalog, rules, overrides = {}) {
 
   return {
     catalog, rules, assumptions: A,
-    products, adders, components, hardware,
+    products, adders, components, hardware, productSections,
     productById: id => byId.get(id) || null,
     hardwareList: () => hardware,
     componentList: () => components,

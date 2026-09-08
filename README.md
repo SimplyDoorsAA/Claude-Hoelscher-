@@ -138,7 +138,8 @@ you commit anything.
 
 | Section | Items |
 | --- | --- |
-| `products` | 589 doors, sidelites and barn slabs — fiberglass, mahogany, knotty alder, barn |
+| `fiberglassProducts` | 222 fiberglass doors and sidelites |
+| `woodProducts` | 367 mahogany, knotty alder and barn doors, sidelites and slabs |
 | `prehangAdders` | 62 interior-casing / 1x4 adders by line, top style and configuration |
 | `components` | 26 millwork items — jambs, casing, brickmould, T-astragal, SDL bars |
 | `hardware` | 22 barn-hardware, iron-mask, speakeasy, clavos and strap SKUs |
@@ -148,6 +149,12 @@ spreadsheet after conversion, with zero mismatches. The 546 `N/A` cells became
 `null` (not offered), never `0`. `NET` columns were not imported: they are
 `list x 0.48` throughout and are derived at quote time from
 `pricing-rules.json`, so storing them would be duplicated state that can drift.
+
+The two door lines are separate arrays and therefore separate tabs in App A,
+so fiberglass can be worked on without wood in the way. The split is for
+editing only: the pricing engine merges every `*Products` array, so the Quoter
+and every price are unaffected, and the net multiplier's scope still names one
+logical `products` section whatever the arrays are called.
 
 Each array becomes its own tab. The grid is built from the data, so a catalog
 carrying different arrays or extra fields still renders — unmodelled fields

@@ -569,11 +569,16 @@ function fmtMoneyTitle(c){
    price and pricing-rules.json, and a stored copy would drift the moment
    either changes. Mirrors packages/pricing-engine toCost(); a test pins the
    two together across the whole catalogue. */
+function scopeNameFor(sectionKey){
+  return /products?$/i.test(sectionKey) ? "products" : sectionKey;
+}
 function costOf(cents, priceBasis, sectionKey){
   if(cents===null||cents===undefined||!S.rules) return null;
   if(priceBasis==="net") return cents;
   const sc = S.rules.netMultiplierScope;
-  if(sc && Array.isArray(sc.appliesTo) && sc.appliesTo.indexOf(sectionKey)<0) return cents;
+  const name = scopeNameFor(sectionKey);
+  if(sc && Array.isArray(sc.appliesTo) &&
+     sc.appliesTo.indexOf(name)<0 && sc.appliesTo.indexOf(sectionKey)<0) return cents;
   const m = Number(S.rules.netMultiplier);
   if(!isFinite(m)) return null;
   const v = cents*m;
@@ -730,7 +735,8 @@ async function putFile(path, text, sha, message){
 /* ============================ catalog shape ============================== */
 /* The catalog may be a bare array of products or an object wrapping several
    arrays. Every array of objects becomes an editable section/tab. */
-const KNOWN_SECTIONS = ["products","prehangAdders","prehang_adders","adders","components","hardware",
+const KNOWN_SECTIONS = ["fiberglassProducts","woodProducts","products","prehangAdders",
+                        "prehang_adders","adders","components","hardware",
                         "accessories","glass","finishes","items"];
 function humanize(k){
   return String(k).replace(/[_-]+/g," ")
@@ -738,7 +744,7 @@ function humanize(k){
     .replace(/\b\w/g, m=>m.toUpperCase()).trim();
 }
 function presetFor(key){
-  if(/^products?$|^items$|^doors$|^skus$|^catalog$/i.test(key)) return PRODUCT_PRESET;
+  if(/products?$/i.test(key) || /^items$|^doors$|^skus$|^catalog$/i.test(key)) return PRODUCT_PRESET;
   if(/prehang|adder/i.test(key)) return ADDER_PRESET;
   if(/component|millwork/i.test(key)) return COMPONENT_PRESET;
   if(/hardware/i.test(key)) return HARDWARE_PRESET;
