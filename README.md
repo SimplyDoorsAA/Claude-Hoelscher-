@@ -307,6 +307,15 @@ sections it covers, the $100.00 prehang charge, labour defaults, half-up-to-cent
 rounding — is read from `pricing-rules.json` at load and changes when App A
 publishes.
 
+**Choosing a line.** The Quoter asks which line is being built before it shows
+anything, because the two price from separate vendor schedules and mixing them
+on screen is what causes mis-quotes. The choice scopes the catalogue, the
+filters, and the sidelites and components offered as accessories. Hardware
+stays available to both, since an iron mask fits either. The choice is
+remembered, shown in the header, and switching with work in progress asks
+whether to keep the existing quote lines or start fresh rather than silently
+dropping or hiding them.
+
 **Cost vs customer pricing.** A lock control in the header, mirrored inside the
 quote drawer, switches the whole app between `grandTotalSellCents` /
 `unitSellCents` and `totalCostCents` / `unitCostCents`. Cost mode paints a

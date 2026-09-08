@@ -97,9 +97,23 @@ export function createEngine(catalog, rules, overrides = {}) {
      woodProducts, fiberglassComponents, and so on — because the two lines are
      edited separately. Pricing does not care: the arrays are merged here, and
      the netMultiplier scope keeps one logical name per kind. */
+  /* A key is <collection><kind>: fiberglassProducts, woodComponents, or a bare
+     kind such as hardware, which belongs to no single collection. The
+     collection is what the Quoter asks for before showing anything. */
+  const KIND = /^(.*?)(products?|(?:prehang)?adders?|components?|hardware)$/i;
+  function collectionOfKey(k) {
+    const m = KIND.exec(k);
+    return m && m[1] ? m[1].toLowerCase() : null;
+  }
+  const rowCollection = new Map();   // row object -> collection name or null
   function gather(re) {
     const keys = Object.keys(catalog).filter(k => re.test(k) && Array.isArray(catalog[k]));
-    return { keys, rows: keys.reduce((all, k) => all.concat(catalog[k]), []) };
+    const rows = [];
+    keys.forEach(k => {
+      const coll = collectionOfKey(k);
+      catalog[k].forEach(row => { rowCollection.set(row, coll); rows.push(row); });
+    });
+    return { keys, rows };
   }
   const gProducts   = gather(/products?$/i);
   const gAdders     = gather(/(?:prehang)?adders?$/i);
@@ -435,9 +449,33 @@ export function createEngine(catalog, rules, overrides = {}) {
     };
   }
 
+  /** Which collection a row belongs to: "fiberglass", "wood", or null if shared. */
+  function collectionOf(row) {
+    if (row && typeof row === "object") return rowCollection.get(row) || null;
+    const p = byId.get(row);
+    return p ? (rowCollection.get(p) || null) : null;
+  }
+  /** The collections the catalogue is split into, in catalogue order. */
+  function collections() {
+    const seen = [];
+    [gProducts, gAdders, gComponents, gHardware].forEach(g => g.keys.forEach(k => {
+      const c = collectionOfKey(k);
+      if (c && seen.indexOf(c) < 0) seen.push(c);
+    }));
+    return seen;
+  }
+  /* Rows belonging to a collection. Shared rows (hardware) are included, since
+     an iron mask fits either line and refusing to show it would be wrong. */
+  const inCollection = (rows, c) => !c ? rows
+    : rows.filter(r => { const rc = rowCollection.get(r); return rc === c || rc === null; });
+  const productsIn   = c => inCollection(products, c);
+  const addersIn     = c => inCollection(adders, c);
+  const componentsIn = c => inCollection(components, c);
+
   /** Distinct filter values present in the catalogue, for the browser UI. */
-  function facets() {
-    const uniq = (fn) => Array.from(new Set(products.map(fn).filter(v => v !== null && v !== undefined && v !== ""))).sort();
+  function facets(collection) {
+    const scope = productsIn(collection);
+    const uniq = (fn) => Array.from(new Set(scope.map(fn).filter(v => v !== null && v !== undefined && v !== ""))).sort();
     return { lines: uniq(p => p.line), families: uniq(p => p.family),
              types: uniq(p => p.type), glazings: uniq(p => p.glazing) };
   }
@@ -455,6 +493,7 @@ export function createEngine(catalog, rules, overrides = {}) {
     marginFor,
     netMultiplier, prehangChargeCents,
     availableOptions, priceLine, priceQuote, facets,
+    collections, collectionOf, productsIn, addersIn, componentsIn,
     toCost, prehungUnits, freightUnitsOf, crateShippingFor, computeFreight, leavesFor
   };
 }

@@ -50,7 +50,12 @@ tailwind.config = {
      remain usable and the page never scrolls sideways.
      --------------------------------------------------------------------- */
   .no-tw *, .no-tw *::before, .no-tw *::after { box-sizing:border-box; }
-  .no-tw body { margin:0; overflow-x:hidden; font:15px/1.45 Inter, system-ui, sans-serif; color:#1c1917; }
+  .no-tw html, .no-tw body { max-width:100%; overflow-x:hidden; }
+  .no-tw body { margin:0; font:15px/1.45 Inter, system-ui, sans-serif; color:#1c1917; }
+  /* Without Tailwind's responsive utilities the header has no way to shed
+     width, so let it wrap rather than push the page sideways. */
+  .no-tw header .flex { flex-wrap:wrap; row-gap:.5rem; }
+  .no-tw header .flex > * { flex:0 0 auto; }
   .no-tw img, .no-tw svg { max-width:100%; }
   .no-tw header, .no-tw section, .no-tw main { display:block; width:100%; }
   .no-tw header > div, .no-tw main, .no-tw section > div { max-width:1600px; margin:0 auto; padding:.75rem 1rem; }
@@ -119,6 +124,20 @@ tailwind.config = {
 </head>
 <body class="font-sans text-ink antialiased">
 
+<!-- =========================== LINE CHOOSER =========================== -->
+<div id="lineGate" class="fixed inset-0 z-[70] hidden bg-paper overflow-y-auto">
+  <div class="mx-auto flex min-h-full max-w-3xl flex-col justify-center px-5 py-12">
+    <div class="text-center">
+      <h1 class="font-display text-4xl sm:text-5xl leading-none tracking-tight">Simply<span class="text-brass">Doors</span></h1>
+      <p class="mt-3 text-[11px] uppercase tracking-[.2em] text-ink-mute">Millwork Catalog &amp; Quote Builder</p>
+      <h2 class="mt-10 font-display text-2xl sm:text-3xl">What are you building?</h2>
+      <p class="mt-2 text-sm text-ink-mute">The two lines price from separate schedules, so pick one to begin.</p>
+    </div>
+    <div id="lineChoices" class="mt-8 grid gap-4 sm:grid-cols-2"></div>
+    <p class="mt-8 text-center text-[11px] text-ink-faint">You can switch lines at any time from the header.</p>
+  </div>
+</div>
+
 <!-- ============================== HEADER ============================== -->
 <header class="sticky top-0 z-30 bg-paper/90 backdrop-blur-md rule">
   <div class="mx-auto max-w-[1600px] px-4 sm:px-6">
@@ -129,6 +148,13 @@ tailwind.config = {
       </div>
 
       <div class="flex-1"></div>
+
+      <!-- which line is being quoted -->
+      <button id="lineChip" type="button" title="Switch between the wood and fiberglass lines"
+        class="hidden items-center gap-1.5 rounded-full border border-brass/40 bg-brass-pale px-3 py-1.5 text-xs font-medium text-brass-deep hover:border-brass transition-colors sm:flex">
+        <span id="lineChipLabel"></span>
+        <svg class="h-3 w-3 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 10 5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
 
       <!-- customer tier -->
       <div id="tierWrap" class="hidden sm:flex items-center rounded-full border border-paper-line bg-paper-card p-0.5">
@@ -280,6 +306,7 @@ const state = {
   ready: false,
   mode: "customer",                       // "customer" | "cost"
   marginTier: null,                       // "builder" | "retail" — set from the rules file
+  collection: null,                       // "fiberglass" | "wood" — chosen before anything shows
   filters: { q: "", line: "", family: "", glazing: "", type: "" },
   rendered: 0,                            // how many cards are in the DOM
   quote: { lines: [] },                   // [{ uid, productId, finish, config, qty, accessories[] }]
@@ -293,6 +320,19 @@ const nextUid = () => "L" + (uidSeq++);
 const isCost = () => state.mode === "cost";
 /** The margin fraction currently in force. Always via the engine. */
 const curMargin = () => state.engine.marginFor(state.marginTier);
+
+const LINE_KEY = "simplydoors.line.v1";
+const LINE_LOOK = {
+  fiberglass: { title:"Fiberglass", blurb:"Mahogany- and oak-grain skins, smooth collection, sidelites." },
+  wood:       { title:"Wood",       blurb:"Mahogany, knotty alder and barn doors, sidelites and slabs." }
+};
+function saveLine() { try { localStorage.setItem(LINE_KEY, state.collection); } catch (e) {} }
+function restoreLine() {
+  let v = null;
+  try { v = localStorage.getItem(LINE_KEY); } catch (e) {}
+  const all = state.engine.collections();
+  state.collection = (v && all.indexOf(v) >= 0) ? v : null;
+}
 
 const TIER_KEY = "simplydoors.tier.v1";
 function saveTier() { try { localStorage.setItem(TIER_KEY, state.marginTier); } catch (e) {} }
@@ -344,7 +384,7 @@ async function loadData() {
 function filteredProducts() {
   const { q, line, family, glazing, type } = state.filters;
   const terms = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  return state.engine.products.filter(p => {
+  return state.engine.productsIn(state.collection).filter(p => {
     if (line && p.line !== line) return false;
     if (family && p.family !== family) return false;
     if (glazing && p.glazing !== glazing) return false;
@@ -542,7 +582,8 @@ function renderCatalog(reset = true) {
   state.rendered += slice.length;
 
   $("#resultCount").textContent =
-    list.length.toLocaleString() + " of " + state.engine.products.length.toLocaleString() + " products";
+    list.length.toLocaleString() + " of " +
+    state.engine.productsIn(state.collection).length.toLocaleString() + " products";
   $("#emptyState").classList.toggle("hidden", list.length > 0);
   return list.length;
 }
@@ -562,8 +603,9 @@ function fillSelect(sel, values, allLabel, labeller) {
 }
 
 function renderFilters() {
-  const f = state.engine.facets();
+  const f = state.engine.facets(state.collection);
   fillSelect($("#fLine"), f.lines, "All lines", v => LINE_LABELS[v] || titleize(v));
+  $("#fLine").classList.toggle("hidden", f.lines.length < 2);
   fillSelect($("#fFamily"), f.families, "All families");
   fillSelect($("#fGlazing"), f.glazings, "All glass");
   fillSelect($("#fType"), f.types, "All types", v => TYPE_LABELS[v] || titleize(v));
@@ -794,7 +836,7 @@ function accessoryBlock(product, draft) {
   sel.appendChild(placeholder);
 
   // sidelites of the same line read first — they are what actually pairs
-  const sidelites = state.engine.products
+  const sidelites = state.engine.productsIn(state.collection)
     .filter(p => p.type === "sidelite" && p.line === product.line)
     .slice(0, 80);
   if (sidelites.length) {
@@ -823,7 +865,7 @@ function accessoryBlock(product, draft) {
       }
     });
   }
-  const comps = state.engine.componentList();
+  const comps = state.engine.componentsIn(state.collection);
   if (comps.length) {
     const g = optgroup("Components");
     comps.forEach(c => {
@@ -1015,6 +1057,91 @@ function renderTotals(q) {
 const LOCK_CLOSED = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
 const LOCK_OPEN   = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.5-2"/></svg>';
 
+function renderLineGate() {
+  const host = $("#lineChoices");
+  host.textContent = "";
+  state.engine.collections().forEach(c => {
+    const look = LINE_LOOK[c] || { title: titleize(c), blurb: "" };
+    const n = state.engine.productsIn(c).filter(p => p.type !== "sidelite").length;
+    const card = el("button",
+      "group rounded-2xl border border-paper-line bg-paper-card p-6 text-left shadow-card transition-all hover:-translate-y-0.5 hover:border-brass hover:shadow-lift focus:outline-none focus:ring-2 focus:ring-brass/40");
+    card.type = "button";
+    const art = el("div", "mb-4 h-28 w-20 overflow-hidden rounded-lg bg-paper-rail");
+    const sample = state.engine.productsIn(c).find(p => p.type === "door") ||
+                   state.engine.productsIn(c)[0];
+    if (sample) art.appendChild(doorSilhouette(sample));
+    card.appendChild(art);
+    card.appendChild(el("h3", "font-display text-2xl leading-none", look.title));
+    card.appendChild(el("p", "mt-2 text-sm text-ink-mute", look.blurb));
+    card.appendChild(el("p", "mt-3 text-[11px] uppercase tracking-widest text-brass",
+      n.toLocaleString() + " doors"));
+    card.addEventListener("click", () => chooseLine(c));
+    host.appendChild(card);
+  });
+  $("#lineGate").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function chooseLine(c) {
+  state.collection = c;
+  saveLine();
+  $("#lineGate").classList.add("hidden");
+  document.body.style.overflow = "";
+  renderLineChip();
+  renderFilters();
+  renderCatalog(true);
+  renderQuote();
+}
+
+function renderLineChip() {
+  const chip = $("#lineChip");
+  if (!state.collection) { chip.classList.add("hidden"); return; }
+  chip.classList.remove("hidden");
+  const look = LINE_LOOK[state.collection] || { title: titleize(state.collection) };
+  $("#lineChipLabel").textContent = look.title;
+}
+
+/* Switching lines with a quote in progress: the quote may hold doors from the
+   line being left, so say so rather than silently hiding or dropping them. */
+function switchLine() {
+  const others = state.engine.collections().filter(c => c !== state.collection);
+  if (!others.length) return;
+  const target = others[0];
+  const foreign = state.quote.lines.filter(l => {
+    const p = state.engine.productById(l.productId);
+    return p && state.engine.collectionOf(p) === state.collection;
+  }).length;
+  if (!foreign) { chooseLine(target); return; }
+
+  const look = LINE_LOOK[target] || { title: titleize(target) };
+  const from = LINE_LOOK[state.collection] || { title: titleize(state.collection) };
+  const box = el("div", "fixed inset-0 z-[80] flex items-center justify-center bg-ink/50 p-5");
+  const card = el("div", "w-full max-w-md rounded-2xl bg-paper-card p-6 shadow-lift");
+  card.appendChild(el("h3", "font-display text-2xl", "Switch to " + look.title + "?"));
+  card.appendChild(el("p", "mt-2 text-sm text-ink-mute",
+    "Your quote holds " + foreign + " " + from.title.toLowerCase() + " line item" +
+    (foreign === 1 ? "" : "s") + ". Keep them on the quote, or start fresh?"));
+  const row = el("div", "mt-5 flex flex-wrap gap-2");
+  const keep = el("button", "flex-1 rounded-xl border border-paper-line py-2.5 text-sm hover:bg-paper-rail", "Keep them");
+  keep.type = "button";
+  keep.addEventListener("click", () => { box.remove(); chooseLine(target); });
+  const fresh = el("button", "flex-1 rounded-xl bg-forest py-2.5 text-sm font-medium text-white hover:bg-forest-deep", "Start fresh");
+  fresh.type = "button";
+  fresh.addEventListener("click", () => {
+    box.remove();
+    state.quote.lines = []; saveQuote();
+    chooseLine(target);
+  });
+  const cancel = el("button", "rounded-xl px-4 py-2.5 text-sm text-ink-mute hover:bg-paper-rail", "Cancel");
+  cancel.type = "button";
+  cancel.addEventListener("click", () => box.remove());
+  row.append(keep, fresh, cancel);
+  card.appendChild(row);
+  box.appendChild(card);
+  box.addEventListener("mousedown", e => { if (e.target === box) box.remove(); });
+  document.body.appendChild(box);
+}
+
 function renderTier() {
   const tiers = state.engine ? state.engine.marginTiers() : {};
   const pct = t => Math.round((tiers[t] || 0) * 100) + "%";
@@ -1086,6 +1213,7 @@ function wire() {
     setTier(names[(names.indexOf(state.marginTier) + 1) % names.length]);
   });
 
+  $("#lineChip").addEventListener("click", switchLine);
   $("#modeToggle").addEventListener("click", toggleMode);
   $("#drawerMode").addEventListener("click", toggleMode);
 
@@ -1142,9 +1270,18 @@ async function boot() {
   }
   restoreTier();
   renderTier();
+  restoreLine();
   restoreQuote();
-  renderFilters();
   $("#loading").classList.add("hidden");
+  if (!state.collection) {
+    // Nothing is shown until the line is chosen: the two price from separate
+    // schedules and mixing them on screen is what causes mis-quotes.
+    renderLineGate();
+    renderLineChip();
+    return;
+  }
+  renderLineChip();
+  renderFilters();
   renderCatalog(true);
   renderQuote();
 }
