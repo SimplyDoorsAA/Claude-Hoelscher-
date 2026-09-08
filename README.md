@@ -153,6 +153,23 @@ Each array becomes its own tab. The grid is built from the data, so a catalog
 carrying different arrays or extra fields still renders — unmodelled fields
 appear as extra columns rather than being dropped.
 
+### Reading prices in App A
+
+Money is shown as `$1,728.00` — dollar sign, thousands separator, always two
+decimals. The cells stay editable and still accept `1728.35`, `$1,728.35` or
+`1,728.35`; the `$` and commas are stripped on the way in and the value is
+stored as integer cents.
+
+**+ Cost** adds a grey line under every list price showing our cost at the net
+multiplier — `$1,728.00` list, `$829.44` cost. Cost is derived on the fly from
+`netMultiplier` and never written to `catalog.json`: a stored copy would drift
+the moment either the list price or the multiplier changed. A configuration
+priced `null` shows a dash there, never `$0.00`. A test pins App A's cost
+figures to the pricing engine's across the catalogue so the two cannot diverge.
+
+**Page numbers** are shown per item — `Cat. Page` on products, `Src Page` on
+adders, components and hardware — and are editable.
+
 ### Known gaps in the imported data
 
 - **`freightUnits` is `null` on every product.** The spreadsheet export carries
@@ -165,6 +182,10 @@ appear as extra columns rather than being dropped.
   placeholder, so `M34--3068` covers both the Flat Glass and Iron Grille doors
   at different prices. The `id` content hash includes description and glazing,
   so ids stay unique where SKUs do not.
+- **222 fiberglass products have no catalog page.** The source spreadsheet
+  carries a page for all 368 wood products and none for any fiberglass one, so
+  the column is present and editable but empty for that line. Nothing can fill
+  it but the fiberglass catalog itself.
 - **Two SDL bar products have no parsable size** — they are lineal bars, not
   doors, so `size.widthIn` / `heightIn` are `null`.
 - **`M23A--3068`** prices Decorative Glass identically to Flat Glass, which is

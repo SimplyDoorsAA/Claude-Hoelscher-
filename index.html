@@ -190,6 +190,15 @@ table.grid input.cell:focus,table.grid select.cell:focus{
 table.grid input.cell.money{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
 table.grid input.cell.num{text-align:right;font-family:var(--mono)}
 table.grid input.cell.mono{font-family:var(--mono);font-size:11px}
+td .costline{
+  display:block;padding:0 6px 2px;text-align:right;
+  font:10px/1.1 var(--mono);color:var(--ink-3);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+td .costline.none{color:#c3c8d1}
+body.showcost{--row-h:22px}
+body.showcost table.grid thead th{height:34px}
+body.showcost table.grid thead th .th{height:34px}
 table.grid input.cell.isnull{background:repeating-linear-gradient(135deg,#fafbfc,#fafbfc 4px,#f0f2f5 4px,#f0f2f5 8px)}
 table.grid input.cell.isnull::placeholder{color:#9aa3b2;font-style:italic}
 table.grid input.cell.bad{background:var(--err-soft);outline:2px solid var(--err);outline-offset:-2px}
@@ -347,6 +356,7 @@ table.grid tbody tr.dirty td.g-unf,table.grid tbody tr.dirty td.g-pre{background
     <div class="sep"></div>
     <button class="btn sm" id="btnUnits" title="Toggle money display between dollars and raw integer cents">$ dollars</button>
     <button class="btn sm" id="btnCols" title="Show or hide columns">Columns</button>
+    <button class="btn sm" id="btnCost" title="Show our cost beneath each list price">+ Cost</button>
     <button class="btn sm" id="btnAdd" title="Append a new row">+ Row</button>
     <div class="sep"></div>
     <button class="btn sm" id="btnReload" title="Discard local edits and re-fetch from GitHub">Reload</button>
@@ -457,6 +467,7 @@ const S = {
   badCells:new Set(),
   pane:null,
   units:"dollars",             // "dollars" | "cents"
+  showCost:false,              // render derived cost beneath each list price
   filter:"",
 };
 function sec(k){ return S.sec[k]; }
@@ -510,6 +521,13 @@ function log(kind, msg, strongTail){
 
 /* --------------------------- money conversions -------------------------- */
 /* Integer-cents in, canonical dollar string out. */
+/** Integer cents -> "$1,728.00". Display only; parseMoney strips $ and commas. */
+function fmtDollars(c){
+  if(c===null||c===undefined||typeof c!=="number"||!isFinite(c)) return "";
+  const neg = c<0, n = Math.abs(Math.trunc(c));
+  return (neg?"-$":"$") + Math.floor(n/100).toLocaleString("en-US")
+         + "." + String(n%100).padStart(2,"0");
+}
 function centsToDollars(c){
   if(c===null||c===undefined) return "";
   if(typeof c!=="number" || !isFinite(c)) return "";
@@ -539,12 +557,29 @@ function parseMoney(raw, mode){
   if(Math.abs(whole)>MAX_CENTS/100) return { ok:false, err:"Value out of range." };
   return { ok:true, value: sign*(whole*100+frac) };   // integer math only
 }
-function moneyDisplay(c){ return S.units==="cents" ? (c===null||c===undefined?"":String(c)) : centsToDollars(c); }
+function moneyDisplay(c){ return S.units==="cents" ? (c===null||c===undefined?"":String(c)) : fmtDollars(c); }
 function fmtMoneyTitle(c){
   if(c===null) return "null — configuration not offered";
   if(c===undefined) return "field absent";
   return c + " cents  ·  $" + centsToDollars(c);
 }
+
+/* ---------------------------- derived cost ------------------------------ */
+/* List -> our cost. Deliberately never stored: cost is a function of the list
+   price and pricing-rules.json, and a stored copy would drift the moment
+   either changes. Mirrors packages/pricing-engine toCost(); a test pins the
+   two together across the whole catalogue. */
+function costOf(cents, priceBasis, sectionKey){
+  if(cents===null||cents===undefined||!S.rules) return null;
+  if(priceBasis==="net") return cents;
+  const sc = S.rules.netMultiplierScope;
+  if(sc && Array.isArray(sc.appliesTo) && sc.appliesTo.indexOf(sectionKey)<0) return cents;
+  const m = Number(S.rules.netMultiplier);
+  if(!isFinite(m)) return null;
+  const v = cents*m;
+  return v<0 ? -Math.floor(-v+0.5) : Math.floor(v+0.5);
+}
+function costDisplay(c){ return S.units==="cents" ? (c===null?"":String(c)) : fmtDollars(c); }
 
 /* ------------------------------ path access ----------------------------- */
 function getPath(obj, path){
@@ -740,6 +775,7 @@ const PRODUCT_PRESET = [
   { path:"line",                        label:"Line",         kind:"text",   w:104, list:true },
   { path:"family",                      label:"Family",       kind:"text",   w:138, list:true },
   { path:"type",                        label:"Type",         kind:"text",   w:78,  list:true },
+  { path:"catalogPage",                 label:"Cat. Page",    kind:"text",   w:78,  list:true },
   { path:"description",                 label:"Description",  kind:"text",   w:290, required:true },
   { path:"glazing",                     label:"Glazing",      kind:"text",   w:118, list:true },
   { path:"size.code",                   label:"Size Code",    kind:"text",   w:82,  mono:true },
@@ -754,7 +790,6 @@ const PRODUCT_PRESET = [
   { path:"prices.prefinished.slab",     label:"Slab",         kind:"money",  w:96, grp:"pre", grpLabel:"Prefinished" },
   { path:"prices.prefinished.singlePH", label:"Single PH",    kind:"money",  w:96, grp:"pre", grpLabel:"Prefinished" },
   { path:"prices.prefinished.doublePH", label:"Double PH",    kind:"money",  w:96, grp:"pre", grpLabel:"Prefinished" },
-  { path:"catalogPage",                 label:"Cat. Page",    kind:"text",   w:82 },
   { path:"notes",                       label:"Notes",        kind:"text",   w:180 }
 ];
 const COMPONENT_PRESET = [
@@ -793,6 +828,7 @@ const ADDER_PRESET = [
   { path:"priceBasis",    label:"Price Basis", kind:"basis",  w:96 },
   { path:"multiplier",    label:"Multiplier",  kind:"number", w:88 },
   { path:"required",      label:"Req",         kind:"bool",   w:44 },
+  { path:"sourcePage",    label:"Src Page",    kind:"text",   w:80,  list:true },
   { path:"priceCents",      label:"Adder Price",kind:"money", w:110, grp:"unf", grpLabel:"List" },
   { path:"prices.singlePH", label:"Single PH", kind:"money",  w:96, grp:"unf", grpLabel:"Adder" },
   { path:"prices.doublePH", label:"Double PH", kind:"money",  w:96, grp:"unf", grpLabel:"Adder" },
@@ -1005,7 +1041,11 @@ function renderGrid(kind){
     const inner = el("div",{class:"th"});
     if(c.grpLabel) inner.appendChild(el("span",{class:"grp",text:c.grpLabel+" ›"}));
     inner.appendChild(document.createTextNode(c.label));
-    if(c.kind==="money") inner.appendChild(el("span",{class:"grp",text: S.units==="cents"?"¢":"$"}));
+    if(c.kind==="money"){
+      inner.appendChild(el("span",{class:"grp",text: S.units==="cents"?"¢":"$"}));
+      if(S.showCost) inner.appendChild(el("span",{class:"grp",
+        text:"/ cost x"+(S.rules?S.rules.netMultiplier:"?")}));
+    }
     if(arrow) inner.appendChild(el("span",{class:"arrow",text:arrow}));
     th.appendChild(inner);
     tr.appendChild(th);
@@ -1108,6 +1148,21 @@ function buildCell(kind, row, col, r, c){
       if(S.badCells.has(input)) return;
       input.value = moneyDisplay(getPath(row,col.path));
     });
+    if(S.showCost){
+      const cap = el("span",{class:"costline"});
+      const paint = v=>{
+        const c = costOf(v, row.priceBasis, kind);
+        cap.textContent = c===null ? "—" : costDisplay(c);
+        cap.classList.toggle("none", c===null);
+        cap.title = c===null ? "No cost — this configuration is not offered"
+                             : "Our cost at x" + (S.rules ? S.rules.netMultiplier : "?");
+      };
+      paint(val);
+      input.addEventListener("input", ()=> paint(getPath(row,col.path)));
+      td.appendChild(input);
+      td.appendChild(cap);
+      return td;
+    }
   } else if(col.kind==="number"){
     input.classList.add("num");
     input.inputMode = "decimal";
@@ -1847,7 +1902,7 @@ function updateCounts(){
   $("#rowCount").textContent = visibleRows(S.pane).length + " / " + S1.rows.length;
 }
 function setBusy(on, label){
-  ["btnPublish","btnReload","btnAdd","btnBackup","btnCols"].forEach(id=>{ const b=$("#"+id); if(b) b.disabled = on; });
+  ["btnPublish","btnReload","btnAdd","btnBackup","btnCols","btnCost"].forEach(id=>{ const b=$("#"+id); if(b) b.disabled = on; });
   const p = $("#btnPublish");
   if(on){ p.dataset.prev = p.textContent; p.textContent = label || "Working…"; }
   else if(p.dataset.prev){ p.textContent = p.dataset.prev; delete p.dataset.prev; updateState(); }
@@ -1862,6 +1917,7 @@ function setPane(name){
   const grid = isGridPane();
   $("#btnAdd").disabled  = !grid || !S.catalog;
   $("#btnCols").disabled = !grid || !S.catalog;
+  $("#btnCost").disabled = !grid || !S.catalog || !S.rules;
   $("#q").disabled = !grid;
   if(name==="raw") renderRaw();
   updateCounts();
@@ -1921,6 +1977,19 @@ function wire(){
     updateState();
   });
 
+  $("#btnCost").addEventListener("click", ()=>{
+    S.showCost = !S.showCost;
+    document.body.classList.toggle("showcost", S.showCost);
+    $("#btnCost").textContent = S.showCost ? "− Cost" : "+ Cost";
+    $("#btnCost").title = S.showCost ? "Hide the derived cost line"
+                                     : "Show our cost beneath each list price";
+    S.badCells = new Set();
+    S.secOrder.forEach(renderGrid);
+    log("info", S.showCost
+      ? "Showing derived cost (list x " + (S.rules?S.rules.netMultiplier:"?") + ") beneath each list price."
+      : "Cost lines hidden.");
+    updateState();
+  });
   $("#btnCols").addEventListener("click", openColumnPicker);
   $("#btnAdd").addEventListener("click", ()=> { if(isGridPane()) addRow(S.pane); });
   $("#btnBackup").addEventListener("click", downloadBackup);
