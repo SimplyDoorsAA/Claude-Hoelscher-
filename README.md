@@ -231,10 +231,13 @@ adders, components and hardware — and are editable.
   placeholder, so `M34--3068` covers both the Flat Glass and Iron Grille doors
   at different prices. The `id` content hash includes description and glazing,
   so ids stay unique where SKUs do not.
-- **222 fiberglass products have no catalog page.** The source spreadsheet
-  carries a page for all 368 wood products and none for any fiberglass one, so
-  the column is present and editable but empty for that line. Nothing can fill
-  it but the fiberglass catalog itself.
+- **53 products still have no catalog page.** The fiberglass dealer price
+  sheet has no Page# column at all — only the wood sheet does — so those pages
+  had to come from the 2025 Fiberglass Product Catalog. 169 of 222 fiberglass
+  products are now mapped from it. The remaining 53 are 45 Smooth Collection
+  (`NL*`) products, whose pages were not in the portion of the catalog
+  supplied, and 8 rows the price sheet prints as `CONFIGURED ITEM` with no
+  vendor part number.
 - **Two SDL bar products have no parsable size** — they are lineal bars, not
   doors, so `size.widthIn` / `heightIn` are `null`.
 - **`M23A--3068`** prices Decorative Glass identically to Flat Glass, which is
