@@ -15,13 +15,18 @@
   },
   "currency": "USD",
   "roundingMode": "half-up-to-cent",
+  "marginTiers": {
+    "builder": 0.3,
+    "retail": 0.4
+  },
+  "defaultMarginTier": "retail",
   "freight": {
     "zone": "FOB Run - San Antonio / Austin",
     "prehangChargeCentsPerUnit": 10000,
     "prehangChargeAlwaysApplies": true
   },
   "defaults": {
-    "marginPercent": 0.35,
+    "fallbackMarginPercent": 0.35,
     "laborCentsPerPrehungUnit": 0,
     "laborCentsPerSlab": 0
   }

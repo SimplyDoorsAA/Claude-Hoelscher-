@@ -110,7 +110,31 @@ export function createEngine(catalog, rules, overrides = {}) {
   const prehangChargeAlways = freight.prehangChargeAlwaysApplies !== false;
   const laborPerPrehung = Number(defaults.laborCentsPerPrehungUnit) || 0;
   const laborPerSlab = Number(defaults.laborCentsPerSlab) || 0;
-  const defaultMargin = Number(defaults.marginPercent) || 0;
+
+  /* Margin tiers. The business quotes builders and retail at different
+     margins, so the tier — not a bare percentage — is what callers pass.
+     defaults.fallbackMarginPercent is used only when no tier resolves. */
+  const tiers = {};
+  if (rules.marginTiers && typeof rules.marginTiers === "object") {
+    for (const k in rules.marginTiers) {
+      const v = Number(rules.marginTiers[k]);
+      if (isFinite(v)) tiers[k] = v;
+    }
+  }
+  const fallbackMargin = Number(
+    defaults.fallbackMarginPercent !== undefined ? defaults.fallbackMarginPercent : defaults.marginPercent
+  ) || 0;
+  const defaultTier = (rules.defaultMarginTier && tiers[rules.defaultMarginTier])
+    ? rules.defaultMarginTier
+    : (Object.keys(tiers)[0] || null);
+  const defaultMargin = defaultTier ? tiers[defaultTier] : fallbackMargin;
+
+  /** Tier name -> margin fraction. Unknown or missing tier falls back. */
+  function marginFor(tier) {
+    if (tier === undefined || tier === null || tier === "") return defaultMargin;
+    if (Object.prototype.hasOwnProperty.call(tiers, tier)) return tiers[tier];
+    return fallbackMargin;
+  }
 
   /** How many prehung units a configuration represents (drives freight + labour). */
   function prehungUnits(config) {
@@ -269,7 +293,11 @@ export function createEngine(catalog, rules, overrides = {}) {
   function priceQuote(input) {
     const spec = Array.isArray(input) ? { lines: input } : (input || {});
     const lines = Array.isArray(spec.lines) ? spec.lines : [];
-    const marginPercent = spec.marginPercent === undefined ? defaultMargin : Number(spec.marginPercent);
+    // An explicit marginPercent still wins; otherwise the tier decides.
+    const marginTier = spec.marginTier === undefined ? defaultTier : spec.marginTier;
+    const marginPercent = spec.marginPercent === undefined
+      ? marginFor(marginTier)
+      : Number(spec.marginPercent);
 
     const priced = lines.map(l => priceLine(l, marginPercent));
     const usable = priced.filter(l => !l.notOffered);
@@ -285,6 +313,7 @@ export function createEngine(catalog, rules, overrides = {}) {
       unitCount,
       lineCount: priced.length,
       unavailableCount: priced.length - usable.length,
+      marginTier,
       marginPercent,
       currency: rules.currency || "USD",
       totalCostCents,
@@ -312,6 +341,9 @@ export function createEngine(catalog, rules, overrides = {}) {
     componentList: () => components,
     adderList: () => adders,
     defaultMarginPercent: defaultMargin,
+    defaultMarginTier: defaultTier,
+    marginTiers: () => Object.assign({}, tiers),
+    marginFor,
     netMultiplier, prehangChargeCents,
     availableOptions, priceLine, priceQuote, facets,
     toCost, prehungUnits

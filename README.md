@@ -153,6 +153,26 @@ Each array becomes its own tab. The grid is built from the data, so a catalog
 carrying different arrays or extra fields still renders — unmodelled fields
 appear as extra columns rather than being dropped.
 
+### Margin tiers
+
+Two customer tiers, set in `pricing-rules.json` and editable in App A's Pricing
+Rules tab:
+
+| Tier | Margin | Resulting price |
+| --- | --- | --- |
+| Builder | 30% | 68.6% of Hoelscher list |
+| Retail | 40% | 80.0% of Hoelscher list |
+
+Because cost is a fixed 48% of list, the margin is also a discount-off-list
+dial: `sell = list x 0.48 / (1 − margin)`. Selling at list would be a 52%
+margin. `defaultMarginTier` decides which one the Quoter opens on — retail, so
+a builder price is never shown by default. `defaults.fallbackMarginPercent`
+applies only if a tier cannot be resolved.
+
+App B carries a Builder/Retail switch in the header and a second one inside the
+quote drawer (the drawer is modal and covers the header). Cost is unaffected by
+the tier; only the customer price moves.
+
 ### Reading prices in App A
 
 Money is shown as `$1,728.00` — dollar sign, thousands separator, always two

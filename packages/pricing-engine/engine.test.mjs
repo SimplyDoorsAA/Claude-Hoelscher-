@@ -55,7 +55,9 @@ t("margin >= 1 is rejected rather than dividing by zero", () => {
 t("reads the multiplier and scope from the rules file", () => {
   assert.equal(engine.netMultiplier, 0.48);
   assert.equal(engine.prehangChargeCents, 10000);
-  assert.equal(engine.defaultMarginPercent, 0.35);
+  assert.equal(engine.defaultMarginPercent, 0.40);      // retail tier is the default
+  assert.deepEqual(engine.marginTiers(), { builder: 0.30, retail: 0.40 });
+  assert.equal(engine.defaultMarginTier, "retail");
 });
 t("cost = list x 0.48 for a list-basis product", () => {
   const p = engine.products.find(x => x.sku === "FG1LVCLE3080");
@@ -106,7 +108,7 @@ t("slab line: cost = list x 0.48, no prehang freight", () => {
   assert.equal(l.doorCostCents, 82944);
   assert.equal(l.freightCents, 0);
   assert.equal(l.unitCostCents, 82944);
-  assert.equal(l.unitSellCents, applyMargin(82944, 0.35));
+  assert.equal(l.unitSellCents, applyMargin(82944, 0.40));
 });
 t("singlePH line adds exactly one prehang freight charge", () => {
   const l = engine.priceLine({ productId: door.id, finish: "unfinished", config: "singlePH", qty: 1 });
@@ -160,6 +162,27 @@ t("an unknown accessory is flagged, not silently free", () => {
 });
 
 /* ---------- quote totals ---------- */
+t("margin tiers resolve, and an unknown tier falls back rather than free-pricing", () => {
+  assert.equal(engine.marginFor("builder"), 0.30);
+  assert.equal(engine.marginFor("retail"), 0.40);
+  assert.equal(engine.marginFor(undefined), 0.40);
+  assert.equal(engine.marginFor("nonsense"), 0.35);      // defaults.fallbackMarginPercent
+});
+t("builder pricing is below retail for the same line", () => {
+  const line = [{ productId: door.id, finish: "unfinished", config: "singlePH", qty: 2 }];
+  const b = engine.priceQuote({ lines: line, marginTier: "builder" });
+  const r = engine.priceQuote({ lines: line, marginTier: "retail" });
+  assert.equal(b.totalCostCents, r.totalCostCents);         // cost is tier-independent
+  assert.ok(b.grandTotalSellCents < r.grandTotalSellCents);
+  assert.equal(b.marginTier, "builder");
+  assert.equal(b.grandTotalSellCents, applyMargin(b.totalCostCents / 2, 0.30) * 2);
+  assert.equal(r.grandTotalSellCents, applyMargin(r.totalCostCents / 2, 0.40) * 2);
+});
+t("an explicit marginPercent still overrides the tier", () => {
+  const q = engine.priceQuote({ lines: [{ productId: door.id, finish: "unfinished", config: "slab", qty: 1 }],
+                                marginTier: "builder", marginPercent: 0 });
+  assert.equal(q.grandTotalSellCents, q.totalCostCents);
+});
 t("priceQuote sums lines and exposes the documented field names", () => {
   const q = engine.priceQuote({ lines: [
     { productId: door.id, finish: "unfinished", config: "singlePH", qty: 2 },

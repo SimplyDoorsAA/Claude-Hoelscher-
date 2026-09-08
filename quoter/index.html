@@ -108,6 +108,8 @@ tailwind.config = {
   @media (prefers-reduced-motion: reduce){ .drawer,.scrim{ transition:none; } }
   /* Option buttons */
   .opt[aria-pressed="true"] { background:#2f4538; color:#fff; border-color:#2f4538; }
+  .tierbtn[aria-pressed="true"] { background:#2f4538; color:#fff; }
+  .tierbtn[aria-pressed="false"] { color:#78716c; }
   .opt:disabled { opacity:.32; cursor:not-allowed; text-decoration:line-through; }
   /* Hide number spinners */
   input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
@@ -127,6 +129,14 @@ tailwind.config = {
       </div>
 
       <div class="flex-1"></div>
+
+      <!-- customer tier -->
+      <div id="tierWrap" class="hidden sm:flex items-center rounded-full border border-paper-line bg-paper-card p-0.5">
+        <button id="tierBuilder" type="button" data-tier="builder" aria-pressed="false"
+          class="tierbtn rounded-full px-3 py-1 text-xs font-medium transition-colors">Builder</button>
+        <button id="tierRetail" type="button" data-tier="retail" aria-pressed="false"
+          class="tierbtn rounded-full px-3 py-1 text-xs font-medium transition-colors">Retail</button>
+      </div>
 
       <!-- price context toggle -->
       <button id="modeToggle" type="button"
@@ -209,6 +219,8 @@ tailwind.config = {
     <button id="drawerMode" type="button" aria-pressed="false"
       title="Switch between customer pricing and internal cost"
       class="rounded-full bg-paper-rail px-2.5 py-1 text-[10px] uppercase tracking-widest text-ink-mute hover:bg-brass-pale hover:text-brass-deep transition-colors"></button>
+    <button id="drawerTier" type="button" title="Switch between builder and retail margin"
+      class="rounded-full bg-paper-rail px-2.5 py-1 text-[10px] uppercase tracking-widest text-ink-mute hover:bg-brass-pale hover:text-brass-deep transition-colors"></button>
     <div class="flex-1"></div>
     <button id="closeQuote" type="button" class="rounded-full p-2 hover:bg-paper-rail" aria-label="Close quote">
       <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
@@ -267,6 +279,7 @@ const state = {
   engine: null,
   ready: false,
   mode: "customer",                       // "customer" | "cost"
+  marginTier: null,                       // "builder" | "retail" — set from the rules file
   filters: { q: "", line: "", family: "", glazing: "", type: "" },
   rendered: 0,                            // how many cards are in the DOM
   quote: { lines: [] },                   // [{ uid, productId, finish, config, qty, accessories[] }]
@@ -278,6 +291,17 @@ let uidSeq = 1;
 const nextUid = () => "L" + (uidSeq++);
 
 const isCost = () => state.mode === "cost";
+/** The margin fraction currently in force. Always via the engine. */
+const curMargin = () => state.engine.marginFor(state.marginTier);
+
+const TIER_KEY = "simplydoors.tier.v1";
+function saveTier() { try { localStorage.setItem(TIER_KEY, state.marginTier); } catch (e) {} }
+function restoreTier() {
+  let t = null;
+  try { t = localStorage.getItem(TIER_KEY); } catch (e) {}
+  const tiers = state.engine.marginTiers();
+  state.marginTier = (t && tiers[t] !== undefined) ? t : state.engine.defaultMarginTier;
+}
 
 /** Persist the quote so a refresh on a job site does not lose it. */
 const STORE_KEY = "simplydoors.quote.v1";
@@ -333,7 +357,7 @@ function filteredProducts() {
 
 /** The whole quote, priced by the engine. Never compute money outside this. */
 function pricedQuote() {
-  return state.engine.priceQuote({ lines: state.quote.lines });
+  return state.engine.priceQuote({ lines: state.quote.lines, marginTier: state.marginTier });
 }
 
 /** Card price: the cheapest offered configuration, in the active context. */
@@ -344,7 +368,7 @@ function fromPrice(product) {
   let best = null;
   for (const f of FINISHES) for (const c of CONFIGS) {
     if (!opts.isOffered(f, c)) continue;
-    const l = state.engine.priceLine({ productId: product.id, finish: f, config: c, qty: 1 });
+    const l = state.engine.priceLine({ productId: product.id, finish: f, config: c, qty: 1 }, curMargin());
     const v = isCost() ? l.unitCostCents : l.unitSellCents;
     if (v !== null && (best === null || v < best)) best = v;
   }
@@ -354,6 +378,7 @@ function fromPrice(product) {
 /* ------------------------------- 5. RENDER ------------------------------- */
 
 const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
 const el = (tag, cls, text) => {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -593,7 +618,7 @@ function renderDetail() {
   const opts = state.engine.availableOptions(d.productId);
   const line = state.engine.priceLine({
     productId: d.productId, finish: d.finish, config: d.config, qty: d.qty, accessories: d.accessories
-  });
+  }, curMargin());
 
   const root = $("#detail");
   root.textContent = "";
@@ -748,7 +773,7 @@ function accessoryBlock(product, draft) {
     const row = el("div", "flex items-center gap-2 rounded-lg border border-paper-line bg-paper-card px-3 py-2");
     row.appendChild(el("span", "flex-1 truncate text-sm", priced.label));
     row.appendChild(el("span", "tnum text-sm text-ink-mute",
-      formatCents(isCost() ? priced.costCents : applyMargin(priced.costCents, state.engine.defaultMarginPercent))));
+      formatCents(isCost() ? priced.costCents : applyMargin(priced.costCents, curMargin()))));
     const rm = el("button", "rounded p-1 text-ink-faint hover:text-red-700", "✕");
     rm.type = "button";
     rm.setAttribute("aria-label", "Remove " + priced.label);
@@ -934,7 +959,8 @@ function renderTotals(q) {
   if (isCost()) {
     box.appendChild(line("Freight (prehang)", formatCents(q.totalFreightCents)));
     if (q.totalLaborCents) box.appendChild(line("Labour", formatCents(q.totalLaborCents)));
-    box.appendChild(line("Margin @ " + Math.round(q.marginPercent * 100) + "%", formatCents(q.marginCents)));
+    box.appendChild(line(titleize(q.marginTier || "") + " margin @ " + Math.round(q.marginPercent * 100) + "%",
+      formatCents(q.marginCents)));
     const total = el("div", "mt-2 flex items-baseline justify-between border-t border-paper-line pt-2");
     total.appendChild(el("span", "font-display text-xl", "Total cost"));
     total.appendChild(el("span", "tnum font-display text-2xl", formatCents(q.totalCostCents)));
@@ -948,7 +974,9 @@ function renderTotals(q) {
     total.appendChild(el("span", "tnum font-display text-2xl", formatCents(q.grandTotalSellCents)));
     box.appendChild(total);
     box.appendChild(el("p", "mt-1 text-[11px] text-ink-faint",
-      q.unitCount + " unit" + (q.unitCount === 1 ? "" : "s") + " · prices exclude tax and installation."));
+      q.unitCount + " unit" + (q.unitCount === 1 ? "" : "s") + " · " +
+      titleize(q.marginTier || "") + " pricing at " + Math.round(q.marginPercent * 100) + "% margin" +
+      " · excludes tax and installation."));
   }
 
   if (q.unavailableCount) {
@@ -976,6 +1004,21 @@ function renderTotals(q) {
 
 const LOCK_CLOSED = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
 const LOCK_OPEN   = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.5-2"/></svg>';
+
+function renderTier() {
+  const tiers = state.engine ? state.engine.marginTiers() : {};
+  const pct = t => Math.round((tiers[t] || 0) * 100) + "%";
+  ["builder", "retail"].forEach(t => {
+    const b = document.getElementById("tier" + t.charAt(0).toUpperCase() + t.slice(1));
+    if (!b) return;
+    const on = state.marginTier === t;
+    b.setAttribute("aria-pressed", String(on));
+    b.title = titleize(t) + " margin " + pct(t);
+    b.hidden = tiers[t] === undefined;
+  });
+  const dt = $("#drawerTier");
+  if (dt) dt.textContent = titleize(state.marginTier || "") + " " + pct(state.marginTier);
+}
 
 function renderMode() {
   $("#modeIcon").innerHTML = isCost() ? LOCK_OPEN : LOCK_CLOSED;
@@ -1015,6 +1058,24 @@ function wire() {
   };
   // The header toggle is covered while the drawer is open, and the drawer is
   // exactly where cost-vs-price gets compared, so it carries its own switch.
+  const setTier = t => {
+    const tiers = state.engine.marginTiers();
+    if (tiers[t] === undefined) return;
+    state.marginTier = t;
+    saveTier();
+    renderTier();
+    renderCatalog(true);
+    renderQuote();
+    if (state.draft) renderDetail();
+  };
+  $$(".tierbtn").forEach(b => b.addEventListener("click", () => setTier(b.dataset.tier)));
+  // The drawer covers the header, so it can cycle the tier itself.
+  $("#drawerTier").addEventListener("click", () => {
+    const names = Object.keys(state.engine.marginTiers());
+    if (!names.length) return;
+    setTier(names[(names.indexOf(state.marginTier) + 1) % names.length]);
+  });
+
   $("#modeToggle").addEventListener("click", toggleMode);
   $("#drawerMode").addEventListener("click", toggleMode);
 
@@ -1069,6 +1130,8 @@ async function boot() {
       err.message + ". The published catalog could not be read, so no pricing is shown.";
     return;
   }
+  restoreTier();
+  renderTier();
   restoreQuote();
   renderFilters();
   $("#loading").classList.add("hidden");
