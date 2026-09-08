@@ -338,8 +338,6 @@ table.grid tbody tr.dirty td.g-unf,table.grid tbody tr.dirty td.g-pre{background
 
   <div class="toolbar">
     <div class="tabs" role="tablist">
-      <button role="tab" id="tabProducts"  aria-selected="true"  data-pane="products">Products</button>
-      <button role="tab" id="tabAdders"    aria-selected="false" data-pane="adders">Prehang Adders</button>
       <button role="tab" id="tabRules"     aria-selected="false" data-pane="rules">Pricing Rules</button>
       <button role="tab" id="tabRaw"       aria-selected="false" data-pane="raw">Payload</button>
     </div>
@@ -358,12 +356,6 @@ table.grid tbody tr.dirty td.g-unf,table.grid tbody tr.dirty td.g-pre{background
   </div>
 
   <div class="main">
-    <section class="pane active" id="paneProducts">
-      <div class="gridwrap" id="wrapProducts"></div>
-    </section>
-    <section class="pane" id="paneAdders">
-      <div class="gridwrap" id="wrapAdders"></div>
-    </section>
     <section class="pane" id="paneRules">
       <div class="rules" id="rulesBody"></div>
     </section>
@@ -457,17 +449,19 @@ const S = {
   // They differ because JSON has one number type: 1.0 re-serializes as 1.
   catalog:null, catalogSha:null, catalogText:"", catalogRaw:"",
   rules:null,   rulesSha:null,   rulesText:"",   rulesRaw:"",
-  products:[], adders:[],
-  cols:{ products:[], adders:[] },
+  // One section per array of objects found in the catalog. Each carries its own
+  // rows, columns, hidden-column set, sort and structural-dirty flag, so the app
+  // adapts to whatever arrays the file actually holds.
+  sec:{}, secOrder:[],
   origin:new WeakMap(),        // row object -> JSON snapshot at load time
-  structDirty:{ products:false, adders:false },  // add/delete/reorder
   badCells:new Set(),
-  pane:"products",
+  pane:null,
   units:"dollars",             // "dollars" | "cents"
   filter:"",
-  sort:{ products:null, adders:null },   // {path, dir}
-  hidden:{ products:new Set(), adders:new Set() },
 };
+function sec(k){ return S.sec[k]; }
+function isGridPane(){ return !!S.sec[S.pane]; }
+function gridKinds(){ return S.secOrder; }
 const LS_COLS = "sd.pricemgr.cols.v1";
 
 /* ------------------------------ dom helpers ----------------------------- */
@@ -518,6 +512,7 @@ function log(kind, msg, strongTail){
 /* Integer-cents in, canonical dollar string out. */
 function centsToDollars(c){
   if(c===null||c===undefined) return "";
+  if(typeof c!=="number" || !isFinite(c)) return "";
   const neg = c<0, n = Math.abs(Math.trunc(c));
   return (neg?"-":"") + Math.floor(n/100) + "." + String(n%100).padStart(2,"0");
 }
@@ -698,26 +693,42 @@ async function putFile(path, text, sha, message){
 }
 
 /* ============================ catalog shape ============================== */
-/* Tolerant locator: the catalog may be an array of products or an object
-   wrapping products + prehang adders under any of several conventional keys. */
-const PRODUCT_KEYS = ["products","items","catalog","doors","skus"];
-const ADDER_KEYS   = ["prehangAdders","prehang_adders","prehangadders","adders","prehangs","prehangOptions","options"];
-function locateArrays(catalog){
-  const out = { products:[], adders:[], productsKey:null, addersKey:null };
-  if(Array.isArray(catalog)){ out.products = catalog; out.productsKey="(root array)"; return out; }
-  if(!catalog || typeof catalog!=="object") return out;
-  for(const k of PRODUCT_KEYS) if(Array.isArray(catalog[k])){ out.products=catalog[k]; out.productsKey=k; break; }
-  for(const k of ADDER_KEYS)   if(Array.isArray(catalog[k])){ out.adders=catalog[k];  out.addersKey=k;  break; }
-  if(!out.productsKey){
-    // fall back to the largest array of objects on the root
-    let best=null,bk=null;
-    for(const k in catalog){
-      const v = catalog[k];
-      if(Array.isArray(v) && v.length && typeof v[0]==="object" && (!best || v.length>best.length)){ best=v; bk=k; }
-    }
-    if(best){ out.products=best; out.productsKey=bk; }
+/* The catalog may be a bare array of products or an object wrapping several
+   arrays. Every array of objects becomes an editable section/tab. */
+const KNOWN_SECTIONS = ["products","prehangAdders","prehang_adders","adders","components","hardware",
+                        "accessories","glass","finishes","items"];
+function humanize(k){
+  return String(k).replace(/[_-]+/g," ")
+    .replace(/([a-z0-9])([A-Z])/g,"$1 $2")
+    .replace(/\b\w/g, m=>m.toUpperCase()).trim();
+}
+function presetFor(key){
+  if(/^products?$|^items$|^doors$|^skus$|^catalog$/i.test(key)) return PRODUCT_PRESET;
+  if(/prehang|adder/i.test(key)) return ADDER_PRESET;
+  if(/component|millwork/i.test(key)) return COMPONENT_PRESET;
+  if(/hardware/i.test(key)) return HARDWARE_PRESET;
+  return [];
+}
+function discoverSections(catalog){
+  const found = [];
+  if(Array.isArray(catalog)){
+    found.push({ key:"products", label:"Products", rows:catalog });
+    return found;
   }
-  return out;
+  if(!catalog || typeof catalog!=="object") return found;
+  const keys = Object.keys(catalog).filter(k=>{
+    const v = catalog[k];
+    return Array.isArray(v) && v.some(x=> x && typeof x==="object" && !Array.isArray(x));
+  });
+  keys.sort((a,b)=>{
+    const ia = KNOWN_SECTIONS.indexOf(a), ib = KNOWN_SECTIONS.indexOf(b);
+    if(ia>=0 && ib>=0) return ia-ib;
+    if(ia>=0) return -1;
+    if(ib>=0) return 1;
+    return a.localeCompare(b);
+  });
+  keys.forEach(k=> found.push({ key:k, label:humanize(k), rows:catalog[k] }));
+  return found;
 }
 
 /* ============================ column engine ============================== */
@@ -743,18 +754,46 @@ const PRODUCT_PRESET = [
   { path:"prices.prefinished.slab",     label:"Slab",         kind:"money",  w:96, grp:"pre", grpLabel:"Prefinished" },
   { path:"prices.prefinished.singlePH", label:"Single PH",    kind:"money",  w:96, grp:"pre", grpLabel:"Prefinished" },
   { path:"prices.prefinished.doublePH", label:"Double PH",    kind:"money",  w:96, grp:"pre", grpLabel:"Prefinished" },
+  { path:"catalogPage",                 label:"Cat. Page",    kind:"text",   w:82 },
   { path:"notes",                       label:"Notes",        kind:"text",   w:180 }
 ];
+const COMPONENT_PRESET = [
+  { path:"description",          label:"Description",  kind:"text",   w:300, required:true },
+  { path:"id",                   label:"ID (hash)",    kind:"ro",     w:104 },
+  { path:"category",             label:"Category",     kind:"text",   w:150, list:true },
+  { path:"line",                 label:"Line",         kind:"text",   w:104, list:true },
+  { path:"unit",                 label:"Unit",         kind:"text",   w:74,  list:true },
+  { path:"priceBasis",           label:"Price Basis",  kind:"basis",  w:96 },
+  { path:"priceCents",           label:"Price",        kind:"money",  w:100, grp:"unf", grpLabel:"List" },
+  { path:"freightUnitsPerPiece", label:"Freight/Pc",   kind:"number", w:88 },
+  { path:"sourcePage",           label:"Src Page",     kind:"text",   w:80 },
+  { path:"notes",                label:"Notes",        kind:"text",   w:240 }
+];
+const HARDWARE_PRESET = [
+  { path:"sku",         label:"SKU",         kind:"text",  w:160, mono:true },
+  { path:"id",          label:"ID (hash)",   kind:"ro",    w:104 },
+  { path:"description", label:"Description", kind:"text",  w:300, required:true },
+  { path:"category",    label:"Category",    kind:"text",  w:170, list:true },
+  { path:"priceBasis",  label:"Price Basis", kind:"basis", w:96 },
+  { path:"priceCents",  label:"Price",       kind:"money", w:100, grp:"unf", grpLabel:"List" },
+  { path:"sourcePage",  label:"Src Page",    kind:"text",  w:140 },
+  { path:"notes",       label:"Notes",       kind:"text",  w:240 }
+];
 const ADDER_PRESET = [
-  { path:"code",          label:"Code",        kind:"text",   w:130, mono:true },
+  { path:"configuration", label:"Configuration", kind:"text", w:230, list:true, required:true },
   { path:"id",            label:"ID (hash)",   kind:"ro",     w:104 },
-  { path:"label",         label:"Label",       kind:"text",   w:250, required:true },
+  { path:"line",          label:"Line",        kind:"text",   w:110, list:true },
+  { path:"topStyle",      label:"Top Style",   kind:"text",   w:120, list:true },
+  { path:"adderType",     label:"Adder Type",  kind:"text",   w:110, list:true },
+  { path:"code",          label:"Code",        kind:"text",   w:130, mono:true },
+  { path:"label",         label:"Label",       kind:"text",   w:250 },
   { path:"description",   label:"Description", kind:"text",   w:280 },
   { path:"category",      label:"Category",    kind:"text",   w:120, list:true },
   { path:"appliesTo",     label:"Applies To",  kind:"csv",    w:170 },
   { path:"priceBasis",    label:"Price Basis", kind:"basis",  w:96 },
   { path:"multiplier",    label:"Multiplier",  kind:"number", w:88 },
   { path:"required",      label:"Req",         kind:"bool",   w:44 },
+  { path:"priceCents",      label:"Adder Price",kind:"money", w:110, grp:"unf", grpLabel:"List" },
   { path:"prices.singlePH", label:"Single PH", kind:"money",  w:96, grp:"unf", grpLabel:"Adder" },
   { path:"prices.doublePH", label:"Double PH", kind:"money",  w:96, grp:"unf", grpLabel:"Adder" },
   { path:"notes",         label:"Notes",       kind:"text",   w:200 }
@@ -772,8 +811,12 @@ function leafPaths(obj, prefix, out, depth){
   return out;
 }
 function isMoneyPath(path){
-  const leaf = path.split(".").pop();
-  return /^prices?(\.|$)/.test(path) || /(^|\.)prices?\./.test(path) || /cents$/i.test(leaf) || /^(list|net)Price$/.test(leaf);
+  const segs = path.split(".");
+  if(segs[0]==="prices" || segs[0]==="price") return true;
+  // any segment ending in "Cents" makes it and everything under it money, so
+  // variant maps such as priceVariantsCents.mahogany are handled too.
+  if(segs.some(x=> /cents$/i.test(x))) return true;
+  return /^(list|net)Price$/.test(segs[segs.length-1]);
 }
 function inferKind(path, samples){
   if(/(^|\.)id$/.test(path)) return "ro";
@@ -792,8 +835,13 @@ function inferKind(path, samples){
 }
 function buildColumns(rows, preset){
   const seen = Object.create(null);
-  const order = [];
+  let order = [];
   rows.forEach(r=> leafPaths(r).forEach(p=>{ if(!seen[p]){ seen[p]=[]; order.push(p); } }));
+  // Drop container paths: a row with `x: null` and a row with `x: {a:1}` both
+  // contribute, but only the leaves `x.a` are editable cells.
+  const container = Object.create(null);
+  order.forEach(p=> order.forEach(q=>{ if(q!==p && q.indexOf(p+".")===0) container[p]=1; }));
+  order = order.filter(p=>{ if(container[p]){ delete seen[p]; return false; } return true; });
   rows.forEach(r=> order.forEach(p=>{ const v=getPath(r,p); if(v!==undefined) seen[p].push(v); }));
 
   const cols = [];
@@ -824,81 +872,68 @@ function finishCol(col, samples){
 
 /* ========================= column visibility control ===================== */
 function visibleCols(kind){
-  const h = S.hidden[kind];
-  const cols = S.cols[kind].filter(c=> !h.has(c.path));
-  return cols.length ? cols : S.cols[kind];     // never render a zero-column grid
-}
-const COL_PRESETS = {
-  products:{
-    all:      [],
-    pricing:  ["line","family","type","glazing","size.widthIn","size.heightIn","size.label","freightUnits","notes"],
-    identity: ["prices.unfinished.slab","prices.unfinished.singlePH","prices.unfinished.doublePH",
-               "prices.prefinished.slab","prices.prefinished.singlePH","prices.prefinished.doublePH"]
-  },
-  adders:{
-    all:      [],
-    pricing:  ["category","appliesTo","required","notes"],
-    identity: []
-  }
-};
-function applyPreset(kind, name){
-  S.hidden[kind] = new Set(COL_PRESETS[kind][name] || []);
-  saveColPrefs(); renderGrid(kind);
+  const S1 = sec(kind); if(!S1) return [];
+  const cols = S1.cols.filter(c=> !S1.hidden.has(c.path));
+  return cols.length ? cols : S1.cols;     // never render a zero-column grid
 }
 function saveColPrefs(){
-  try{ localStorage.setItem(LS_COLS, JSON.stringify({
-    products:Array.from(S.hidden.products), adders:Array.from(S.hidden.adders) })); }catch(e){}
-}
-function loadColPrefs(){
   try{
-    const o = JSON.parse(localStorage.getItem(LS_COLS)||"null");
-    if(o){ S.hidden.products = new Set(o.products||[]); S.hidden.adders = new Set(o.adders||[]); }
+    const o={}; S.secOrder.forEach(k=> o[k]=Array.from(sec(k).hidden));
+    localStorage.setItem(LS_COLS, JSON.stringify(o));
   }catch(e){}
 }
+function loadColPrefsFor(key){
+  try{
+    const o = JSON.parse(localStorage.getItem(LS_COLS)||"null");
+    if(o && Array.isArray(o[key])) return new Set(o[key]);
+  }catch(e){}
+  return new Set();
+}
 function openColumnPicker(){
-  const kind = S.pane==="adders" ? "adders" : "products";
-  const all = S.cols[kind];
-  if(!all.length){ log("warn","No columns to configure — load a catalog first."); return; }
+  const kind = S.pane, S1 = sec(kind);
+  if(!S1 || !S1.cols.length){ log("warn","No columns to configure — load a catalog first."); return; }
+  const all = S1.cols;
   const list = el("div",{style:"display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:2px 14px"});
   const boxes = [];
-  all.forEach(c=>{
+  all.forEach((c,i)=>{
     const cb = el("input",{type:"checkbox"});
-    cb.checked = !S.hidden[kind].has(c.path);
-    cb.disabled = c.path==="sku" || c.path==="code";     // keep the sticky anchor column
-    boxes.push({cb, path:c.path});
+    cb.checked = !S1.hidden.has(c.path);
+    cb.disabled = (i===0);                     // keep the sticky anchor column
+    boxes.push({cb, col:c, i});
     list.appendChild(el("label",{class:"checkline",style:"font-size:12px",title:c.path},
       cb, document.createTextNode((c.grpLabel? c.grpLabel+" › ":"") + c.label)));
   });
-  const setAll = v => boxes.forEach(b=>{ if(!b.cb.disabled) b.cb.checked = v; });
+  const apply = fn => boxes.forEach(b=>{ if(!b.cb.disabled) b.cb.checked = fn(b.col, b.i); });
   const body = el("div",{},
     el("p",{class:"legend",text:"Hidden columns are display-only — their values are still published untouched."}),
     el("div",{style:"display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px"},
-      el("button",{class:"btn sm",onclick:()=>setAll(true)},"Select all"),
-      el("button",{class:"btn sm",onclick:()=>{ setAll(false);
-        boxes.forEach(b=>{ if((COL_PRESETS[kind].pricing||[]).indexOf(b.path)<0) b.cb.checked = true; }); }},"Pricing focus"),
-      el("button",{class:"btn sm",onclick:()=>{ setAll(false);
-        boxes.forEach(b=>{ if((COL_PRESETS[kind].identity||[]).indexOf(b.path)<0) b.cb.checked = true; }); }},"Specs only")
+      el("button",{class:"btn sm",onclick:()=>apply(()=>true)},"Select all"),
+      el("button",{class:"btn sm",onclick:()=>apply(c=>
+        c.kind==="money" || c.kind==="ro" || c.kind==="basis" || c.required)},"Pricing focus"),
+      el("button",{class:"btn sm",onclick:()=>apply(c=> c.kind!=="money")},"Specs only")
     ),
     list
   );
-  openModal("Columns — " + (kind==="products"?"Products":"Prehang Adders"), body, [
+  openModal("Columns — " + S1.label, body, [
     { label:"Cancel", value:false },
     { label:"Apply", value:true, cls:"primary" }
   ]).then(v=>{
     if(!v) return;
-    S.hidden[kind] = new Set(boxes.filter(b=>!b.cb.checked).map(b=>b.path));
+    S1.hidden = new Set(boxes.filter(b=>!b.cb.checked).map(b=>b.col.path));
     saveColPrefs();
     renderGrid(kind);
-    log("info", S.hidden[kind].size + " column(s) hidden on the " + kind + " grid.");
+    log("info", S1.hidden.size + " column(s) hidden on the " + S1.label + " grid.");
   });
 }
 
 /* =============================== grid render ============================= */
+function cssId(k){ return String(k).replace(/[^A-Za-z0-9_-]/g,"_"); }
 function snapshot(rows){ rows.forEach(r=> S.origin.set(r, JSON.stringify(r))); }
 function isRowDirty(row){ const o = S.origin.get(row); return o===undefined || o !== JSON.stringify(row); }
 
 function visibleRows(kind){
-  const rows = kind==="products" ? S.products : S.adders;
+  const S1 = sec(kind); if(!S1) return [];
+  const rows = S1.rows;
   const q = S.filter.trim().toLowerCase();
   let view = rows.map((row,idx)=>({row,idx}));
   if(q){
@@ -908,7 +943,7 @@ function visibleRows(kind){
       return terms.every(t=> hay.indexOf(t)>=0);
     });
   }
-  const s = S.sort[kind];
+  const s = S1.sort;
   if(s){
     view.sort((a,b)=>{
       const av = getPath(a.row, s.path), bv = getPath(b.row, s.path);
@@ -926,13 +961,15 @@ function visibleRows(kind){
 }
 
 function renderGrid(kind){
-  const wrap = kind==="products" ? $("#wrapProducts") : $("#wrapAdders");
-  const rows = kind==="products" ? S.products : S.adders;
+  const S1 = sec(kind); if(!S1) return;
+  const wrap = $("#wrap-" + cssId(kind));
+  if(!wrap) return;
+  const rows = S1.rows;
   const cols = visibleCols(kind);
   wrap.textContent = "";
   if(!rows.length){
     wrap.appendChild(el("div",{class:"empty"},
-      el("p",{text: kind==="products" ? "No products in this catalog file." : "No prehang adders in this catalog file."}),
+      el("p",{text:"No rows in “" + S1.label + "”."}),
       el("p",{text:"Use “+ Row” to append one."})
     ));
     updateCounts(); return;
@@ -951,17 +988,17 @@ function renderGrid(kind){
   const tr = el("tr");
   tr.appendChild(el("th",{class:"c0",title:"Row number (file order)"},"#"));
   cols.forEach((c,i)=>{
-    const s = S.sort[kind];
+    const s = S1.sort;
     const arrow = s && s.path===c.path ? (s.dir==="asc" ? "▲" : "▼") : "";
     const th = el("th",{
       class:(i===0?"c1 ":"") + (c.grp?("g-"+c.grp+" "):""),
       "data-sort":c.path,
       title:c.path + (c.extra ? "  (field not in the reference schema — preserved as-is)" : ""),
       onclick:()=>{
-        const cur = S.sort[kind];
-        S.sort[kind] = (cur && cur.path===c.path && cur.dir==="asc") ? {path:c.path,dir:"desc"}
-                     : (cur && cur.path===c.path && cur.dir==="desc") ? null
-                     : {path:c.path,dir:"asc"};
+        const cur = S1.sort;
+        S1.sort = (cur && cur.path===c.path && cur.dir==="asc") ? {path:c.path,dir:"desc"}
+                : (cur && cur.path===c.path && cur.dir==="desc") ? null
+                : {path:c.path,dir:"asc"};
         renderGrid(kind);
       }
     });
@@ -1136,7 +1173,8 @@ function clearBad(input){
   if(had) updateState();
 }
 function afterEdit(kind, row){
-  const wrap = kind==="products" ? $("#wrapProducts") : $("#wrapAdders");
+  const wrap = $("#wrap-" + cssId(kind));
+  if(!wrap) return;
   const trs = $$("tbody tr", wrap);
   for(const tr of trs){ if(tr.__row===row){ tr.classList.toggle("dirty", isRowDirty(row)); break; } }
   scheduleUpdate();
@@ -1162,67 +1200,69 @@ function gridKeys(ev){
 /* ============================= add / dup / delete ======================== */
 function newProductTemplate(){
   return { id:null, sku:"", line:"", family:"", type:"door", description:"", glazing:null,
-    size:{ code:"", widthIn:0, heightIn:0, label:"" },
-    freightUnits:1.0, priceBasis:"list",
+    size:{ code:"", widthIn:null, heightIn:null, label:"" },
+    freightUnits:null, priceBasis:"list",
     prices:{ unfinished:{ slab:null, singlePH:null, doublePH:null },
              prefinished:{ slab:null, singlePH:null, doublePH:null } },
-    notes:null };
+    catalogPage:null, notes:null };
 }
-function newAdderTemplate(){
-  return { id:null, code:"", label:"", category:"", appliesTo:["singlePH","doublePH"],
-           priceBasis:"list", prices:{ singlePH:null, doublePH:null }, notes:null };
+/* A new row copies the field shape of the rows already present, so it carries
+   exactly the same keys as its siblings whatever the section holds. */
+function templateFor(kind){
+  const S1 = sec(kind);
+  const tpl = (S1.preset===PRODUCT_PRESET) ? newProductTemplate() : { id:null };
+  const proto = S1.rows[0];
+  if(proto) leafPaths(proto).forEach(p=>{ if(!hasPath(tpl,p)) setPath(tpl,p, p==="priceBasis" ? "list" : null); });
+  return tpl;
 }
+/* Identifying content for a brand-new row's hash: every non-money, non-id leaf. */
 function hashInputsFor(kind, row){
-  return kind==="products"
-    ? [row.sku, row.line, row.type, row.size && row.size.code, row.description, row.glazing]
-    : [row.code, row.label, row.category, JSON.stringify(row.appliesTo||null)];
+  return leafPaths(row)
+    .filter(p=> p!=="id" && !isMoneyPath(p))
+    .sort()
+    .map(p=> p + "=" + JSON.stringify(getPath(row,p)));
 }
 async function mintId(kind, row){
   row.id = await contentHash(hashInputsFor(kind,row).concat([String(Date.now()), String(Math.random())]));
   return row.id;
 }
 async function addRow(kind){
-  const rows = kind==="products" ? S.products : S.adders;
-  const tpl = kind==="products" ? newProductTemplate() : newAdderTemplate();
-  // Match the shape of existing rows so the new row carries the same fields.
-  if(rows.length){
-    const proto = rows[0];
-    leafPaths(proto).forEach(p=>{ if(!hasPath(tpl,p)) setPath(tpl,p,null); });
-  }
+  const S1 = sec(kind); if(!S1) return;
+  const tpl = templateFor(kind);
   await mintId(kind,tpl);
-  rows.push(tpl);
-  S.structDirty[kind] = true;
-  S.cols[kind] = buildColumns(rows, kind==="products"?PRODUCT_PRESET:ADDER_PRESET);
-  log("info","New " + (kind==="products"?"product":"adder") + " row appended · id minted ", tpl.id);
+  S1.rows.push(tpl);
+  S1.structDirty = true;
+  S1.cols = buildColumns(S1.rows, S1.preset);
+  log("info","New row appended to " + S1.label + " · id minted ", tpl.id);
   renderGrid(kind); updateState(); renderRaw();
-  const wrap = kind==="products" ? $("#wrapProducts") : $("#wrapAdders");
-  const last = wrap.querySelector("tbody tr:last-child [data-c]");
+  const wrap = $("#wrap-" + cssId(kind));
+  const last = wrap && wrap.querySelector("tbody tr:last-child [data-c]");
   if(last) last.focus();
 }
 async function duplicateRow(kind, row){
-  const rows = kind==="products" ? S.products : S.adders;
+  const S1 = sec(kind);
   const copy = JSON.parse(JSON.stringify(row));
   await mintId(kind, copy);
-  if(copy.sku) copy.sku = copy.sku + "-COPY";
-  if(copy.code) copy.code = copy.code + "-COPY";
-  rows.splice(rows.indexOf(row)+1, 0, copy);
-  S.structDirty[kind]=true;
-  log("info","Row duplicated · new id ", copy.id);
+  if(typeof copy.sku==="string" && copy.sku)   copy.sku  = copy.sku + "-COPY";
+  if(typeof copy.code==="string" && copy.code) copy.code = copy.code + "-COPY";
+  S1.rows.splice(S1.rows.indexOf(row)+1, 0, copy);
+  S1.structDirty = true;
+  log("info","Row duplicated in " + S1.label + " · new id ", copy.id);
   renderGrid(kind); updateState(); renderRaw();
 }
 function deleteRow(kind, row){
-  const label = row.sku || row.code || row.label || row.id || "(row)";
+  const S1 = sec(kind);
+  const label = row.sku || row.code || row.description || row.label || row.id || "(row)";
   confirmModal("Delete row",
     el("div",{},
-      el("p",{},"Remove ", el("b",{text:String(label)}), " from the catalog?"),
+      el("p",{},"Remove ", el("b",{text:String(label)}), " from ", el("b",{text:S1.label}), "?"),
       el("p",{class:"legend",text:"Saved quotes that reference this id will no longer resolve against the published catalog. This only takes effect once you publish."})
     ),
     "Delete row", ()=>{
-      const rows = kind==="products" ? S.products : S.adders;
-      const i = rows.indexOf(row);
-      if(i>=0) rows.splice(i,1);
-      S.structDirty[kind]=true;
-      log("warn","Row removed: " + label);
+      const i = S1.rows.indexOf(row);
+      if(i>=0) S1.rows.splice(i,1);
+      S1.structDirty = true;
+      log("warn","Row removed from " + S1.label + ": " + label);
       renderGrid(kind); updateState(); renderRaw();
     });
 }
@@ -1371,7 +1411,7 @@ function validate(){
   if(S.badCells.size) errors.push(S.badCells.size + " cell(s) contain input that could not be parsed — clear the red cells first.");
 
   const seenIds = new Map();
-  const check = (kind, rows, labelOf)=>{
+  const check = (kind, rows, labelOf, isProducts)=>{
     rows.forEach((row,i)=>{
       const tag = kind + " #" + (i+1) + " " + labelOf(row);
       const id = row.id;
@@ -1384,7 +1424,7 @@ function validate(){
       if("priceBasis" in row){
         if(row.priceBasis!=="list" && row.priceBasis!=="net")
           errors.push(tag + ': priceBasis must be exactly "list" or "net" (found ' + JSON.stringify(row.priceBasis) + ").");
-      } else if(kind==="Product"){
+      } else if(isProducts){
         errors.push(tag + ": priceBasis is required and must be \"list\" or \"net\".");
       }
 
@@ -1400,26 +1440,33 @@ function validate(){
           if(Math.abs(v)>MAX_CENTS) errors.push(tag + ": " + p + " is out of range.");
         }
       });
-      if(!anyPrice) warnings.push(tag + ": every price is null — this item is not offered in any configuration.");
+      if(!anyPrice && moneyLeavesOf(row).length)
+        warnings.push(tag + ": every price is null — this item is not offered in any configuration.");
 
-      if(kind==="Product"){
+      if(isProducts){
         if(typeof row.sku!=="string" || row.sku.trim()==="") errors.push(tag + ": sku is required.");
         if(typeof row.description!=="string" || row.description.trim()==="") errors.push(tag + ": description is required.");
-        if("freightUnits" in row && (typeof row.freightUnits!=="number" || !isFinite(row.freightUnits)))
-          errors.push(tag + ": freightUnits must be a number.");
+        if("freightUnits" in row && row.freightUnits!==null &&
+           (typeof row.freightUnits!=="number" || !isFinite(row.freightUnits)))
+          errors.push(tag + ": freightUnits must be a number or null.");
         if(row.size){
           ["widthIn","heightIn"].forEach(k=>{
-            if(k in row.size && (typeof row.size[k]!=="number" || !isFinite(row.size[k])))
+            if(k in row.size && row.size[k]!==null &&
+               (typeof row.size[k]!=="number" || !isFinite(row.size[k])))
               warnings.push(tag + ": size." + k + " is not numeric.");
           });
         }
-      } else {
-        if(!(row.code||row.label||row.description)) warnings.push(tag + ": adder has no code or label.");
+      } else if(!(row.code||row.label||row.description||row.configuration||row.sku)){
+        warnings.push(tag + ": row has no identifying name.");
       }
     });
   };
-  check("Product", S.products, r=> r.sku || r.id || "");
-  check("Adder",   S.adders,   r=> r.code || r.label || r.id || "");
+  S.secOrder.forEach(k=>{
+    const S1 = sec(k);
+    const isProducts = (S1.preset===PRODUCT_PRESET);
+    check(S1.label.replace(/s$/,""), S1.rows,
+          r=> r.sku || r.code || r.configuration || r.description || r.id || "", isProducts);
+  });
 
   if(S.rules && typeof S.rules==="object"){
     const nm = S.rules.netMultiplier;
@@ -1487,6 +1534,44 @@ function confirmModal(title, bodyNode, okLabel, onOk){
   ]).then(v=>{ if(v) onOk(); });
 }
 
+/* =========================== section UI scaffolding ===================== */
+function buildSections(catalog){
+  const found = discoverSections(catalog);
+  S.sec = {}; S.secOrder = [];
+  found.forEach(f=>{
+    S.sec[f.key] = {
+      key:f.key, label:f.label, rows:f.rows,
+      preset: presetFor(f.key),
+      cols: [], hidden: loadColPrefsFor(f.key),
+      sort: null, structDirty:false
+    };
+    S.secOrder.push(f.key);
+  });
+  S.secOrder.forEach(k=>{ const S1=sec(k); S1.cols = buildColumns(S1.rows, S1.preset); });
+
+  // tabs — inserted before the fixed Pricing Rules tab
+  const tabs = $(".tabs");
+  $$(".tabs button[data-section]").forEach(b=> b.remove());
+  const anchor = $("#tabRules");
+  S.secOrder.forEach(k=>{
+    const S1 = sec(k);
+    const b = el("button",{ role:"tab","aria-selected":"false", dataset:{pane:k, section:"1"},
+                            title:k + " — " + S1.rows.length + " row(s)",
+                            onclick:()=> setPane(k) }, S1.label);
+    tabs.insertBefore(b, anchor);
+  });
+
+  // panes — inserted before the fixed Pricing Rules pane
+  const main = $(".main");
+  $$(".pane[data-section]").forEach(n=> n.remove());
+  const paneAnchor = $("#paneRules");
+  S.secOrder.forEach(k=>{
+    const pane = el("section",{class:"pane", id:"pane-"+cssId(k), dataset:{section:"1"}},
+                    el("div",{class:"gridwrap", id:"wrap-"+cssId(k)}));
+    main.insertBefore(pane, paneAnchor);
+  });
+}
+
 /* ================================== load ================================ */
 async function connectAndLoad(){
   const gerr = $("#gateErr");
@@ -1541,10 +1626,9 @@ async function loadAll(){
         + " byte delta — number formatting only, no value changed).");
     }
 
-    const found = locateArrays(S.catalog);
-    S.products = found.products; S.adders = found.adders;
-    log("info","Catalog parsed · products key: " + (found.productsKey||"none") + " (" + S.products.length + ")"
-              + " · adders key: " + (found.addersKey||"none") + " (" + S.adders.length + ")");
+    buildSections(S.catalog);
+    log("info","Catalog parsed · " + S.secOrder.length + " section(s): "
+              + S.secOrder.map(k=> k + " (" + sec(k).rows.length + ")").join(", "));
 
     let rulesOk = true;
     try{
@@ -1559,18 +1643,18 @@ async function loadAll(){
     }
 
     S.origin = new WeakMap();
-    snapshot(S.products); snapshot(S.adders);
-    S.structDirty = { products:false, adders:false };
+    S.secOrder.forEach(k=>{ const S1=sec(k); snapshot(S1.rows); S1.structDirty=false; });
     S.badCells = new Set();
-    S.cols.products = buildColumns(S.products, PRODUCT_PRESET);
-    S.cols.adders   = buildColumns(S.adders,   ADDER_PRESET);
 
-    renderGrid("products"); renderGrid("adders"); renderRules(); renderRaw();
+    if(!S.sec[S.pane]) S.pane = S.secOrder[0] || "rules";
+    setPane(S.pane);
+    S.secOrder.forEach(renderGrid); renderRules(); renderRaw();
     $("#tabRules").disabled = !rulesOk;
     const v = validate();
     showIssues(v.errors, v.warnings);
+    const total = S.secOrder.reduce((n,k)=> n + sec(k).rows.length, 0);
     log(v.errors.length ? "warn" : "ok",
-        "Load complete — " + S.products.length + " products, " + S.adders.length + " adders, "
+        "Load complete — " + total + " item(s) across " + S.secOrder.length + " section(s), "
         + v.errors.length + " errors, " + v.warnings.length + " warnings.");
     updateState();
   }catch(err){
@@ -1676,10 +1760,8 @@ async function publish(){
 
     // 3. Re-baseline the working copy so dirty flags clear.
     S.origin = new WeakMap();
-    snapshot(S.products); snapshot(S.adders);
-    S.structDirty = { products:false, adders:false };
-    renderGrid(S.pane==="adders" ? "adders" : "products");
-    renderGrid(S.pane==="adders" ? "products" : "adders");
+    S.secOrder.forEach(k=>{ const S1=sec(k); snapshot(S1.rows); S1.structDirty=false; });
+    S.secOrder.forEach(renderGrid);
     updateState(); renderRaw();
     log("ok","Publish complete. The Quoter will serve the new catalog once GitHub Pages / raw caches refresh.");
   }catch(err){
@@ -1700,9 +1782,10 @@ async function publish(){
 function defaultCommitMessage(){
   const d = new Date();
   const parts = [];
-  const dp = S.products.filter(isRowDirty).length, da = S.adders.filter(isRowDirty).length;
-  if(dp) parts.push(dp + " product" + (dp===1?"":"s"));
-  if(da) parts.push(da + " adder" + (da===1?"":"s"));
+  S.secOrder.forEach(k=>{
+    const S1 = sec(k), n = S1.rows.filter(isRowDirty).length;
+    if(n || S1.structDirty) parts.push(n + " " + S1.label.toLowerCase());
+  });
   if(serializeRules() !== S.rulesText && S.rules) parts.push("pricing rules");
   const what = parts.length ? parts.join(", ") : "catalog data";
   return "chore(pricing): update " + what + " — " + d.toISOString().slice(0,16).replace("T"," ") + "Z";
@@ -1715,11 +1798,14 @@ function scheduleUpdate(){
   updTimer = setTimeout(()=>{ updTimer=null; updateState(); renderRaw(); }, 140);
 }
 function dirtyCounts(){
-  const dp = S.products.filter(isRowDirty).length;
-  const da = S.adders.filter(isRowDirty).length;
+  let rows=0, struct=0; const per=[];
+  S.secOrder.forEach(k=>{
+    const S1 = sec(k), n = S1.rows.filter(isRowDirty).length;
+    rows += n; if(S1.structDirty) struct++;
+    if(n) per.push(n + (S1.label[0]||"?").toLowerCase());
+  });
   const dr = (S.rules!==null && serializeRules()!==S.rulesText) ? 1 : 0;
-  const struct = (S.structDirty.products?1:0) + (S.structDirty.adders?1:0);
-  return { dp, da, dr, struct, total: dp+da+dr+struct };
+  return { rows, per, dr, struct, total: rows+dr+struct };
 }
 function updateState(){
   const d = dirtyCounts();
@@ -1729,9 +1815,7 @@ function updateState(){
     pill.textContent = S.badCells.size + " invalid cell" + (S.badCells.size===1?"":"s");
   } else if(d.total){
     pill.className = "pill dirty";
-    const bits = [];
-    if(d.dp) bits.push(d.dp+"p");
-    if(d.da) bits.push(d.da+"a");
+    const bits = d.per.slice();
     if(d.dr) bits.push("rules");
     if(d.struct) bits.push("±rows");
     pill.textContent = "unsaved: " + bits.join(" ");
@@ -1743,10 +1827,9 @@ function updateState(){
   updateCounts();
 }
 function updateCounts(){
-  const kind = S.pane==="adders" ? "adders" : "products";
-  const total = (kind==="products" ? S.products : S.adders).length;
-  const shown = S.pane==="products" || S.pane==="adders" ? visibleRows(kind).length : total;
-  $("#rowCount").textContent = shown + " / " + total;
+  const S1 = sec(S.pane);
+  if(!S1){ $("#rowCount").textContent = "—"; return; }
+  $("#rowCount").textContent = visibleRows(S.pane).length + " / " + S1.rows.length;
 }
 function setBusy(on, label){
   ["btnPublish","btnReload","btnAdd","btnBackup","btnCols"].forEach(id=>{ const b=$("#"+id); if(b) b.disabled = on; });
@@ -1758,11 +1841,13 @@ function setPane(name){
   S.pane = name;
   $$(".tabs button").forEach(b=> b.setAttribute("aria-selected", String(b.dataset.pane===name)));
   $$(".pane").forEach(p=> p.classList.remove("active"));
-  $("#pane" + name.charAt(0).toUpperCase() + name.slice(1)).classList.add("active");
-  const gridPane = (name==="products"||name==="adders");
-  $("#btnAdd").disabled = !gridPane || !S.catalog;
-  $("#btnCols").disabled = !gridPane || !S.catalog;
-  $("#q").disabled = !gridPane;
+  const pane = S.sec[name] ? $("#pane-" + cssId(name))
+             : name==="rules" ? $("#paneRules") : $("#paneRaw");
+  if(pane) pane.classList.add("active");
+  const grid = isGridPane();
+  $("#btnAdd").disabled  = !grid || !S.catalog;
+  $("#btnCols").disabled = !grid || !S.catalog;
+  $("#q").disabled = !grid;
   if(name==="raw") renderRaw();
   updateCounts();
 }
@@ -1798,14 +1883,14 @@ function wire(){
     $("#gate").classList.remove("hide");
   });
 
-  $$(".tabs button").forEach(b=> b.addEventListener("click", ()=> setPane(b.dataset.pane)));
+  $$(".tabs button:not([data-section])").forEach(b=> b.addEventListener("click", ()=> setPane(b.dataset.pane)));
 
   let qTimer=null;
   $("#q").addEventListener("input", ()=>{
     if(qTimer) clearTimeout(qTimer);
     qTimer = setTimeout(()=>{
       S.filter = $("#q").value;
-      renderGrid(S.pane==="adders" ? "adders" : "products");
+      if(isGridPane()) renderGrid(S.pane);
     }, 160);
   });
 
@@ -1816,13 +1901,13 @@ function wire(){
       ? "Money shown in dollars; stored as integer cents. Click for raw cents."
       : "Money shown as the raw integer cents actually stored. Click for dollars.";
     S.badCells = new Set();
-    renderGrid("products"); renderGrid("adders"); renderRules();
+    S.secOrder.forEach(renderGrid); renderRules();
     log("info","Money display switched to " + (S.units==="dollars" ? "dollars (stored as integer cents)" : "raw integer cents") + ".");
     updateState();
   });
 
   $("#btnCols").addEventListener("click", openColumnPicker);
-  $("#btnAdd").addEventListener("click", ()=> addRow(S.pane==="adders" ? "adders" : "products"));
+  $("#btnAdd").addEventListener("click", ()=> { if(isGridPane()) addRow(S.pane); });
   $("#btnBackup").addEventListener("click", downloadBackup);
   $("#btnPublish").addEventListener("click", publish);
 
@@ -1831,7 +1916,7 @@ function wire(){
     if(!d.total){ loadAll(); return; }
     confirmModal("Discard local edits?", el("div",{},
       el("p",{text:"Reloading fetches the published files again and throws away every unsaved change in this tab."}),
-      el("p",{class:"legend",text:"Unsaved: " + d.dp + " product row(s), " + d.da + " adder row(s)"
+      el("p",{class:"legend",text:"Unsaved: " + d.rows + " edited row(s)"
         + (d.dr?", pricing rules":"") + (d.struct?", added/removed rows":"") + "."})
     ), "Discard and reload", ()=>{ log("warn","Discarding local edits and re-fetching."); loadAll(); });
   });
@@ -1844,7 +1929,7 @@ function wire(){
 
   document.addEventListener("keydown", e=>{
     if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="s"){ e.preventDefault(); if(!$("#btnPublish").disabled) publish(); }
-    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="f" && (S.pane==="products"||S.pane==="adders")){
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="f" && isGridPane()){
       e.preventDefault(); $("#q").focus(); $("#q").select();
     }
   });
@@ -1858,7 +1943,6 @@ function wire(){
 function init(){
   wire();
   loadCfg();
-  loadColPrefs();
   $("#fOwner").value   = S.cfg.owner   || "SimplyDoorsAA";
   $("#fRepo").value    = S.cfg.repo    || "Claude-Hoelscher-";
   $("#fBranch").value  = S.cfg.branch  || "main";
@@ -1867,7 +1951,7 @@ function init(){
   $("#fTok").value     = S.cfg.token   || "";
   $("#fRemember").checked = !!S.cfg.remember;
   $("#btnUnits").textContent = "$ dollars";
-  setPane("products");
+  setPane("rules");
   log("info","Price Manager ready. " + (S.cfg.token ? "Stored credentials found — press Connect." : "Enter a PAT to begin."));
   if(S.cfg.token && S.cfg.owner && S.cfg.repo) connectAndLoad();
 }

@@ -115,11 +115,50 @@ you commit anything.
 | Path | Purpose |
 | --- | --- |
 | `index.html` | The entire application |
-| `data/catalog.json` | Master catalog — `products[]` and `prehangAdders[]` |
+| `data/catalog.json` | Master catalog — `products[]`, `prehangAdders[]`, `components[]`, `hardware[]` |
 | `data/pricing-rules.json` | Net multiplier, currency, rounding, freight and defaults |
 | `.nojekyll` | Serve files verbatim from Pages |
 
-`data/catalog.json` ships with a representative starter set (10 products across the
-fiberglass / knotty alder / mahogany / steel lines plus a sidelite, and 12 prehang adders)
-including the exact reference record `5a762b97f5` from the data contract. Replace it with the
-real catalog; the app adapts to the file it finds.
+## The catalog
+
+`data/catalog.json` holds 699 priced items converted from
+`SimplyDoors_Complete_Catalog.xlsx` (Hoelscher dealer price lists, 7-1-2026):
+
+| Section | Items |
+| --- | --- |
+| `products` | 589 doors, sidelites and barn slabs — fiberglass, mahogany, knotty alder, barn |
+| `prehangAdders` | 62 interior-casing / 1x4 adders by line, top style and configuration |
+| `components` | 26 millwork items — jambs, casing, brickmould, T-astragal, SDL bars |
+| `hardware` | 22 barn-hardware, iron-mask, speakeasy, clavos and strap SKUs |
+
+Every one of the 2,994 door price cells was verified against the source
+spreadsheet after conversion, with zero mismatches. The 546 `N/A` cells became
+`null` (not offered), never `0`. `NET` columns were not imported: they are
+`list x 0.48` throughout and are derived at quote time from
+`pricing-rules.json`, so storing them would be duplicated state that can drift.
+
+Each array becomes its own tab. The grid is built from the data, so a catalog
+carrying different arrays or extra fields still renders — unmodelled fields
+appear as extra columns rather than being dropped.
+
+### Known gaps in the imported data
+
+- **`freightUnits` is `null` on every product.** The spreadsheet export carries
+  no per-door freight column, and it is not safe to invent one. Freight cannot
+  be computed for a door until this is supplied.
+- **One duplicate row was dropped.** `M23SL--1280` / "1281 2/3 Lite Sidelite
+  Iron Grille" appeared twice, identical on every field and all six prices, and
+  flagged `dup part#` in the source. Its note was merged onto the surviving row.
+- **SKU is not unique, by design.** The vendor uses `--` as a glass-code
+  placeholder, so `M34--3068` covers both the Flat Glass and Iron Grille doors
+  at different prices. The `id` content hash includes description and glazing,
+  so ids stay unique where SKUs do not.
+- **Two SDL bar products have no parsable size** — they are lineal bars, not
+  doors, so `size.widthIn` / `heightIn` are `null`.
+- **`M23A--3068`** prices Decorative Glass identically to Flat Glass, which is
+  the only place in the catalog where those two differ by nothing. Worth
+  confirming with Hoelscher.
+
+The workbook's own `Open Items` sheet lists further decisions pending with the
+vendor — most importantly whether the 0.48 NET multiplier applies to
+components, adders and hardware. If it does not, those costs are 52% low.
