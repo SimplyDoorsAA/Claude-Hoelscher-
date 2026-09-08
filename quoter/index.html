@@ -57,6 +57,17 @@ tailwind.config = {
   .no-tw header .flex { flex-wrap:wrap; row-gap:.5rem; }
   .no-tw header .flex > * { flex:0 0 auto; }
   .no-tw img, .no-tw svg { max-width:100%; }
+  /* Every SVG here carries only Tailwind sizing, so without a rule each one
+     grows to fill the page. Icons get a fixed box; the drawn door silhouettes
+     (.sil) size from their frame instead. */
+  .no-tw svg:not(.sil) { width:20px; height:20px; flex:0 0 auto; }
+  .no-tw .door-frame { width:100%; }
+  .no-tw .sil { display:block; width:100%; height:auto; }
+  .no-tw #quoteLines .sil { width:44px; }
+  .no-tw #lineChoices .sil { width:80px; }
+  .no-tw #lineChoices { display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
+  .no-tw #lineChoices button { border:1px solid #e4e0d9; border-radius:12px; background:#fff;
+                               padding:1.25rem; text-align:left; font:inherit; }
   .no-tw header, .no-tw section, .no-tw main { display:block; width:100%; }
   .no-tw header > div, .no-tw main, .no-tw section > div { max-width:1600px; margin:0 auto; padding:.75rem 1rem; }
   .no-tw header { position:sticky; top:0; background:#faf9f7; border-bottom:1px solid #e4e0d9; z-index:30; }
@@ -82,6 +93,14 @@ tailwind.config = {
                                 border-radius:8px; background:#fff; max-width:100%; }
   .no-tw .opt { border:1px solid #e4e0d9; border-radius:8px; padding:.45rem .7rem; background:#fff; margin:0 .35rem .35rem 0; }
   .no-tw .opt[aria-pressed="true"] { background:#2f4538; color:#fff; }
+  .no-tw .opt[disabled] { opacity:.4; }
+  .no-tw #detail > div { display:block; }
+  .no-tw #detail > div > div:last-child { padding:1rem; }
+  .no-tw .railchip, .no-tw .railstep { display:inline-block; border-radius:999px; font-size:11px;
+                                       padding:.2rem .55rem; margin:0 .3rem .3rem 0; }
+  .no-tw .railchip { border:1px solid #d9c9a8; background:#f3ecdf; color:#44403c; }
+  .no-tw .railstep { border:1px dashed #e4e0d9; color:#a8a29e; }
+  .no-tw .railstep-now { border-style:solid; border-color:#78716c; color:#1c1917; font-weight:600; }
   @media (min-width:768px){
     .no-tw #drawer { inset:0 0 0 auto; width:420px; height:100%; border-left:1px solid #e4e0d9; border-top:0; }
     .no-tw #mobileBar { display:none; }
@@ -381,18 +400,74 @@ async function loadData() {
 
 /* ------------------------------ 4. SELECTORS ----------------------------- */
 
-function filteredProducts() {
+function matchesFilters(p) {
   const { q, line, family, glazing, type } = state.filters;
+  if (line && p.line !== line) return false;
+  if (family && p.family !== family) return false;
+  if (glazing && p.glazing !== glazing) return false;
+  if (type && p.type !== type) return false;
   const terms = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  return state.engine.productsIn(state.collection).filter(p => {
-    if (line && p.line !== line) return false;
-    if (family && p.family !== family) return false;
-    if (glazing && p.glazing !== glazing) return false;
-    if (type && p.type !== type) return false;
-    if (!terms.length) return true;
-    const hay = (p.description + " " + p.sku + " " + (p.size && p.size.label || "") + " " + (p.glazing || "")).toLowerCase();
-    return terms.every(t => hay.includes(t));
+  if (!terms.length) return true;
+  const hay = (p.description + " " + p.sku + " " + (p.size && p.size.label || "") +
+               " " + (p.glazing || "")).toLowerCase();
+  return terms.every(t => hay.includes(t));
+}
+/** Models with at least one product matching the filters. */
+function filteredModels() {
+  return buildModels().filter(m => m.products.some(matchesFilters));
+}
+
+/* ------------------------- model grouping --------------------------------
+   The price list carries one part number per glass and per size, so a single
+   door appears up to sixteen times. Customers shop the door, not the part
+   number, so the browser groups them into models and the configurator asks for
+   glass, size and finish one question at a time. */
+const SIZE_PREFIX = /^\d{4,5}[A-Z]?\s+/;
+/* Descriptions lead with the size code, and codes are four or five digits
+   (2'10" is "21068"), so strip the row's own code when it is there and fall
+   back to the shape only when it is not. */
+function modelKeyOf(p) {
+  const d = String(p.description || "").trim();
+  const code = p.size && p.size.code;
+  if (code && d.startsWith(code)) {
+    const rest = d.slice(String(code).length);
+    if (/^\s/.test(rest)) return rest.trim();
+  }
+  return d.replace(SIZE_PREFIX, "").trim();
+}
+
+/** Products reachable only as an option on another model, e.g. iron grille. */
+function optionOnlyIds() {
+  const set = new Set();
+  (state.engine.catalog.fiberglassIronGrilles || []).forEach(g => set.add(g.productId));
+  return set;
+}
+function grillesForModel(name) {
+  return (state.engine.catalog.fiberglassIronGrilles || []).filter(g => g.baseModel === name);
+}
+/** Stain colours apply to grained skins only, never the Smooth Collection. */
+function stainsApplyTo(modelName) {
+  return /Mahogany Grain|Oak Grain/i.test(modelName) &&
+         (state.engine.catalog.fiberglassStainColors || []).length > 0;
+}
+
+function buildModels() {
+  const hidden = optionOnlyIds();
+  const map = new Map();
+  state.engine.productsIn(state.collection).forEach(p => {
+    if (hidden.has(p.id)) return;
+    const key = modelKeyOf(p);
+    if (!map.has(key)) map.set(key, { key, name: key, products: [], line: p.line, type: p.type });
+    map.get(key).products.push(p);
   });
+  const models = Array.from(map.values());
+  models.forEach(m => {
+    m.sizes = Array.from(new Set(m.products.map(p => p.size && p.size.code).filter(Boolean)));
+    m.glazings = Array.from(new Set(m.products.map(p => p.glazing).filter(Boolean)));
+    m.grilles = grillesForModel(m.name);
+    m.sample = m.products[0];
+  });
+  return models;
 }
 
 /** The whole quote, priced by the engine. Never compute money outside this. */
@@ -400,11 +475,9 @@ function pricedQuote() {
   return state.engine.priceQuote({ lines: state.quote.lines, marginTier: state.marginTier });
 }
 
-/** Card price: the cheapest offered configuration, in the active context. */
+/** Cheapest offered configuration of one product, in the active context. */
 function fromPrice(product) {
   const opts = state.engine.availableOptions(product.id);
-  const first = opts.firstOffered();
-  if (!first) return null;
   let best = null;
   for (const f of FINISHES) for (const c of CONFIGS) {
     if (!opts.isOffered(f, c)) continue;
@@ -412,6 +485,15 @@ function fromPrice(product) {
     const v = isCost() ? l.unitCostCents : l.unitSellCents;
     if (v !== null && (best === null || v < best)) best = v;
   }
+  return best;
+}
+/** Cheapest across every variant of a model. */
+function modelFromPrice(m) {
+  let best = null;
+  m.products.forEach(p => {
+    const v = fromPrice(p);
+    if (v !== null && (best === null || v < best)) best = v;
+  });
   return best;
 }
 
@@ -445,7 +527,7 @@ function doorSilhouette(product) {
   const svgns = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgns, "svg");
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  svg.setAttribute("class", "h-full w-full");
+  svg.setAttribute("class", "sil h-full w-full");
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label", product.description || "Door illustration");
 
@@ -515,13 +597,14 @@ function doorSilhouette(product) {
 
 /* --- 5b. catalog cards --------------------------------------------------- */
 
-function productCard(product) {
+function productCard(model) {
+  const product = model.sample;
   const card = el("article",
     "group relative flex flex-col overflow-hidden rounded-xl border border-paper-line bg-paper-card shadow-card transition-shadow hover:shadow-lift");
 
   const btn = el("button", "text-left flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-brass/40 rounded-xl");
   btn.type = "button";
-  btn.addEventListener("click", () => openDetail(product.id));
+  btn.addEventListener("click", () => openConfigurator(model));
 
   const frame = el("div", "door-frame relative w-full overflow-hidden bg-paper-rail");
   const img = document.createElement("img");
@@ -550,19 +633,25 @@ function productCard(product) {
   const body = el("div", "flex flex-1 flex-col gap-1 p-3");
   body.appendChild(el("p", "text-[10px] uppercase tracking-[.14em] text-brass",
     LINE_LABELS[product.line] || titleize(product.line)));
-  body.appendChild(el("h3", "font-display text-[17px] leading-snug line-clamp-2", product.description));
-  const meta = el("p", "text-xs text-ink-mute",
-    [product.size && product.size.label, product.glazing].filter(Boolean).join(" · "));
-  body.appendChild(meta);
+  body.appendChild(el("h3", "font-display text-[17px] leading-snug line-clamp-2", model.name));
+  const bits = [];
+  if (model.sizes.length) bits.push(model.sizes.length === 1
+    ? (product.size && product.size.label) || model.sizes[0]
+    : model.sizes.length + " sizes");
+  if (model.glazings.length > 1) bits.push(model.glazings.length + " glass options");
+  else if (model.glazings.length === 1) bits.push(model.glazings[0]);
+  if (model.grilles.length) bits.push("iron grille available");
+  body.appendChild(el("p", "text-xs text-ink-mute", bits.join(" · ")));
 
   const foot = el("div", "mt-auto flex items-end justify-between pt-2");
-  const from = fromPrice(product);
+  const from = modelFromPrice(model);
   const priceWrap = el("div", "");
   priceWrap.appendChild(el("p", "text-[10px] uppercase tracking-widest text-ink-faint",
     isCost() ? "Cost from" : "From"));
   priceWrap.appendChild(el("p", "tnum font-display text-xl leading-none", formatCents(from)));
   foot.appendChild(priceWrap);
-  foot.appendChild(el("span", "text-xs font-mono text-ink-faint", product.sku));
+  foot.appendChild(el("span", "text-xs font-mono text-ink-faint",
+    model.products.length > 1 ? model.products.length + " variants" : product.sku));
   body.appendChild(foot);
 
   btn.appendChild(body);
@@ -572,7 +661,7 @@ function productCard(product) {
 
 function renderCatalog(reset = true) {
   const grid = $("#catalog");
-  const list = filteredProducts();
+  const list = filteredModels();
   if (reset) { grid.textContent = ""; state.rendered = 0; }
 
   const slice = list.slice(state.rendered, state.rendered + CONFIG.pageSize);
@@ -581,9 +670,9 @@ function renderCatalog(reset = true) {
   grid.appendChild(frag);
   state.rendered += slice.length;
 
+  const totalModels = buildModels().length;
   $("#resultCount").textContent =
-    list.length.toLocaleString() + " of " +
-    state.engine.productsIn(state.collection).length.toLocaleString() + " products";
+    list.length.toLocaleString() + " of " + totalModels.toLocaleString() + " doors";
   $("#emptyState").classList.toggle("hidden", list.length > 0);
   return list.length;
 }
@@ -613,11 +702,12 @@ function renderFilters() {
 
 /* --- 5d. product detail sheet -------------------------------------------- */
 
-function optionButton(label, pressed, disabled, onClick, title) {
+function optionButton(label, pressed, disabled, onClick, title, sub) {
   const b = el("button",
-    "opt rounded-lg border border-paper-line bg-paper-card px-3 py-2 text-sm transition-colors hover:border-brass disabled:hover:border-paper-line",
-    label);
+    "opt rounded-lg border border-paper-line bg-paper-card px-3 py-2 text-sm transition-colors hover:border-brass disabled:hover:border-paper-line");
   b.type = "button";
+  b.appendChild(el("span", "block", label));
+  if (sub) b.appendChild(el("span", "block text-[10px] opacity-70", sub));
   b.setAttribute("aria-pressed", String(!!pressed));
   b.disabled = !!disabled;
   if (title) b.title = title;
@@ -625,17 +715,21 @@ function optionButton(label, pressed, disabled, onClick, title) {
   return b;
 }
 
-function openDetail(productId) {
-  const product = state.engine.productById(productId);
-  if (!product) return;
-  const opts = state.engine.availableOptions(productId);
-  const first = opts.firstOffered();
+/* ------------------------- the configurator ------------------------------
+   One question at a time, in the order a customer thinks: glass, then size,
+   then iron grille, then finish, then stain, then how it is hung. Later steps
+   stay hidden until the ones they depend on are answered. */
+
+function openConfigurator(model) {
   state.draft = {
-    productId, qty: 1,
-    finish: first ? first.finish : "unfinished",
-    config: first ? first.config : "slab",
-    accessories: []
+    model, glazing: null, sizeCode: null, grilleChoice: null, grille: null,
+    finish: null, stain: null, config: null, qty: 1, accessories: []
   };
+  const d = state.draft;
+  // Anything with only one possible answer is settled without asking.
+  if (model.glazings.length <= 1) d.glazing = model.glazings[0] || null;
+  if (model.sizes.length === 1) d.sizeCode = model.sizes[0];
+  if (!model.grilles.length) d.grilleChoice = "none";
   renderDetail();
   $("#detail").classList.remove("hidden");
   requestAnimationFrame(() => {
@@ -644,7 +738,6 @@ function openDetail(productId) {
   });
   document.body.style.overflow = "hidden";
 }
-
 function closeDetail() {
   $("#detail").classList.add("hidden");
   $("#detailScrim").style.opacity = "0";
@@ -653,150 +746,312 @@ function closeDetail() {
   if (!state.drawerOpen) document.body.style.overflow = "";
 }
 
+/** The catalogue product the current answers resolve to, if any. */
+function draftProduct() {
+  const d = state.draft;
+  if (!d) return null;
+  if (d.grilleChoice === "yes" && d.grille) return state.engine.productById(d.grille.productId);
+  if (!d.sizeCode) return null;
+  const match = p => (p.size && p.size.code) === d.sizeCode;
+  return d.model.products.find(p => match(p) && (p.glazing || null) === (d.glazing || null))
+      || d.model.products.find(match) || null;
+}
+/** Cheapest offered unit price for one glazing, for the delta shown per option. */
+function glazingFrom(model, glazing, sizeCode) {
+  let best = null;
+  model.products.forEach(p => {
+    if ((p.glazing || null) !== (glazing || null)) return;
+    if (sizeCode && (p.size && p.size.code) !== sizeCode) return;
+    const v = fromPrice(p);
+    if (v !== null && (best === null || v < best)) best = v;
+  });
+  return best;
+}
+
+/** The questions this model will ask, in order, with any answer given.
+   Drives the progress rail and lets an answer be taken back. */
+function stepPlan(d) {
+  const m = d.model;
+  const sizeLabel = code => {
+    const p = m.products.find(x => (x.size && x.size.code) === code);
+    return (p && p.size.label) || code;
+  };
+  const plan = [];
+  if (m.glazings.length > 1) plan.push({ key: "glazing", title: "Glass", value: d.glazing });
+  if (m.sizes.length > 1) plan.push({ key: "size", title: "Size", value: d.sizeCode && sizeLabel(d.sizeCode) });
+  if (m.grilles.length) plan.push({ key: "grille", title: "Iron grille",
+    value: d.grilleChoice === "none" ? "No grille" : (d.grille && d.grille.style) || null });
+  plan.push({ key: "finish", title: "Finish", value: d.finish && FINISH_LABELS[d.finish] });
+  if (d.finish === "prefinished" && stainsApplyTo(m.name))
+    plan.push({ key: "stain", title: "Stain colour", value: d.stain });
+  plan.push({ key: "config", title: "Configuration", value: d.config && CONFIG_LABELS[d.config] });
+  return plan;
+}
+/** Take back one answer, and every answer that depended on it. */
+function unanswerFrom(key) {
+  const d = state.draft, order = ["glazing", "size", "grille", "finish", "stain", "config"];
+  const from = order.indexOf(key);
+  const clear = {
+    glazing: () => { d.glazing = null; },
+    size:    () => { d.sizeCode = null; },
+    grille:  () => { d.grilleChoice = d.model.grilles.length ? null : "none"; d.grille = null; },
+    finish:  () => { d.finish = null; },
+    stain:   () => { d.stain = null; },
+    config:  () => { d.config = null; }
+  };
+  order.slice(from).forEach(k => clear[k]());
+  d.accessories = [];
+  renderDetail();
+}
+/** A rail of the questions, so the customer can see where they are. */
+function progressRail(d) {
+  const plan = stepPlan(d);
+  const done = plan.filter(s => s.value).length;
+  const wrap = el("div", "");
+  wrap.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-faint",
+    done >= plan.length ? "All set" : "Step " + (done + 1) + " of " + plan.length));
+  const row = el("div", "flex flex-wrap gap-1.5");
+  plan.forEach((s, i) => {
+    if (s.value) {
+      const chip = el("button",
+        "railchip rounded-full border border-brass/40 bg-brass-pale px-2.5 py-1 text-[11px] text-ink-soft hover:border-brass");
+      chip.type = "button";
+      chip.title = "Change the " + s.title.toLowerCase();
+      chip.textContent = s.value;
+      chip.addEventListener("click", () => unanswerFrom(s.key));
+      row.appendChild(chip);
+    } else {
+      const cls = i === done
+        ? "railstep railstep-now rounded-full border border-ink/25 px-2.5 py-1 text-[11px] font-medium text-ink"
+        : "railstep rounded-full border border-dashed border-paper-line px-2.5 py-1 text-[11px] text-ink-faint";
+      row.appendChild(el("span", cls, s.title));
+    }
+  });
+  wrap.appendChild(row);
+  return wrap;
+}
+
+function stepBlock(title, note) {
+  const wrap = el("div", "");
+  const head = el("div", "mb-2 flex items-baseline gap-2");
+  head.appendChild(el("p", "text-[11px] uppercase tracking-widest text-ink-mute", title));
+  if (note) head.appendChild(el("p", "text-[11px] text-ink-faint", note));
+  wrap.appendChild(head);
+  const row = el("div", "flex flex-wrap gap-2");
+  wrap.appendChild(row);
+  wrap.row = row;
+  return wrap;
+}
+
 function renderDetail() {
   const d = state.draft;
   if (!d) return;
-  const product = state.engine.productById(d.productId);
-  const opts = state.engine.availableOptions(d.productId);
-  const line = state.engine.priceLine({
-    productId: d.productId, finish: d.finish, config: d.config, qty: d.qty, accessories: d.accessories
-  }, curMargin());
-
+  const model = d.model;
   const root = $("#detail");
   root.textContent = "";
 
-  const wrap = el("div", "grid md:grid-cols-[minmax(0,340px)_minmax(0,1fr)]");
+  // minmax(0,...) on both tracks, and min-w-0 on the column below, so a long
+  // row of options can never widen the grid instead of wrapping.
+  const wrap = el("div", "grid grid-cols-[minmax(0,1fr)] md:grid-cols-[minmax(0,320px)_minmax(0,1fr)]");
 
   /* image column */
-  const imgCol = el("div", "relative bg-paper-rail p-6 hidden md:flex items-center justify-center");
-  const holder = el("div", "door-frame w-full max-w-[260px] overflow-hidden rounded-lg bg-paper-card shadow-card");
+  const imgCol = el("div", "relative bg-paper-rail p-6 hidden md:flex items-start justify-center");
+  const holder = el("div", "door-frame w-full max-w-[240px] overflow-hidden rounded-lg bg-paper-card shadow-card");
+  const shown = draftProduct() || model.sample;
   const img = document.createElement("img");
-  img.src = CONFIG.imageBase + encodeURIComponent(product.sku) + CONFIG.imageExt;
-  img.alt = product.description;
+  img.src = CONFIG.imageBase + encodeURIComponent(shown.sku) + CONFIG.imageExt;
+  img.alt = model.name;
   img.className = "h-full w-full object-cover";
   img.addEventListener("error", function onErr() {
     img.removeEventListener("error", onErr);
-    img.replaceWith(doorSilhouette(product));
+    img.replaceWith(doorSilhouette(shown));
   }, { once: true });
   holder.appendChild(img);
   imgCol.appendChild(holder);
 
-  /* body column */
-  const body = el("div", "p-5 sm:p-6 flex flex-col gap-5");
+  const body = el("div", "min-w-0 p-5 sm:p-6 flex flex-col gap-5");
 
+  /* heading */
   const head = el("div", "flex items-start gap-3");
-  const headText = el("div", "min-w-0 flex-1");
-  headText.appendChild(el("p", "text-[10px] uppercase tracking-[.16em] text-brass",
-    (LINE_LABELS[product.line] || titleize(product.line)) + " · " + product.family));
-  const h = el("h2", "font-display text-2xl sm:text-3xl leading-tight", product.description);
-  h.id = "detailTitle";
-  headText.appendChild(h);
-  headText.appendChild(el("p", "mt-1 text-sm text-ink-mute",
-    [product.size && product.size.label, product.glazing, "SKU " + product.sku].filter(Boolean).join(" · ")));
-  head.appendChild(headText);
+  const ht = el("div", "min-w-0 flex-1");
+  ht.appendChild(el("p", "text-[10px] uppercase tracking-[.16em] text-brass",
+    (LINE_LABELS[model.line] || titleize(model.line)) + " · " + (model.sample.family || "")));
+  const h2 = el("h2", "font-display text-2xl sm:text-3xl leading-tight", model.name);
+  h2.id = "detailTitle";
+  ht.appendChild(h2);
+  head.appendChild(ht);
   const close = el("button", "rounded-full p-2 hover:bg-paper-rail shrink-0");
-  close.type = "button";
-  close.setAttribute("aria-label", "Close");
+  close.type = "button"; close.setAttribute("aria-label", "Close");
   close.innerHTML = '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>';
   close.addEventListener("click", closeDetail);
   head.appendChild(close);
   body.appendChild(head);
+  body.appendChild(progressRail(d));
 
-  /* finish */
-  const finishBlock = el("div", "");
-  finishBlock.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-mute", "Finish"));
-  const finishRow = el("div", "flex flex-wrap gap-2");
-  FINISHES.forEach(f => {
-    const anyConfig = CONFIGS.some(c => opts.isOffered(f, c));
-    finishRow.appendChild(optionButton(
-      FINISH_LABELS[f], d.finish === f, !anyConfig,
-      () => {
-        d.finish = f;
-        if (!opts.isOffered(f, d.config)) {
-          const c = CONFIGS.find(c => opts.isOffered(f, c));
-          if (c) d.config = c;
-        }
-        renderDetail();
-      },
-      anyConfig ? "" : "Not offered in this finish"));
-  });
-  finishBlock.appendChild(finishRow);
-  body.appendChild(finishBlock);
+  /* ---- the questions, in order; each appears once the previous is answered ---- */
+  let blocked = false;
+  const gate = answered => { if (blocked) return false; if (!answered) { blocked = true; return true; } return true; };
 
-  /* configuration */
-  const cfgBlock = el("div", "");
-  cfgBlock.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-mute", "Configuration"));
-  const cfgRow = el("div", "flex flex-wrap gap-2");
-  CONFIGS.forEach(c => {
-    const offered = opts.isOffered(d.finish, c);
-    cfgRow.appendChild(optionButton(
-      CONFIG_LABELS[c], d.config === c, !offered,
-      () => { d.config = c; renderDetail(); },
-      offered ? "" : "Not offered in " + FINISH_LABELS[d.finish].toLowerCase()));
-  });
-  cfgBlock.appendChild(cfgRow);
-  if (!opts.isOffered(d.finish, d.config)) {
-    cfgBlock.appendChild(el("p", "mt-2 text-xs text-red-700",
-      "This combination is not offered — pick another."));
-  }
-  body.appendChild(cfgBlock);
-
-  /* accessories */
-  body.appendChild(accessoryBlock(product, d));
-
-  /* quantity + price + add */
-  const foot = el("div", "mt-auto rounded-xl bg-paper-rail p-4");
-  const qtyRow = el("div", "flex items-center gap-3");
-  qtyRow.appendChild(el("span", "text-[11px] uppercase tracking-widest text-ink-mute", "Quantity"));
-  const dec = el("button", "h-8 w-8 rounded-lg border border-paper-line bg-paper-card text-lg leading-none", "−");
-  dec.type = "button";
-  dec.addEventListener("click", () => { d.qty = Math.max(1, d.qty - 1); renderDetail(); });
-  const qty = document.createElement("input");
-  qty.type = "number"; qty.min = "1"; qty.value = String(d.qty);
-  qty.className = "tnum w-16 rounded-lg border border-paper-line bg-paper-card px-2 py-1 text-center";
-  qty.addEventListener("change", () => { d.qty = Math.max(1, parseInt(qty.value, 10) || 1); renderDetail(); });
-  const inc = el("button", "h-8 w-8 rounded-lg border border-paper-line bg-paper-card text-lg leading-none", "+");
-  inc.type = "button";
-  inc.addEventListener("click", () => { d.qty += 1; renderDetail(); });
-  qtyRow.append(dec, qty, inc);
-  foot.appendChild(qtyRow);
-
-  const priceRow = el("div", "mt-4 flex items-end justify-between gap-4");
-  const pv = el("div", "");
-  pv.appendChild(el("p", "text-[10px] uppercase tracking-widest text-ink-faint",
-    isCost() ? "Unit cost" : "Unit price"));
-  pv.appendChild(el("p", "tnum font-display text-3xl leading-none",
-    formatCents(isCost() ? line.unitCostCents : line.unitSellCents)));
-  if (d.qty > 1) {
-    pv.appendChild(el("p", "tnum mt-1 text-xs text-ink-mute",
-      d.qty + " × — " + formatCents(isCost() ? line.totalCostCents : line.totalSellCents) + " total"));
-  }
-  priceRow.appendChild(pv);
-
-  const add = el("button",
-    "rounded-xl bg-forest px-5 py-3 text-sm font-medium text-white hover:bg-forest-deep disabled:opacity-40 disabled:hover:bg-forest",
-    "Add to quote");
-  add.type = "button";
-  add.disabled = line.notOffered;
-  add.addEventListener("click", () => {
-    state.quote.lines.push({
-      uid: nextUid(), productId: d.productId, finish: d.finish, config: d.config,
-      qty: d.qty, accessories: d.accessories.slice()
+  // 1. glass
+  if (model.glazings.length > 1) {
+    const base = Math.min(...model.glazings.map(g => glazingFrom(model, g, d.sizeCode)).filter(v => v !== null));
+    const blk = stepBlock("Glass");
+    model.glazings.forEach(g => {
+      const v = glazingFrom(model, g, d.sizeCode);
+      const delta = (v === null || v === base) ? null : "+" + formatCents(v - base);
+      blk.row.appendChild(optionButton(g, d.glazing === g, v === null, () => {
+        d.glazing = g; renderDetail();
+      }, null, delta));
     });
-    saveQuote();
-    closeDetail();
-    renderQuote();
-    openDrawer();
-  });
-  priceRow.appendChild(add);
-  foot.appendChild(priceRow);
+    body.appendChild(blk);
+    if (!gate(d.glazing)) { /* stop here */ }
+  }
 
-  if (line.freightCents > 0) {
-    foot.appendChild(el("p", "mt-3 text-[11px] text-ink-mute",
+  // 2. size
+  if (!blocked && model.sizes.length > 1) {
+    const blk = stepBlock("Size");
+    model.sizes.forEach(code => {
+      const p = model.products.find(x => (x.size && x.size.code) === code &&
+                                         (x.glazing || null) === (d.glazing || null));
+      blk.row.appendChild(optionButton((p && p.size.label) || code, d.sizeCode === code, !p, () => {
+        d.sizeCode = code;
+        if (d.grille && d.grille.sizeCode !== code) { d.grille = null; d.grilleChoice = null; }
+        renderDetail();
+      }, p ? null : "Not offered in this glass"));
+    });
+    body.appendChild(blk);
+    gate(d.sizeCode);
+  }
+
+  // 3. iron grille
+  if (!blocked && model.grilles.length) {
+    const forSize = model.grilles.filter(g => !d.sizeCode || g.sizeCode === d.sizeCode);
+    const blk = stepBlock("Iron grille", forSize.length ? null : "not offered in this size");
+    blk.row.appendChild(optionButton("No grille", d.grilleChoice === "none", false, () => {
+      d.grilleChoice = "none"; d.grille = null; renderDetail();
+    }));
+    forSize.forEach(g => (g.styles || []).forEach(style => {
+      const on = d.grilleChoice === "yes" && d.grille && d.grille.style === style;
+      blk.row.appendChild(optionButton(style, on, false, () => {
+        d.grilleChoice = "yes";
+        d.grille = { style, sizeCode: g.sizeCode, productId: g.productId, sku: g.sku };
+        renderDetail();
+      }));
+    }));
+    body.appendChild(blk);
+    gate(d.grilleChoice);
+  }
+
+  const product = draftProduct();
+  const opts = product ? state.engine.availableOptions(product.id) : null;
+
+  // 4. finish
+  if (!blocked && opts) {
+    const blk = stepBlock("Finish");
+    FINISHES.forEach(f => {
+      const any = CONFIGS.some(c => opts.isOffered(f, c));
+      blk.row.appendChild(optionButton(FINISH_LABELS[f], d.finish === f, !any, () => {
+        d.finish = f;
+        if (f !== "prefinished") d.stain = null;
+        if (d.config && !opts.isOffered(f, d.config)) d.config = null;
+        renderDetail();
+      }, any ? null : "Not offered in this finish"));
+    });
+    body.appendChild(blk);
+    gate(d.finish);
+  }
+
+  // 5. stain, only for prefinished grained skins
+  const stains = state.engine.catalog.fiberglassStainColors || [];
+  if (!blocked && d.finish === "prefinished" && stainsApplyTo(model.name) && stains.length) {
+    const blk = stepBlock("Stain colour", "no price difference");
+    stains.forEach(sc => {
+      blk.row.appendChild(optionButton(sc.name, d.stain === sc.name, false, () => {
+        d.stain = sc.name; renderDetail();
+      }, sc.appliesTo));
+    });
+    body.appendChild(blk);
+    gate(d.stain);
+  }
+
+  // 6. how it is hung
+  if (!blocked && opts && d.finish) {
+    const blk = stepBlock("Configuration");
+    CONFIGS.forEach(c => {
+      const offered = opts.isOffered(d.finish, c);
+      blk.row.appendChild(optionButton(CONFIG_LABELS[c], d.config === c, !offered, () => {
+        d.config = c; renderDetail();
+      }, offered ? null : "Not offered in " + FINISH_LABELS[d.finish].toLowerCase()));
+    });
+    body.appendChild(blk);
+    gate(d.config);
+  }
+
+  // 7. accessories and the price, once everything is answered
+  if (!blocked && product && d.finish && d.config) {
+    body.appendChild(accessoryBlock(product, d));
+
+    const line = state.engine.priceLine({
+      productId: product.id, finish: d.finish, config: d.config, qty: d.qty, accessories: d.accessories
+    }, curMargin());
+
+    const foot = el("div", "mt-auto rounded-xl bg-paper-rail p-4");
+    // CFG-xxx is our own placeholder for the rows the price list prints as
+    // CONFIGURED ITEM with no part number; never show it as a vendor number.
+    const configured = /^CFG-/.test(product.sku);
+    const chosen = [d.glazing, d.stain, d.grille && d.grille.style + " grille",
+                    product.size && product.size.label,
+                    configured ? "configured item — Hoelscher prints no part number"
+                               : product.sku].filter(Boolean).join(" · ");
+    if (chosen) foot.appendChild(el("p", "mb-3 text-xs text-ink-mute", chosen));
+
+    const qtyRow = el("div", "flex items-center gap-3");
+    qtyRow.appendChild(el("span", "text-[11px] uppercase tracking-widest text-ink-mute", "Quantity"));
+    const dec = el("button", "h-8 w-8 rounded-lg border border-paper-line bg-paper-card text-lg leading-none", "\u2212");
+    dec.type = "button";
+    dec.addEventListener("click", () => { d.qty = Math.max(1, d.qty - 1); renderDetail(); });
+    const qty = document.createElement("input");
+    qty.type = "number"; qty.min = "1"; qty.value = String(d.qty);
+    qty.className = "tnum w-16 rounded-lg border border-paper-line bg-paper-card px-2 py-1 text-center";
+    qty.addEventListener("change", () => { d.qty = Math.max(1, parseInt(qty.value, 10) || 1); renderDetail(); });
+    const inc = el("button", "h-8 w-8 rounded-lg border border-paper-line bg-paper-card text-lg leading-none", "+");
+    inc.type = "button";
+    inc.addEventListener("click", () => { d.qty += 1; renderDetail(); });
+    qtyRow.append(dec, qty, inc);
+    foot.appendChild(qtyRow);
+
+    const priceRow = el("div", "mt-4 flex items-end justify-between gap-4");
+    const pv = el("div", "");
+    pv.appendChild(el("p", "text-[10px] uppercase tracking-widest text-ink-faint",
+      isCost() ? "Unit cost" : "Unit price"));
+    pv.appendChild(el("p", "tnum font-display text-3xl leading-none",
+      formatCents(isCost() ? line.unitCostCents : line.unitSellCents)));
+    if (d.qty > 1) pv.appendChild(el("p", "tnum mt-1 text-xs text-ink-mute",
+      d.qty + " \u00d7 \u2014 " + formatCents(isCost() ? line.totalCostCents : line.totalSellCents) + " total"));
+    priceRow.appendChild(pv);
+
+    const add = el("button",
+      "rounded-xl bg-forest px-5 py-3 text-sm font-medium text-white hover:bg-forest-deep disabled:opacity-40", "Add to quote");
+    add.type = "button";
+    add.disabled = line.notOffered;
+    add.addEventListener("click", () => {
+      state.quote.lines.push({
+        uid: nextUid(), productId: product.id, finish: d.finish, config: d.config,
+        qty: d.qty, accessories: d.accessories.slice(),
+        stain: d.stain || null, grilleStyle: d.grille ? d.grille.style : null
+      });
+      saveQuote(); closeDetail(); renderQuote(); openDrawer();
+    });
+    priceRow.appendChild(add);
+    foot.appendChild(priceRow);
+    if (line.freightCents > 0) foot.appendChild(el("p", "mt-3 text-[11px] text-ink-mute",
       "Includes " + formatCents(line.freightCents) +
       " prehang charge per opening. Crate & shipping is banded on the whole order and added in the quote."));
+    body.appendChild(foot);
+  } else {
+    body.appendChild(el("p", "mt-auto rounded-xl bg-paper-rail p-4 text-sm text-ink-mute",
+      "Answer the questions above to see pricing."));
   }
-  body.appendChild(foot);
 
   wrap.append(imgCol, body);
   root.appendChild(wrap);
@@ -811,7 +1066,7 @@ function accessoryBlock(product, draft) {
   const chosen = el("div", "mb-2 flex flex-col gap-1.5");
   draft.accessories.forEach((acc, i) => {
     const priced = state.engine.priceLine({
-      productId: draft.productId, finish: draft.finish, config: draft.config, qty: 1, accessories: [acc]
+      productId: product.id, finish: draft.finish, config: draft.config, qty: 1, accessories: [acc]
     }).accessories[0];
     const row = el("div", "flex items-center gap-2 rounded-lg border border-paper-line bg-paper-card px-3 py-2");
     row.appendChild(el("span", "flex-1 truncate text-sm", priced.label));
@@ -943,8 +1198,10 @@ function renderQuote() {
 
     const info = el("div", "min-w-0 flex-1");
     info.appendChild(el("p", "font-display text-[15px] leading-snug line-clamp-2", l.description));
-    info.appendChild(el("p", "mt-0.5 text-xs text-ink-mute",
-      FINISH_LABELS[l.finish] + " · " + CONFIG_LABELS[l.config]));
+    const spec2 = [FINISH_LABELS[l.finish], CONFIG_LABELS[l.config]];
+    if (spec.stain) spec2.push(spec.stain + " stain");
+    if (spec.grilleStyle) spec2.push(spec.grilleStyle + " grille");
+    info.appendChild(el("p", "mt-0.5 text-xs text-ink-mute", spec2.join(" · ")));
     if (l.notOffered) {
       info.appendChild(el("p", "mt-1 text-xs font-medium text-red-700",
         "No longer offered in this combination — remove or reconfigure."));
@@ -1062,7 +1319,9 @@ function renderLineGate() {
   host.textContent = "";
   state.engine.collections().forEach(c => {
     const look = LINE_LOOK[c] || { title: titleize(c), blurb: "" };
-    const n = state.engine.productsIn(c).filter(p => p.type !== "sidelite").length;
+    const n = new Set(state.engine.productsIn(c)
+      .filter(p => p.type !== "sidelite" && !optionOnlyIds().has(p.id))
+      .map(modelKeyOf)).size;
     const card = el("button",
       "group rounded-2xl border border-paper-line bg-paper-card p-6 text-left shadow-card transition-all hover:-translate-y-0.5 hover:border-brass hover:shadow-lift focus:outline-none focus:ring-2 focus:ring-brass/40");
     card.type = "button";
@@ -1255,7 +1514,7 @@ function wire() {
   const io = new IntersectionObserver(entries => {
     if (!state.ready) return;
     if (entries.some(e => e.isIntersecting)) {
-      const total = filteredProducts().length;
+      const total = filteredModels().length;
       if (state.rendered < total) renderCatalog(false);
     }
   }, { rootMargin: "600px" });

@@ -19733,5 +19733,87 @@
       "sourcePage": "Mahogany p.27 / KA p.51",
       "notes": null
     }
+  ],
+  "fiberglassStainColors": [
+    {
+      "id": "28652e3b5a",
+      "code": "M",
+      "name": "Midnight",
+      "appliesTo": "Mahogany Grain or Oak Grain skin — not the Smooth Collection",
+      "priceImpact": "none",
+      "sourcePage": "3",
+      "notes": "Finish choice does not change the part number; captured on the quote."
+    },
+    {
+      "id": "5ec410b7f7",
+      "code": "S",
+      "name": "Slate",
+      "appliesTo": "Mahogany Grain or Oak Grain skin — not the Smooth Collection",
+      "priceImpact": "none",
+      "sourcePage": "3",
+      "notes": "Finish choice does not change the part number; captured on the quote."
+    },
+    {
+      "id": "f2be2a036d",
+      "code": "B",
+      "name": "Bourbon",
+      "appliesTo": "Mahogany Grain or Oak Grain skin — not the Smooth Collection",
+      "priceImpact": "none",
+      "sourcePage": "3",
+      "notes": "Finish choice does not change the part number; captured on the quote."
+    },
+    {
+      "id": "ecb0cfe8a1",
+      "code": "F",
+      "name": "Fox",
+      "appliesTo": "Mahogany Grain or Oak Grain skin — not the Smooth Collection",
+      "priceImpact": "none",
+      "sourcePage": "3",
+      "notes": "Finish choice does not change the part number; captured on the quote."
+    }
+  ],
+  "fiberglassIronGrilles": [
+    {
+      "id": "4c6874e3f4",
+      "sku": "CFG-001",
+      "productId": "01304cf4ce",
+      "baseModel": "3/4 Lite 1 Panel - Mahogany Grain Skin",
+      "sizeCode": "3068",
+      "styles": [
+        "Cordoba",
+        "Avignon",
+        "Hammond",
+        "Santiago",
+        "Barcelona",
+        "Whitney",
+        "Berkley",
+        "Balfour",
+        "Sienna"
+      ],
+      "sourcePage": null,
+      "notes": "Priced as its own configured item; the price list prints no part number for it."
+    },
+    {
+      "id": "d9696e4a93",
+      "sku": "CFG-002",
+      "productId": "4cdb798e92",
+      "baseModel": "3/4 Lite 1 Panel - Mahogany Grain Skin",
+      "sizeCode": "3080",
+      "styles": [
+        "Cordoba",
+        "Avignon",
+        "Hammond",
+        "Santiago",
+        "Barcelona",
+        "Whitney",
+        "Berkley",
+        "Balfour",
+        "Sienna",
+        "Saltillo",
+        "Southampton"
+      ],
+      "sourcePage": null,
+      "notes": "Priced as its own configured item; the price list prints no part number for it."
+    }
   ]
 }
