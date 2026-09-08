@@ -451,8 +451,12 @@ const S = {
   cfg:{ token:"", owner:"", repo:"", branch:"main",
         catalogPath:"data/catalog.json", rulesPath:"data/pricing-rules.json", remember:false },
   user:null,
-  catalog:null, catalogSha:null, catalogText:"",
-  rules:null,   rulesSha:null,   rulesText:"",
+  // catalogText/rulesText are the CANONICAL baseline (re-serialized at load) and
+  // answer "did the administrator change anything". catalogRaw/rulesRaw are the
+  // exact bytes GitHub returned and answer "did the remote file move under us".
+  // They differ because JSON has one number type: 1.0 re-serializes as 1.
+  catalog:null, catalogSha:null, catalogText:"", catalogRaw:"",
+  rules:null,   rulesSha:null,   rulesText:"",   rulesRaw:"",
   products:[], adders:[],
   cols:{ products:[], adders:[] },
   origin:new WeakMap(),        // row object -> JSON snapshot at load time
@@ -750,7 +754,10 @@ const ADDER_PRESET = [
   { path:"appliesTo",     label:"Applies To",  kind:"csv",    w:170 },
   { path:"priceBasis",    label:"Price Basis", kind:"basis",  w:96 },
   { path:"multiplier",    label:"Multiplier",  kind:"number", w:88 },
-  { path:"required",      label:"Req",         kind:"bool",   w:44 }
+  { path:"required",      label:"Req",         kind:"bool",   w:44 },
+  { path:"prices.singlePH", label:"Single PH", kind:"money",  w:96, grp:"unf", grpLabel:"Adder" },
+  { path:"prices.doublePH", label:"Double PH", kind:"money",  w:96, grp:"unf", grpLabel:"Adder" },
+  { path:"notes",         label:"Notes",       kind:"text",   w:200 }
 ];
 
 function leafPaths(obj, prefix, out, depth){
@@ -1525,9 +1532,14 @@ async function loadAll(){
     $("#repoLabel").textContent = S.cfg.owner + "/" + S.cfg.repo + " @ " + S.cfg.branch;
 
     const cat = await getFile(S.cfg.catalogPath);
-    S.catalogText = cat.text; S.catalogSha = cat.sha;
+    S.catalogRaw = cat.text; S.catalogSha = cat.sha;
     try{ S.catalog = JSON.parse(cat.text); }
     catch(e){ throw new ApiError(0, S.cfg.catalogPath + " is not valid JSON: " + e.message, null); }
+    S.catalogText = serialize(S.catalog);
+    if(S.catalogText !== S.catalogRaw){
+      log("info","Catalog re-serialized to canonical JSON (" + (cat.text.length - S.catalogText.length)
+        + " byte delta — number formatting only, no value changed).");
+    }
 
     const found = locateArrays(S.catalog);
     S.products = found.products; S.adders = found.adders;
@@ -1537,11 +1549,12 @@ async function loadAll(){
     let rulesOk = true;
     try{
       const rul = await getFile(S.cfg.rulesPath);
-      S.rulesText = rul.text; S.rulesSha = rul.sha;
+      S.rulesRaw = rul.text; S.rulesSha = rul.sha;
       S.rules = JSON.parse(rul.text);
+      S.rulesText = serialize(S.rules);
     }catch(e){
       rulesOk = false;
-      S.rules = null; S.rulesText = ""; S.rulesSha = null;
+      S.rules = null; S.rulesText = ""; S.rulesRaw = ""; S.rulesSha = null;
       log("warn","Pricing rules unavailable (" + (e.message||e) + ") — the Pricing Rules tab is disabled.");
     }
 
@@ -1588,9 +1601,11 @@ async function publish(){
   const catText = serializeCatalog(), rulText = serializeRules();
   const targets = [];
   if(S.catalog!==null && catText !== S.catalogText)
-    targets.push({ name:"catalog", path:S.cfg.catalogPath, text:catText, shaKey:"catalogSha", textKey:"catalogText" });
+    targets.push({ name:"catalog", path:S.cfg.catalogPath, text:catText,
+                   shaKey:"catalogSha", textKey:"catalogText", rawKey:"catalogRaw" });
   if(S.rules!==null && rulText !== S.rulesText)
-    targets.push({ name:"pricing rules", path:S.cfg.rulesPath, text:rulText, shaKey:"rulesSha", textKey:"rulesText" });
+    targets.push({ name:"pricing rules", path:S.cfg.rulesPath, text:rulText,
+                   shaKey:"rulesSha", textKey:"rulesText", rawKey:"rulesRaw" });
 
   if(!targets.length){
     log("info","Nothing to publish — working copy matches the last loaded revision.");
@@ -1622,7 +1637,7 @@ async function publish(){
       try{
         const live = await getFile(t.path);
         liveSha = live.sha;
-        if(live.text !== S[t.textKey]){
+        if(live.text !== S[t.rawKey]){
           const proceed = await openModal("Remote file changed", el("div",{},
             el("p",{}, el("b",{text:t.path}), document.createTextNode(" was modified on " + S.cfg.branch + " after you loaded it.")),
             el("p",{text:"Committing now replaces the remote version with your working copy. Their changes will be overwritten."}),
@@ -1645,6 +1660,7 @@ async function publish(){
       const blobSha   = data && data.content && data.content.sha ? data.content.sha : "(none)";
       S[t.shaKey]  = blobSha;
       S[t.textKey] = t.text;
+      S[t.rawKey]  = t.text;   // what we just wrote is now the remote content
       log("ok","COMMITTED " + t.path + " · HTTP " + status + " · commit ", commitSha);
       log("info","  blob sha " + blobSha + (data && data.commit && data.commit.html_url ? "  ·  " + data.commit.html_url : ""));
       if(data && data.commit && data.commit.html_url){
