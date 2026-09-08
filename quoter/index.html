@@ -1087,6 +1087,12 @@ function chooseLine(c) {
   saveLine();
   $("#lineGate").classList.add("hidden");
   document.body.style.overflow = "";
+  // A search or facet carried over from the other line almost never matches
+  // anything here, which reads as an empty catalogue rather than a stale
+  // filter. Clear them so the new line opens on its full range.
+  state.filters = { q: "", line: "", family: "", glazing: "", type: "" };
+  $("#q").value = "";
+  ["#fLine", "#fFamily", "#fGlazing", "#fType"].forEach(sel => { const n = $(sel); if (n) n.value = ""; });
   renderLineChip();
   renderFilters();
   renderCatalog(true);
