@@ -108,6 +108,10 @@ export function createEngine(catalog, rules, overrides = {}) {
   const defaults = rules.defaults || {};
   const prehangChargeCents = Number(freight.prehangChargeCentsPerUnit) || 0;
   const prehangChargeAlways = freight.prehangChargeAlwaysApplies !== false;
+  const unitDefs = freight.unitDefinitions || {};
+  const crateTiers = Array.isArray(freight.crateShippingTiers) ? freight.crateShippingTiers : [];
+  const unitRounding = freight.unitRounding || "ceil";
+  const leavesByConfig = freight.doorLeavesByConfig || { slab: 1, singlePH: 1, doublePH: 2 };
   const laborPerPrehung = Number(defaults.laborCentsPerPrehungUnit) || 0;
   const laborPerSlab = Number(defaults.laborCentsPerSlab) || 0;
 
@@ -136,11 +140,63 @@ export function createEngine(catalog, rules, overrides = {}) {
     return fallbackMargin;
   }
 
-  /** How many prehung units a configuration represents (drives freight + labour). */
+  /* The Hoelscher schedule charges $100 per prehung OPENING, not per door
+     leaf: "(5) DOUBLE PREHUNG UNITS ... + ($100 PREHANG CHARGE x 5)". A single
+     door with two sidelites and a transom is likewise one opening. */
   function prehungUnits(config) {
     if (config === "singlePH") return 1;
     if (config === "doublePH") return A.doublePrehangUnits;
     return 0;
+  }
+
+  /** Freight units an item contributes: door 1, sidelite 0.5, transom 1. */
+  function freightUnitsOf(product) {
+    if (!product) return 0;
+    if (typeof product.freightUnits === "number" && isFinite(product.freightUnits)) {
+      return product.freightUnits;
+    }
+    const byType = Number(unitDefs[product.type]);
+    return isFinite(byType) ? byType : 1;
+  }
+
+  /** Door leaves in one opening: a double prehung holds two ("DOUBLE DOOR 2"). */
+  function leavesFor(config) {
+    const n = Number(leavesByConfig[config]);
+    return isFinite(n) ? n : 1;
+  }
+
+  function roundUnits(u) {
+    if (unitRounding === "none") return u;
+    if (unitRounding === "round") return Math.round(u);
+    return Math.ceil(u - 1e-9);
+  }
+
+  /** Crate & shipping tier for a whole order's unit count. */
+  function crateShippingFor(totalUnits) {
+    const u = roundUnits(totalUnits);
+    if (u <= 0) return { chargeCents: 0, units: u, tier: null };
+    for (const t of crateTiers) {
+      const lo = Number(t.minUnits);
+      const hi = (t.maxUnits === null || t.maxUnits === undefined) ? Infinity : Number(t.maxUnits);
+      if (u >= lo && u <= hi) {
+        return { chargeCents: Number(t.chargeCents) || 0, units: u, tier: t.label || null };
+      }
+    }
+    return { chargeCents: 0, units: u, tier: null };
+  }
+
+  /** The whole freight calculation, exposed so it can be tested on its own
+      against the five worked examples printed on the shipping schedule. */
+  function computeFreight(totalUnits, prehungOpenings) {
+    const crate = crateShippingFor(totalUnits);
+    const prehang = (prehangChargeAlways || prehungOpenings > 0)
+      ? Math.round(prehungOpenings) * prehangChargeCents : 0;
+    return {
+      units: crate.units, tier: crate.tier,
+      crateShippingCents: crate.chargeCents,
+      prehangCents: prehang,
+      totalCents: crate.chargeCents + prehang
+    };
   }
 
   /** List cents -> cost cents, honouring priceBasis and the multiplier's scope. */
@@ -220,8 +276,10 @@ export function createEngine(catalog, rules, overrides = {}) {
         }
       }
       const unit = toCost(listCents, c.priceBasis, "components");
+      const per = Number(c.freightUnitsPerPiece);
       return { id: c.id, kind: "component", label, qty, unitCostCents: unit,
-               costCents: unit === null ? null : unit * qty, notOffered: unit === null };
+               costCents: unit === null ? null : unit * qty, notOffered: unit === null,
+               freightUnits: isFinite(per) ? per * qty : 0 };
     }
     if (acc.kind === "adder") {
       const a = adderById.get(acc.id);
@@ -241,7 +299,11 @@ export function createEngine(catalog, rules, overrides = {}) {
     return { id: p.id, kind: "product", label: p.description || p.sku, sku: p.sku, finish, config, qty,
              unitCostCents: unit, costCents: unit === null ? null : unit * qty,
              notOffered: unit === null,
-             prehungUnits: prehungUnits(config) * qty, slabUnits: config === "slab" ? qty : 0 };
+             // An accessory sits in the SAME opening as its door, so it never
+             // adds a prehang charge of its own — only freight units.
+             prehungUnits: 0,
+             freightUnits: freightUnitsOf(p) * qty,
+             slabUnits: config === "slab" ? qty : 0 };
   }
 
   /**
@@ -263,11 +325,20 @@ export function createEngine(catalog, rules, overrides = {}) {
     // Freight: the prehang charge, per prehung unit. prehangChargeAlwaysApplies
     // means it is not conditional on the product's freightUnits — which is just
     // as well, since the current catalogue carries none.
-    let prehung = prehungUnits(config);
+    // One line is one opening. The door's configuration decides whether that
+    // opening is prehung; its accessories ride along inside it.
+    const prehungOpenings = prehungUnits(config) > 0 ? 1 : 0;
     let slabs = config === "slab" ? 1 : 0;
-    accessories.forEach(a => { prehung += (a.prehungUnits || 0); slabs += (a.slabUnits || 0); });
-    const freightCents = prehangChargeAlways || prehung > 0 ? prehung * prehangChargeCents : 0;
-    const laborCents = prehung * laborPerPrehung + slabs * laborPerSlab;
+    accessories.forEach(a => { slabs += (a.slabUnits || 0); });
+
+    // Freight units feeding the order-level crate & shipping tier. A double
+    // prehung opening carries two door leaves and so counts twice.
+    let units = freightUnitsOf(product) * leavesFor(config);
+    accessories.forEach(a => { units += (a.freightUnits || 0); });
+
+    const freightCents = (prehangChargeAlways || prehungOpenings > 0)
+      ? prehungOpenings * prehangChargeCents : 0;
+    const laborCents = prehungUnits(config) * laborPerPrehung + slabs * laborPerSlab;
 
     const unitCostCents = notOffered ? null
       : doorCostCents + accessoriesCostCents + freightCents + laborCents;
@@ -277,6 +348,7 @@ export function createEngine(catalog, rules, overrides = {}) {
       productId: line.productId, product: product || null, sku: product ? product.sku : null,
       description: product ? product.description : "(unknown product)",
       finish, config, qty, notOffered,
+      prehungOpenings, freightUnits: units,
       listCents,
       doorCostCents, accessories, accessoriesCostCents,
       freightCents, laborCents,
@@ -302,11 +374,23 @@ export function createEngine(catalog, rules, overrides = {}) {
     const priced = lines.map(l => priceLine(l, marginPercent));
     const usable = priced.filter(l => !l.notOffered);
 
-    const totalCostCents = usable.reduce((n, l) => n + l.totalCostCents, 0);
-    const grandTotalSellCents = usable.reduce((n, l) => n + l.totalSellCents, 0);
-    const totalFreightCents = usable.reduce((n, l) => n + l.freightCents * l.qty, 0);
+    const lineCostCents = usable.reduce((n, l) => n + l.totalCostCents, 0);
+    const lineSellCents = usable.reduce((n, l) => n + l.totalSellCents, 0);
+    const totalPrehangCents = usable.reduce((n, l) => n + l.freightCents * l.qty, 0);
     const totalLaborCents = usable.reduce((n, l) => n + l.laborCents * l.qty, 0);
     const unitCount = usable.reduce((n, l) => n + l.qty, 0);
+
+    /* Crate & shipping is banded on the WHOLE order's unit count, so it cannot
+       live on a line. Quoted net, like the prehang charge, and carrying the
+       same margin so one quote is marked up uniformly. */
+    const freightUnitCount = usable.reduce((n, l) => n + (l.freightUnits || 0) * l.qty, 0);
+    const crate = crateShippingFor(freightUnitCount);
+    const crateShippingCents = crate.chargeCents;
+    const crateShippingSellCents = applyMargin(crateShippingCents, marginPercent, A.marginMode);
+
+    const totalCostCents = lineCostCents + crateShippingCents;
+    const grandTotalSellCents = lineSellCents + crateShippingSellCents;
+    const totalFreightCents = totalPrehangCents + crateShippingCents;
 
     return {
       lines: priced,
@@ -318,6 +402,14 @@ export function createEngine(catalog, rules, overrides = {}) {
       currency: rules.currency || "USD",
       totalCostCents,
       grandTotalSellCents,
+      lineCostCents,
+      lineSellCents,
+      totalPrehangCents,
+      crateShippingCents,
+      crateShippingSellCents,
+      freightUnitCount,
+      freightUnitsBilled: crate.units,
+      crateShippingTier: crate.tier,
       totalFreightCents,
       totalLaborCents,
       marginCents: grandTotalSellCents - totalCostCents,
@@ -346,7 +438,7 @@ export function createEngine(catalog, rules, overrides = {}) {
     marginFor,
     netMultiplier, prehangChargeCents,
     availableOptions, priceLine, priceQuote, facets,
-    toCost, prehungUnits
+    toCost, prehungUnits, freightUnitsOf, crateShippingFor, computeFreight, leavesFor
   };
 }
 

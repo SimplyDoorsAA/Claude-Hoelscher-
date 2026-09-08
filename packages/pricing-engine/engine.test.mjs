@@ -175,26 +175,116 @@ t("builder pricing is below retail for the same line", () => {
   assert.equal(b.totalCostCents, r.totalCostCents);         // cost is tier-independent
   assert.ok(b.grandTotalSellCents < r.grandTotalSellCents);
   assert.equal(b.marginTier, "builder");
-  assert.equal(b.grandTotalSellCents, applyMargin(b.totalCostCents / 2, 0.30) * 2);
-  assert.equal(r.grandTotalSellCents, applyMargin(r.totalCostCents / 2, 0.40) * 2);
+  assert.equal(b.grandTotalSellCents, applyMargin(b.lineCostCents / 2, 0.30) * 2 + b.crateShippingSellCents);
+  assert.equal(r.grandTotalSellCents, applyMargin(r.lineCostCents / 2, 0.40) * 2 + r.crateShippingSellCents);
 });
 t("an explicit marginPercent still overrides the tier", () => {
   const q = engine.priceQuote({ lines: [{ productId: door.id, finish: "unfinished", config: "slab", qty: 1 }],
                                 marginTier: "builder", marginPercent: 0 });
   assert.equal(q.grandTotalSellCents, q.totalCostCents);
 });
-t("priceQuote sums lines and exposes the documented field names", () => {
+/* ---------- freight: the Hoelscher San Antonio / Austin schedule ---------- */
+t("reproduces all five worked examples printed on the shipping schedule", () => {
+  //            label                              units, prehung openings, expected
+  const cases = [
+    ["#1 one single prehung unit",                     1, 1, 22000],
+    ["#2 one single + one double prehung",             3, 2, 32000],
+    ["#3 five double prehung units",                  10, 5, 50000],
+    ["#4 door + 2 sidelites + transom, + one double",  5, 2, 36500],
+    ["#5 eight slabs + one double prehung",           10, 1, 10000]
+  ];
+  for (const [label, units, openings, expected] of cases) {
+    assert.equal(engine.computeFreight(units, openings).totalCents, expected, label);
+  }
+});
+t("crate & shipping is banded on the whole order", () => {
+  const c = u => engine.crateShippingFor(u).chargeCents;
+  assert.equal(c(1), 12000); assert.equal(c(3), 12000);
+  assert.equal(c(4), 16500); assert.equal(c(6), 16500);
+  assert.equal(c(7), 20000); assert.equal(c(9), 20000);
+  assert.equal(c(10), 0);    assert.equal(c(40), 0);      // 10+ is prepaid
+  assert.equal(c(0), 0);
+});
+t("fractional units round up into the next band", () => {
+  assert.equal(engine.crateShippingFor(0.5).units, 1);    // a lone sidelite
+  assert.equal(engine.crateShippingFor(3.5).chargeCents, 16500);
+});
+t("freight units follow the schedule: door 1, sidelite 0.5", () => {
+  const d = engine.products.find(p => p.type === "door");
+  const sl = engine.products.find(p => p.type === "sidelite");
+  assert.equal(engine.freightUnitsOf(d), 1);
+  assert.equal(engine.freightUnitsOf(sl), 0.5);
+  assert.equal(engine.products.filter(p => typeof p.freightUnits !== "number").length, 0);
+});
+t("a prehung opening is charged once, however many sidelites ride in it", () => {
+  const sl = engine.products.filter(p => p.type === "sidelite" && p.prices.unfinished.slab !== null);
+  const bare = engine.priceLine({ productId: door.id, finish: "unfinished", config: "singlePH", qty: 1 });
+  const withSl = engine.priceLine({ productId: door.id, finish: "unfinished", config: "singlePH", qty: 1,
+    accessories: [ { kind: "product", id: sl[0].id, finish: "unfinished", config: "slab", qty: 1 },
+                   { kind: "product", id: sl[1].id, finish: "unfinished", config: "slab", qty: 1 } ] });
+  assert.equal(bare.freightCents, 10000);
+  assert.equal(withSl.freightCents, 10000, "sidelites must not each attract a prehang charge");
+  assert.equal(withSl.prehungOpenings, 1);
+  assert.equal(withSl.freightUnits, 2);          // 1 door + 0.5 + 0.5
+});
+t("a double prehung opening counts as two freight units", () => {
+  const dbl = engine.products.find(p => p.prices.unfinished.doublePH !== null);
+  const one = engine.priceLine({ productId: dbl.id, finish: "unfinished", config: "singlePH", qty: 1 });
+  const two = engine.priceLine({ productId: dbl.id, finish: "unfinished", config: "doublePH", qty: 1 });
+  assert.equal(one.freightUnits, 1);
+  assert.equal(two.freightUnits, 2, "DOUBLE DOOR = 2 units on the schedule");
+  assert.equal(two.freightCents, 10000, "but still one prehang charge");
+});
+t("examples #2 and #5 reproduce when built from real quote lines", () => {
+  const dbl = engine.products.find(p => p.prices.unfinished.doublePH !== null &&
+                                        p.prices.unfinished.singlePH !== null);
+  // #2 one single prehung + one double prehung = 3 units -> $120 + $200
+  const q2 = engine.priceQuote({ lines: [
+    { productId: dbl.id, finish: "unfinished", config: "singlePH", qty: 1 },
+    { productId: dbl.id, finish: "unfinished", config: "doublePH", qty: 1 }
+  ]});
+  assert.equal(q2.freightUnitCount, 3);
+  assert.equal(q2.crateShippingCents, 12000);
+  assert.equal(q2.totalPrehangCents, 20000);
+  assert.equal(q2.totalFreightCents, 32000);
+  // #5 eight slabs + one double prehung = 10 units -> prepaid + $100
+  const q5 = engine.priceQuote({ lines: [
+    { productId: dbl.id, finish: "unfinished", config: "slab", qty: 8 },
+    { productId: dbl.id, finish: "unfinished", config: "doublePH", qty: 1 }
+  ]});
+  assert.equal(q5.freightUnitCount, 10);
+  assert.equal(q5.crateShippingCents, 0);
+  assert.equal(q5.totalFreightCents, 10000);
+});
+t("a slab-only order still pays crate & shipping", () => {
+  const q = engine.priceQuote({ lines: [{ productId: door.id, finish: "unfinished", config: "slab", qty: 1 }] });
+  assert.equal(q.totalPrehangCents, 0);
+  assert.equal(q.crateShippingCents, 12000);
+  assert.equal(q.freightUnitCount, 1);
+  assert.equal(q.totalCostCents, q.lineCostCents + 12000);
+});
+t("ten or more units ship prepaid", () => {
+  const q = engine.priceQuote({ lines: [{ productId: door.id, finish: "unfinished", config: "slab", qty: 10 }] });
+  assert.equal(q.freightUnitCount, 10);
+  assert.equal(q.crateShippingCents, 0);
+});
+
+t("priceQuote sums lines, adds order-level crate, and names its fields", () => {
   const q = engine.priceQuote({ lines: [
     { productId: door.id, finish: "unfinished", config: "singlePH", qty: 2 },
     { productId: door.id, finish: "prefinished", config: "slab", qty: 1 }
   ]});
   const a = engine.priceLine({ productId: door.id, finish: "unfinished", config: "singlePH", qty: 2 });
   const b = engine.priceLine({ productId: door.id, finish: "prefinished", config: "slab", qty: 1 });
-  assert.equal(q.totalCostCents, a.totalCostCents + b.totalCostCents);
-  assert.equal(q.grandTotalSellCents, a.totalSellCents + b.totalSellCents);
+  assert.equal(q.lineCostCents, a.totalCostCents + b.totalCostCents);
+  assert.equal(q.freightUnitCount, 3);                       // three doors
+  assert.equal(q.crateShippingCents, 12000);                 // 1-3 units
+  assert.equal(q.totalCostCents, q.lineCostCents + 12000);
+  assert.equal(q.grandTotalSellCents, q.lineSellCents + q.crateShippingSellCents);
   assert.ok(Number.isInteger(q.unitCostCents) && Number.isInteger(q.unitSellCents));
   assert.equal(q.unitCount, 3);
-  assert.equal(q.totalFreightCents, 20000);
+  assert.equal(q.totalPrehangCents, 20000);
+  assert.equal(q.totalFreightCents, 32000);                  // prehang + crate
 });
 t("unoffered lines are excluded from totals but reported", () => {
   const bad = engine.products.find(x => x.prices.prefinished.doublePH === null);
@@ -203,7 +293,9 @@ t("unoffered lines are excluded from totals but reported", () => {
     { productId: bad.id, finish: "prefinished", config: "doublePH", qty: 1 }
   ]});
   assert.equal(q.unavailableCount, 1);
-  assert.equal(q.totalCostCents, engine.priceLine({ productId: door.id, finish: "unfinished", config: "slab", qty: 1 }).totalCostCents);
+  assert.equal(q.lineCostCents,
+    engine.priceLine({ productId: door.id, finish: "unfinished", config: "slab", qty: 1 }).totalCostCents);
+  assert.equal(q.freightUnitCount, 1, "an unavailable line must not add freight units");
 });
 t("sell always exceeds cost at a positive margin", () => {
   const q = engine.priceQuote({ lines: [{ productId: door.id, finish: "unfinished", config: "doublePH", qty: 4 }] });
@@ -216,6 +308,7 @@ t("margin of 0 makes sell equal cost", () => {
 });
 t("an empty quote totals zero, not NaN", () => {
   const q = engine.priceQuote({ lines: [] });
+  assert.equal(q.crateShippingCents, 0);
   assert.equal(q.totalCostCents, 0);
   assert.equal(q.grandTotalSellCents, 0);
   assert.equal(q.unitCostCents, 0);

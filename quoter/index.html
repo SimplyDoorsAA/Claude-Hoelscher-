@@ -751,7 +751,8 @@ function renderDetail() {
 
   if (line.freightCents > 0) {
     foot.appendChild(el("p", "mt-3 text-[11px] text-ink-mute",
-      "Includes " + formatCents(line.freightCents) + " prehang freight per unit."));
+      "Includes " + formatCents(line.freightCents) +
+      " prehang charge per opening. Crate & shipping is banded on the whole order and added in the quote."));
   }
   body.appendChild(foot);
 
@@ -956,8 +957,13 @@ function renderTotals(q) {
     return r;
   };
 
+  const freightNote = q.crateShippingTier
+    ? q.crateShippingTier + " · " + q.freightUnitsBilled + " freight unit" + (q.freightUnitsBilled === 1 ? "" : "s")
+    : null;
+
   if (isCost()) {
-    box.appendChild(line("Freight (prehang)", formatCents(q.totalFreightCents)));
+    box.appendChild(line("Prehang charge", formatCents(q.totalPrehangCents)));
+    box.appendChild(line("Crate & shipping", formatCents(q.crateShippingCents)));
     if (q.totalLaborCents) box.appendChild(line("Labour", formatCents(q.totalLaborCents)));
     box.appendChild(line(titleize(q.marginTier || "") + " margin @ " + Math.round(q.marginPercent * 100) + "%",
       formatCents(q.marginCents)));
@@ -967,8 +973,9 @@ function renderTotals(q) {
     box.appendChild(total);
     box.appendChild(el("p", "mt-1 text-[11px] text-ink-faint",
       "Customer price would be " + formatCents(q.grandTotalSellCents) + "."));
+    if (freightNote) box.appendChild(el("p", "mt-0.5 text-[11px] text-ink-faint", freightNote));
   } else {
-    box.appendChild(line("Includes prehang freight", formatCents(q.totalFreightCents)));
+    box.appendChild(line("Includes freight", formatCents(q.totalFreightCents)));
     const total = el("div", "mt-2 flex items-baseline justify-between border-t border-paper-line pt-2");
     total.appendChild(el("span", "font-display text-xl", "Total"));
     total.appendChild(el("span", "tnum font-display text-2xl", formatCents(q.grandTotalSellCents)));
@@ -977,6 +984,9 @@ function renderTotals(q) {
       q.unitCount + " unit" + (q.unitCount === 1 ? "" : "s") + " · " +
       titleize(q.marginTier || "") + " pricing at " + Math.round(q.marginPercent * 100) + "% margin" +
       " · excludes tax and installation."));
+    if (freightNote) box.appendChild(el("p", "mt-0.5 text-[11px] text-ink-faint",
+      "Shipping band: " + freightNote +
+      (q.crateShippingCents === 0 ? " — prepaid" : "")));
   }
 
   if (q.unavailableCount) {

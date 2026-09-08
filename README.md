@@ -153,6 +153,35 @@ Each array becomes its own tab. The grid is built from the data, so a catalog
 carrying different arrays or extra fields still renders — unmodelled fields
 appear as extra columns rather than being dropped.
 
+### Freight
+
+Transcribed from the Hoelscher San Antonio / Austin shipping schedule. Two
+separate charges:
+
+**1. Prehang charge — $100 net per prehung OPENING.** Not per door leaf: the
+schedule's example #3 bills five double prehung units (ten leaves) at
+`$100 x 5`. A single door with two sidelites and a transom is likewise one
+opening, so accessories attached to a line never add a charge of their own.
+
+**2. Crate & shipping — banded on the whole order's unit count.**
+
+| Units | FOB Run — San Antonio / Austin |
+| --- | --- |
+| 1-3 | $120 | 
+| 4-6 | $165 |
+| 7-9 | $200 |
+| 10+ | Prepaid |
+
+Units: door slab 1, sidelite 0.5, transom 1, 25 jamb legs 1, 50 pcs other
+components 1. A double prehung opening carries two leaves and counts twice.
+Fractional totals round up. Because the band depends on the whole order, this
+charge is computed at quote level, not per line.
+
+Both charges are quoted net and are never multiplied by `netMultiplier`.
+
+All five worked examples printed on the schedule are pinned as tests, two of
+them rebuilt from real quote lines rather than from the numbers alone.
+
 ### Margin tiers
 
 Two customer tiers, set in `pricing-rules.json` and editable in App A's Pricing
