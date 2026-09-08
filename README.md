@@ -139,10 +139,18 @@ you commit anything.
 | Section | Items |
 | --- | --- |
 | `fiberglassProducts` | 222 fiberglass doors and sidelites |
+| `fiberglassPrehangAdders` | 24 interior-casing / 1x4 adders |
+| `fiberglassComponents` | 11 PVC jambs, brickmould, T-astragal, dentil shelf, SDL bars |
 | `woodProducts` | 367 mahogany, knotty alder and barn doors, sidelites and slabs |
-| `prehangAdders` | 62 interior-casing / 1x4 adders by line, top style and configuration |
-| `components` | 26 millwork items — jambs, casing, brickmould, T-astragal, SDL bars |
-| `hardware` | 22 barn-hardware, iron-mask, speakeasy, clavos and strap SKUs |
+| `woodPrehangAdders` | 38 interior-casing / 1x4 adders |
+| `woodComponents` | 15 jamb legs, casing, mull covers, subsills, T-astragal |
+| `hardware` | 22 barn-hardware, iron-mask, speakeasy, clavos and strap SKUs — shared |
+
+The split follows the vendor price sheets, not a guess: the fiberglass sheet
+carries its own Components, SDL Bars and Prehang Adders sections and no
+hardware at all, so `hardware` stays shared. Iron masks and speakeasy kits are
+priced on the wood sheet but fit fiberglass doors too, which is the other
+reason not to file them under one line.
 
 Every one of the 2,994 door price cells was verified against the source
 spreadsheet after conversion, with zero mismatches. The 546 `N/A` cells became
@@ -150,8 +158,8 @@ spreadsheet after conversion, with zero mismatches. The 546 `N/A` cells became
 `list x 0.48` throughout and are derived at quote time from
 `pricing-rules.json`, so storing them would be duplicated state that can drift.
 
-The two door lines are separate arrays and therefore separate tabs in App A,
-so fiberglass can be worked on without wood in the way. The split is for
+Each vendor price sheet is its own set of arrays, and therefore its own set of
+tabs in App A, so fiberglass can be worked on without wood in the way. The split is for
 editing only: the pricing engine merges every `*Products` array, so the Quoter
 and every price are unaffected, and the net multiplier's scope still names one
 logical `products` section whatever the arrays are called.
@@ -224,7 +232,10 @@ priced `null` shows a dash there, never `$0.00`. A test pins App A's cost
 figures to the pricing engine's across the catalogue so the two cannot diverge.
 
 **Page numbers** are shown per item — `Cat. Page` on products, `Src Page` on
-adders, components and hardware — and are editable.
+adders, components and hardware — and are editable. **⚑ Needs page** filters
+any grid to just the rows that have none, which is the working set for filling
+them in. `docs/missing-catalog-pages.md` lists the same rows, currently 127 of
+699.
 
 ### Known gaps in the imported data
 

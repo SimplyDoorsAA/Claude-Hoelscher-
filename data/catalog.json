@@ -18268,7 +18268,7 @@
       "notes": null
     }
   ],
-  "prehangAdders": [
+  "fiberglassPrehangAdders": [
     {
       "id": "8f799dd688",
       "line": "fiberglass",
@@ -18532,7 +18532,9 @@
       "priceCents": 19700,
       "sourcePage": null,
       "notes": null
-    },
+    }
+  ],
+  "woodPrehangAdders": [
     {
       "id": "8e663904d7",
       "line": "wood",
@@ -18952,7 +18954,7 @@
       "notes": null
     }
   ],
-  "components": [
+  "fiberglassComponents": [
     {
       "id": "b62d21d75c",
       "category": "Components",
@@ -19106,7 +19108,9 @@
       "freightUnitsPerPiece": 0,
       "sourcePage": null,
       "notes": null
-    },
+    }
+  ],
+  "woodComponents": [
     {
       "id": "ad247becfb",
       "category": "Construction Door Adder",

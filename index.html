@@ -357,6 +357,7 @@ table.grid tbody tr.dirty td.g-unf,table.grid tbody tr.dirty td.g-pre{background
     <button class="btn sm" id="btnUnits" title="Toggle money display between dollars and raw integer cents">$ dollars</button>
     <button class="btn sm" id="btnCols" title="Show or hide columns">Columns</button>
     <button class="btn sm" id="btnCost" title="Show our cost beneath each list price">+ Cost</button>
+    <button class="btn sm" id="btnNoPage" title="Show only rows with no catalog page recorded">⚑ Needs page</button>
     <button class="btn sm" id="btnAdd" title="Append a new row">+ Row</button>
     <div class="sep"></div>
     <button class="btn sm" id="btnReload" title="Discard local edits and re-fetch from GitHub">Reload</button>
@@ -468,6 +469,7 @@ const S = {
   pane:null,
   units:"dollars",             // "dollars" | "cents"
   showCost:false,              // render derived cost beneath each list price
+  needsPage:false,             // show only rows with no catalog page yet
   filter:"",
 };
 function sec(k){ return S.sec[k]; }
@@ -569,8 +571,14 @@ function fmtMoneyTitle(c){
    price and pricing-rules.json, and a stored copy would drift the moment
    either changes. Mirrors packages/pricing-engine toCost(); a test pins the
    two together across the whole catalogue. */
+/* A section key names which sheet a row came from; the multiplier's scope names
+   what kind of thing it is. fiberglassComponents -> components, and so on. */
 function scopeNameFor(sectionKey){
-  return /products?$/i.test(sectionKey) ? "products" : sectionKey;
+  if(/products?$/i.test(sectionKey)) return "products";
+  if(/(?:prehang)?adders?$/i.test(sectionKey)) return "prehangAdders";
+  if(/components?$/i.test(sectionKey)) return "components";
+  if(/hardware$/i.test(sectionKey)) return "hardware";
+  return sectionKey;
 }
 function costOf(cents, priceBasis, sectionKey){
   if(cents===null||cents===undefined||!S.rules) return null;
@@ -735,9 +743,11 @@ async function putFile(path, text, sha, message){
 /* ============================ catalog shape ============================== */
 /* The catalog may be a bare array of products or an object wrapping several
    arrays. Every array of objects becomes an editable section/tab. */
-const KNOWN_SECTIONS = ["fiberglassProducts","woodProducts","products","prehangAdders",
-                        "prehang_adders","adders","components","hardware",
-                        "accessories","glass","finishes","items"];
+/* Tab order groups each vendor price sheet together, then the shared sections. */
+const KNOWN_SECTIONS = ["fiberglassProducts","fiberglassPrehangAdders","fiberglassComponents",
+                        "woodProducts","woodPrehangAdders","woodComponents",
+                        "products","prehangAdders","prehang_adders","adders","components",
+                        "hardware","accessories","glass","finishes","items"];
 function humanize(k){
   return String(k).replace(/[_-]+/g," ")
     .replace(/([a-z0-9])([A-Z])/g,"$1 $2")
@@ -973,9 +983,23 @@ function cssId(k){ return String(k).replace(/[^A-Za-z0-9_-]/g,"_"); }
 function snapshot(rows){ rows.forEach(r=> S.origin.set(r, JSON.stringify(r))); }
 function isRowDirty(row){ const o = S.origin.get(row); return o===undefined || o !== JSON.stringify(row); }
 
+/* Which field on this section records a catalog page. */
+function pageFieldOf(kind){
+  const S1 = sec(kind); if(!S1) return null;
+  for(const f of ["catalogPage","sourcePage","page"]){
+    if(S1.cols.some(c=>c.path===f)) return f;
+  }
+  return null;
+}
+function lacksPage(kind,row){
+  const f = pageFieldOf(kind); if(!f) return false;
+  const v = getPath(row,f);
+  return v===null || v===undefined || String(v).trim()==="";
+}
 function visibleRows(kind){
   const S1 = sec(kind); if(!S1) return [];
-  const rows = S1.rows;
+  let rows = S1.rows;
+  if(S.needsPage) rows = rows.filter(r=> lacksPage(kind,r));
   const q = S.filter.trim().toLowerCase();
   let view = rows.map((row,idx)=>({row,idx}));
   if(q){
@@ -1919,7 +1943,7 @@ function updateCounts(){
   $("#rowCount").textContent = visibleRows(S.pane).length + " / " + S1.rows.length;
 }
 function setBusy(on, label){
-  ["btnPublish","btnReload","btnAdd","btnBackup","btnCols","btnCost"].forEach(id=>{ const b=$("#"+id); if(b) b.disabled = on; });
+  ["btnPublish","btnReload","btnAdd","btnBackup","btnCols","btnCost","btnNoPage"].forEach(id=>{ const b=$("#"+id); if(b) b.disabled = on; });
   const p = $("#btnPublish");
   if(on){ p.dataset.prev = p.textContent; p.textContent = label || "Working…"; }
   else if(p.dataset.prev){ p.textContent = p.dataset.prev; delete p.dataset.prev; updateState(); }
@@ -1935,6 +1959,7 @@ function setPane(name){
   $("#btnAdd").disabled  = !grid || !S.catalog;
   $("#btnCols").disabled = !grid || !S.catalog;
   $("#btnCost").disabled = !grid || !S.catalog || !S.rules;
+  $("#btnNoPage").disabled = !grid || !S.catalog;
   $("#q").disabled = !grid;
   if(name==="raw") renderRaw();
   updateCounts();
@@ -2005,6 +2030,16 @@ function wire(){
     log("info", S.showCost
       ? "Showing derived cost (list x " + (S.rules?S.rules.netMultiplier:"?") + ") beneath each list price."
       : "Cost lines hidden.");
+    updateState();
+  });
+  $("#btnNoPage").addEventListener("click", ()=>{
+    S.needsPage = !S.needsPage;
+    $("#btnNoPage").classList.toggle("primary", S.needsPage);
+    if(isGridPane()) renderGrid(S.pane);
+    const n = S.secOrder.reduce((t,k)=> t + sec(k).rows.filter(r=>lacksPage(k,r)).length, 0);
+    log("info", S.needsPage
+      ? "Filtered to rows with no catalog page — " + n + " across the whole catalog."
+      : "Page filter cleared.");
     updateState();
   });
   $("#btnCols").addEventListener("click", openColumnPicker);

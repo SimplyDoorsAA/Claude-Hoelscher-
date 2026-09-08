@@ -93,15 +93,23 @@ export function createEngine(catalog, rules, overrides = {}) {
      line, in several: fiberglassProducts[], woodProducts[]. Pricing treats them
      identically — the split is for editing, not for money — so they are merged
      here and the netMultiplier scope keeps the single logical name "products". */
-  const productKeys = Object.keys(catalog)
-    .filter(k => /products?$/i.test(k) && Array.isArray(catalog[k]));
-  const products = productKeys.length
-    ? productKeys.reduce((all, k) => all.concat(catalog[k]), [])
-    : [];
-  const productSections = productKeys.slice();
-  const adders    = Array.isArray(catalog.prehangAdders) ? catalog.prehangAdders : [];
-  const components= Array.isArray(catalog.components) ? catalog.components : [];
-  const hardware  = Array.isArray(catalog.hardware) ? catalog.hardware : [];
+  /* The catalogue is split by vendor price sheet — fiberglassProducts,
+     woodProducts, fiberglassComponents, and so on — because the two lines are
+     edited separately. Pricing does not care: the arrays are merged here, and
+     the netMultiplier scope keeps one logical name per kind. */
+  function gather(re) {
+    const keys = Object.keys(catalog).filter(k => re.test(k) && Array.isArray(catalog[k]));
+    return { keys, rows: keys.reduce((all, k) => all.concat(catalog[k]), []) };
+  }
+  const gProducts   = gather(/products?$/i);
+  const gAdders     = gather(/(?:prehang)?adders?$/i);
+  const gComponents = gather(/components?$/i);
+  const gHardware   = gather(/hardware$/i);
+  const products   = gProducts.rows;
+  const adders     = gAdders.rows;
+  const components = gComponents.rows;
+  const hardware   = gHardware.rows;
+  const productSections = gProducts.keys;
 
   const byId = new Map();
   products.forEach(p => byId.set(p.id, p));
