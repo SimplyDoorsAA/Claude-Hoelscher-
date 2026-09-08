@@ -1277,11 +1277,18 @@ const RULE_META = {
   "freight.prehangChargeAlwaysApplies":   { label:"Charge Always Applies",  kind:"bool",  note:"Apply even when freight units are 0" },
   "defaults.marginPercent":               { label:"Default Margin",         kind:"float", note:"Fraction, e.g. 0.35 = 35%" },
   "defaults.laborCentsPerPrehungUnit":    { label:"Labor / Prehung Unit",   kind:"money", note:"Integer cents" },
-  "defaults.laborCentsPerSlab":           { label:"Labor / Slab",           kind:"money", note:"Integer cents" }
+  "defaults.laborCentsPerSlab":           { label:"Labor / Slab",           kind:"money", note:"Integer cents" },
+  "netMultiplierScope.appliesTo":         { label:"Multiplier Applies To",  kind:"csv",   note:"Catalog sections the net multiplier covers" },
+  "netMultiplierScope.excludesFreight":   { label:"Excludes Freight",       kind:"bool",  note:"Freight is quoted already net" },
+  "netMultiplierScope.decidedOn":         { label:"Decided On",             kind:"text",  note:"Date of the pricing decision" },
+  "netMultiplierScope.decidedBy":         { label:"Decided By",             kind:"text",  note:"Who made the call" },
+  "netMultiplierScope.vendorConfirmed":   { label:"Vendor Confirmed",       kind:"bool",  note:"Has Hoelscher confirmed the scope?" },
+  "netMultiplierScope.note":              { label:"Scope Note",             kind:"text",  note:"Rationale and reversal instructions" }
 };
 function ruleKind(path, val){
   const m = RULE_META[path];
   if(m) return m.kind;
+  if(Array.isArray(val)) return "csv";
   if(typeof val==="boolean") return "bool";
   if(/cents/i.test(path.split(".").pop())) return "money";
   if(typeof val==="number") return Number.isInteger(val) ? "int" : "float";
@@ -1345,6 +1352,14 @@ function ruleRow(path){
     vtd.appendChild(inp);
     vtd.appendChild(el("span",{class:"legend",style:"margin-left:8px",
       text:(S.units==="cents"?"integer cents":"dollars → stored as integer cents")}));
+  } else if(kind==="csv"){
+    const inp = el("input",{type:"text",title:"Comma-separated list — stored as a JSON array"});
+    inp.value = Array.isArray(val) ? val.join(", ") : (val===null||val===undefined ? "" : String(val));
+    inp.addEventListener("input",()=>{
+      setPath(S.rules, path, inp.value.split(",").map(x=>x.trim()).filter(x=>x!==""));
+      scheduleUpdate();
+    });
+    vtd.appendChild(inp);
   } else if(kind==="float" || kind==="int"){
     const inp = el("input",{type:"text",inputmode:"decimal"});
     inp.value = val===null||val===undefined ? "" : String(val);

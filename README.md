@@ -159,6 +159,26 @@ appear as extra columns rather than being dropped.
   the only place in the catalog where those two differ by nothing. Worth
   confirming with Hoelscher.
 
-The workbook's own `Open Items` sheet lists further decisions pending with the
-vendor — most importantly whether the 0.48 NET multiplier applies to
-components, adders and hardware. If it does not, those costs are 52% low.
+### Net multiplier scope
+
+Every catalogued item carries `priceBasis: "list"`, so `NET = list x
+netMultiplier` across all four sections. That scope is now stated explicitly in
+`pricing-rules.json` under `netMultiplierScope` rather than left for the Quoter
+to infer:
+
+| Field | Meaning |
+| --- | --- |
+| `appliesTo` | Sections the multiplier covers — all four |
+| `excludesFreight` | Freight is quoted already net and is never multiplied |
+| `decidedBy` / `decidedOn` | Dealer instruction, 2026-09-07 |
+| `vendorConfirmed` | **`false`** — Hoelscher has not confirmed this yet |
+
+`vendorConfirmed` is the live risk. If Hoelscher states that components,
+prehang adders or hardware are already net, drop those entries from
+`appliesTo`; leaving them would understate those costs by 52%. No price data
+changes either way — only the scope list.
+
+The workbook's `Open Items` sheet lists the remaining vendor questions:
+unpriced 3680 iron-grille and Craftsman variants, the Impact glass SKUs absent
+from the product catalog, brickmould length (100" vs 104"), and several
+Speakeasy + Iron Mask bundles with no combined part number.

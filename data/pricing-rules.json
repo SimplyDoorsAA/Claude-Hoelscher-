@@ -1,5 +1,18 @@
 {
   "netMultiplier": 0.48,
+  "netMultiplierScope": {
+    "appliesTo": [
+      "products",
+      "prehangAdders",
+      "components",
+      "hardware"
+    ],
+    "excludesFreight": true,
+    "decidedOn": "2026-09-07",
+    "decidedBy": "dealer",
+    "vendorConfirmed": false,
+    "note": "Every catalogued item carries priceBasis \"list\", so NET = list x netMultiplier for all four sections. Freight is quoted already net by the shipping schedule and is never multiplied. Still unconfirmed by Hoelscher: if they state that components, prehang adders or hardware are already net, remove those sections from appliesTo — leaving them here would understate those costs by 52%."
+  },
   "currency": "USD",
   "roundingMode": "half-up-to-cent",
   "freight": {
