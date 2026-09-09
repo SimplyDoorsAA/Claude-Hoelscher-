@@ -1,0 +1,31 @@
+{
+  "glass": {
+    "Baroque": "baroque.webp",
+    "Clear Bevel Low-E": "clear-bevel-low-e.webp",
+    "Clear Low-E": "clear-low-e.webp",
+    "Digital": "digital.webp",
+    "Flemish": "flemish.webp",
+    "Rain": "rain.webp",
+    "Reeded": "reeded.webp",
+    "Sandblast w/1\u201d": "sandblast-w-1.webp",
+    "Satin": "satin.webp",
+    "Small Reeded": "small-reeded.webp",
+    "Stippolyte": "stippolyte.webp",
+    "Water": "water.webp"
+  },
+  "note": "Glass swatches from the Hoelscher catalogs, by the name the catalog prints. privacy is the vendor rating, 0-9.",
+  "privacy": {
+    "Baroque": 2,
+    "Clear Bevel Low-E": 1,
+    "Clear Low-E": 0,
+    "Digital": 4,
+    "Flemish": 3,
+    "Rain": 6,
+    "Reeded": 7,
+    "Sandblast w/1\u201d": 3,
+    "Satin": 9,
+    "Small Reeded": 8,
+    "Stippolyte": 5,
+    "Water": 5
+  }
+}

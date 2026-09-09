@@ -256,6 +256,37 @@ const glassOpts=await page.$$eval('#detail .opt',ns=>ns.map(n=>n.textContent.tri
 ok('every glass the model is offered in is listed',
    iron.glazings.every(g=>glassOpts.some(o=>o.startsWith(g))), glassOpts.join(' | '));
 
+/* --- the glass swatches off the catalog's own glass page ---------------- */
+const glassMan=JSON.parse(fs.readFileSync(ROOT+'/quoter/assets/glass/manifest.json','utf8'));
+const gkey=v=>String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const gnames=Object.keys(glassMan.glass);
+const swatchFor=v=>{const w=gkey(v);
+  let h=gnames.find(n=>gkey(n)===w);
+  if(!h){const st=gnames.filter(n=>gkey(n).startsWith(w)); if(st.length===1) h=st[0];}
+  return h||null;};
+const expectSwatch=iron.glazings.filter(swatchFor).length;
+const swatchImgs=await page.$$eval('#detail .steprow .opt img',ns=>ns.map(n=>n.getAttribute('src')));
+ok('the glass options carry the catalog swatch',
+   expectSwatch>0 && swatchImgs.length===expectSwatch,
+   swatchImgs.length+' swatches for '+expectSwatch+' glasses that have one');
+ok('every swatch file the manifest names is on disk',
+   Object.values(glassMan.glass).every(f=>fs.existsSync(ROOT+'/quoter/assets/glass/'+f)),
+   Object.values(glassMan.glass).filter(f=>!fs.existsSync(ROOT+'/quoter/assets/glass/'+f)).join(', '));
+ok('no swatch is broken',
+   (await page.$$eval('#detail .steprow .opt img',ns=>ns.filter(i=>i.complete&&i.naturalWidth===0).length))===0);
+// "Clear Low E" on the sheet is "Clear Low-E" on the swatch page; the match has
+// to survive that, and Sandblast against "Sandblast w/1” Clear Border".
+ok('a glass named differently on the two sheets still finds its swatch',
+   swatchFor('Clear Low E')==='Clear Low-E' && swatchFor('Sandblast')!==null,
+   String(swatchFor('Clear Low E'))+' / '+String(swatchFor('Sandblast')));
+ok('the vendor privacy rating is shown beside the glass',
+   /privacy \d/.test(await page.textContent('#detail')) &&
+   /privacy rated 0-9 by Hoelscher/.test(await page.textContent('#detail')));
+const ratedGlass=iron.glazings.map(swatchFor).filter(Boolean);
+ok('every rated glass on this door has a rating in the manifest',
+   ratedGlass.every(n=>Number.isInteger(glassMan.privacy[n])),
+   ratedGlass.map(n=>n+'='+glassMan.privacy[n]).join(', '));
+
 await pick(iron.glazings[0]);
 s=await steps();
 ok('answering the glass reveals the size question', s[1]==='Size', s.join(' > '));

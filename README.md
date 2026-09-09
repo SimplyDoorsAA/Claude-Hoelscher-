@@ -487,8 +487,21 @@ model is reported and skipped. Four wrinkles it handles rather than fudges:
   photos are ranked by brightness so the black door never stands in for the
   white one.
 
-`--glass` pulls the glass swatches off the "Available Glass Options" pages
-instead, with the vendor's privacy rating. Nothing in the app reads them yet.
+**Glass swatches.** `--glass` pulls the swatches off the catalogs' "Available
+Glass Options" pages, where each square sits directly above its name, into
+`quoter/assets/glass/` with Hoelscher's own privacy rating (0 clear to 9
+opaque). The configurator's Glass question shows the swatch and the rating
+beside each option.
+
+The two sheets do not spell the names the same way — the price sheet writes
+`Clear Low E` where the swatch page writes `Clear Low-E`, and `Sandblast`
+against `Sandblast w/1" Clear Border` — so the app matches on letters and
+digits alone, exactly first and then by prefix. That covers 7 of the 19 glass
+names in the catalogue and 203 of the 299 rows that name one. The rest are the
+decorative glasses (Pecos, San Jacinto, Columbia and the like), which the
+catalogs show only as an unlabelled "Other Available Decorative Glass Options"
+gallery — there is nothing to name them from, so they get no swatch rather than
+a guessed one.
 
 Output is `quoter/assets/doors/*.webp` plus a `manifest.json` the Quoter reads
 at boot. A model with no photograph falls back to an architectural silhouette
