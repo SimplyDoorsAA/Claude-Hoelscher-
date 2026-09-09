@@ -468,14 +468,27 @@ python3 tools/extract-door-images.py FIBERGLASS.pdf WOOD.pdf   # --dry-run to lo
 The catalogs set one tall photo beside the part numbers for that door, so the
 tool reads the part numbers that fall in a photo's vertical band and nearest
 column, resolves them against `catalog.json`, and files the photo under the
-model they agree on. Nothing is guessed: a photo whose part numbers do not
-resolve to one model is reported and skipped. Two wrinkles it handles rather
-than fudges — the wood catalog and the wood price sheet spell part numbers
-differently (`M3GPWNSR2880L` against `M3GPWN--2880--`), so matching falls back
-to the size code plus the longest letter prefix; and where one photo covers a
-door offered in two skins it is shared, except when the skins differ by colour,
-where the photos are ranked by brightness so the black door never stands in for
-the white one.
+model they agree on. **Nothing is guessed** — a photo it cannot pin to one
+model is reported and skipped. Four wrinkles it handles rather than fudges:
+
+- The wood catalog and the wood price sheet spell part numbers differently
+  (`M3GPWNSR2880L` against `M3GPWN--2880--`), so matching falls back to the
+  size code plus the longest letter prefix that still matches, which keeps the
+  narrow-profile door (`M3GPWN`) from being confused with the wide one.
+- Some pages carry text runs at negative coordinates belonging to another
+  layer; left in, they attach one door's part numbers to the door above it.
+- 25 part numbers are shared by more than one door (see the audit). Where the
+  caption directly above the photo names the difference — "Flat Glass" against
+  "Decorative Glass" — that settles it. Where it does not, the whole band is
+  treated as unsafe and every photo in it is skipped, because a near-miss files
+  a picture under the wrong door.
+- Where one photo covers a door offered in two skins it is shared, as the
+  catalog itself does — except when the skins differ by colour, where the
+  photos are ranked by brightness so the black door never stands in for the
+  white one.
+
+`--glass` pulls the glass swatches off the "Available Glass Options" pages
+instead, with the vendor's privacy rating. Nothing in the app reads them yet.
 
 Output is `quoter/assets/doors/*.webp` plus a `manifest.json` the Quoter reads
 at boot. A model with no photograph falls back to an architectural silhouette

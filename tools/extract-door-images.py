@@ -9,6 +9,7 @@ reported and skipped rather than filed under a guess.
 
     python3 tools/extract-door-images.py CATALOG.pdf [CATALOG.pdf ...]
     python3 tools/extract-door-images.py --dry-run CATALOG.pdf
+    python3 tools/extract-door-images.py --glass CATALOG.pdf   # the glass swatches
 
 Writes quoter/assets/doors/<slug>.webp and manifest.json. Needs pypdf + Pillow.
 """
@@ -95,6 +96,8 @@ def alpha_size(token, sizes):
             return head, m.group(0)
     return None, None
 
+AMBIGUOUS = object()   # the number is real but says which door only ambiguously
+
 def sku_resolver(products):
     """Match a part number printed in a catalog to a model in our data.
 
@@ -114,7 +117,32 @@ def sku_resolver(products):
         if head:
             index.setdefault((size, head), set()).add(model_key(p))
 
-    def resolve(token):
+    # 25 part numbers in the sheet are used by more than one door (see
+    # docs/audit-2026-09-09.md), so a number alone cannot always say which. The
+    # catalog page prints the difference in words — "Decorative Glass" against
+    # "Flat Glass" — so a tie is broken on the text beside the photo.
+    def pick(keys, context):
+        keys = sorted(keys)
+        if len(keys) == 1:
+            return keys[0]
+        ctx = re.sub(r'[^a-z0-9]+', ' ', (context or '').lower())
+        common = set()
+        for k in keys:
+            words = {w for w in re.split(r'[^a-z0-9]+', k.lower()) if len(w) > 3}
+            common = words if not common else common & words
+        scored = []
+        for k in keys:
+            words = {w for w in re.split(r'[^a-z0-9]+', k.lower()) if len(w) > 3} - common
+            scored.append((sum(1 for w in words if w in ctx), k))
+        scored.sort(reverse=True)
+        # Decisive or nothing: the winner must be named and every other
+        # candidate unnamed. A near-miss here files a photo under the wrong
+        # door, which is worse than leaving the silhouette in place.
+        if scored[0][0] > 0 and (len(scored) == 1 or scored[1][0] == 0):
+            return scored[0][1]
+        return AMBIGUOUS
+
+    def resolve(token, context=''):
         p = by_sku.get(token)
         if p:
             return model_key(p)
@@ -126,12 +154,12 @@ def sku_resolver(products):
             if sz != size or not head.startswith(h):
                 continue
             if best is None or len(h) > len(best[0]):
-                best = (h, keys)
+                best = (h, set(keys))
             elif len(h) == len(best[0]):
                 best = (h, best[1] | keys)
-        if not best or len(best[1]) != 1:
+        if not best:
             return None
-        return next(iter(best[1]))
+        return pick(best[1], context)
     return resolve
 
 # Skins that differ only in colour must not share one photo: a white door
@@ -192,11 +220,83 @@ def trim(im, tol=248):
         return im                       # a trim that aggressive is a mistake
     return im.crop((left, top, right + 1, bot + 1))
 
+GLASS_DIR = os.path.join(ROOT, 'quoter', 'assets', 'glass')
+
+def extract_glass(pdfs, dry):
+    """The catalogs devote a page per line to the glass, one square swatch with
+    its name printed underneath. Those swatches turn the configurator's Glass
+    question from a row of words into something a customer can actually judge.
+
+    A swatch is square and sits directly above its caption, so it is matched to
+    the nearest caption below it in the same column.
+    """
+    found = {}
+    for pdf in pdfs:
+        reader = PdfReader(pdf)
+        for pno, page in enumerate(reader.pages, 1):
+            text = page.extract_text() or ''
+            if not re.search(r'Available Glass Options\s*:', text):
+                continue
+            runs = text_runs(page)
+            squares = [(n, x, y, w, h) for n, x, y, w, h in placements(page)
+                       if 50 <= w <= 140 and 0.85 <= h / max(w, 1) <= 1.15]
+            for name, x, y, w, h in squares:
+                below = [(y - ry, rx, t) for rx, ry, t in runs
+                         if 0 < y - ry < 26 and abs(rx - x) < w]
+                if not below:
+                    continue
+                label = min(below)[2].strip().rstrip(':').strip()
+                if not label or label.lower().startswith('privacy'):
+                    continue
+                privacy = None
+                for rx, ry, t in runs:
+                    m = re.match(r'Privacy:\s*(\d+)', t.strip())
+                    if m and abs(rx - x) < w and 0 < y - ry < 40:
+                        privacy = int(m.group(1))
+                key = re.sub(r'\s+', ' ', label)
+                if key in found:
+                    continue
+                found[key] = (page, name, privacy)
+
+    files, meta = {}, {}
+    if not dry:
+        os.makedirs(GLASS_DIR, exist_ok=True)
+    total = 0
+    for label, (page, name, privacy) in sorted(found.items()):
+        fn = slug(label) + '.webp'
+        files[label] = fn
+        if privacy is not None:
+            meta[label] = privacy
+        if dry:
+            continue
+        im = load_image(page, name)
+        if im is None:
+            print('  ERROR decoding glass', label); files.pop(label); continue
+        if im.width > 320:
+            im = im.resize((320, round(im.height * 320 / im.width)), Image.LANCZOS)
+        path = os.path.join(GLASS_DIR, fn)
+        im.save(path, 'WEBP', quality=WEBP_QUALITY, method=6)
+        total += os.path.getsize(path)
+
+    if not dry:
+        with open(os.path.join(GLASS_DIR, 'manifest.json'), 'w') as f:
+            json.dump({'note': 'Glass swatches from the Hoelscher catalogs, by the name '
+                               'the catalog prints. privacy is the vendor rating, 0-9.',
+                       'glass': files, 'privacy': meta}, f, indent=2, sort_keys=True)
+            f.write('\n')
+    print(f'{len(files)} glass swatch(es), {total // 1024} KB')
+    for label in sorted(files):
+        print(f'  {label:<22} privacy {meta.get(label, "-")}')
+    return files
+
 def main(argv):
     dry = '--dry-run' in argv
     pdfs = [a for a in argv if not a.startswith('--')]
     if not pdfs:
         sys.exit(__doc__)
+    if '--glass' in argv:
+        extract_glass(pdfs, dry)
+        return
 
     catalog = json.load(open(os.path.join(ROOT, 'data', 'catalog.json')))
     products = catalog['fiberglassProducts'] + catalog['woodProducts']
@@ -228,18 +328,39 @@ def main(argv):
             # catalog runs two doors side by side, each with its own part-number
             # column, so the band alone would attach both to whichever is first.
             bands = {name: [] for name, *_ in photos}
+            # The words printed beside a photo settle a part number that two
+            # doors share, so collect each photo's text before resolving.
+            # A door's own caption sits directly above its photo, so reach a
+            # little past the top of the band to catch it — but not as far as
+            # the page title, which would say the same thing about every photo
+            # on the page and so separate none of them.
+            context = {name: ' '.join(
+                           t for tx, ty, t in placed
+                           if y - 10 <= ty <= y + h + 45 and abs(tx - (x + w / 2)) < 320)
+                       for name, x, y, w, h in photos}
+            poisoned = set()
             for tx, ty, t in placed:
-                hits = [resolve(tok) for tok in TOKEN.findall(t)]
-                hits = [k for k in hits if k]
-                if not hits:
-                    continue
                 near = [(abs(tx - (px + pw / 2)), pn)
                         for pn, px, py, pw, ph in photos if py <= ty <= py + ph]
                 if not near:
                     continue
-                bands[min(near)[1]].extend(hits)
+                owner = min(near)[1]
+                for tok in TOKEN.findall(t):
+                    k = resolve(tok, context.get(owner, ''))
+                    # A number the sheet gives to more than one door, that the
+                    # page does not disambiguate, makes the whole band unsafe:
+                    # whatever else resolves there could belong to either door.
+                    if k is AMBIGUOUS:
+                        poisoned.add(owner)
+                    elif k:
+                        bands[owner].append(k)
 
             for name, x, y, w, h in photos:
+                if name in poisoned:
+                    skipped.append((label, pno, name,
+                                    'a part number beside it is shared by several doors '
+                                    'and the page does not say which'))
+                    continue
                 band = bands.get(name) or []
                 if not band:
                     skipped.append((label, pno, name, 'no part number beside it'))
@@ -308,9 +429,12 @@ def main(argv):
 
     manifest = {
         'note': 'Door photography extracted from the Hoelscher catalogs by '
-                'tools/extract-door-images.py. Keyed by model, the way a card is.',
+                'tools/extract-door-images.py. Keyed by model, the way a card is. '
+                'source says which catalog page each photo came off, so a match '
+                'can be checked against the original.',
         'sharedAcrossSkins': shared,
         'models': files,
+        'source': {k: f'{v[0]} p{v[1]} {v[2]}' for k, v in sorted(found.items()) if k in files},
     }
     if not dry:
         with open(os.path.join(OUT, 'manifest.json'), 'w') as f:
