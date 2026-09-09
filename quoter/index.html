@@ -316,6 +316,22 @@ const LINE_LABELS = {
   knotty_alder: "Knotty Alder", barn: "Barn"
 };
 const TYPE_LABELS = { door: "Doors", sidelite: "Sidelites", barn_slab: "Barn Slabs" };
+
+/* How the opening is made up. This is what a customer means by "configuration",
+   and it is also the dimension the prehang adders on both price sheets are
+   keyed by (3068 Single / Single,12-14" Sidelite / Sidelites / Double). It maps
+   onto the engine's three priced configurations plus a count of sidelites; the
+   engine's vocabulary is deliberately left alone. */
+const OPENINGS = [
+  { key: "slab",      label: "Slab only",            sub: "no frame", config: "slab",     sidelites: 0 },
+  { key: "single",    label: "Single door",          config: "singlePH", sidelites: 0 },
+  { key: "single1SL", label: "Single + 1 sidelite",  config: "singlePH", sidelites: 1 },
+  { key: "single2SL", label: "Single + 2 sidelites", config: "singlePH", sidelites: 2 },
+  { key: "double",    label: "Double door",          sub: "two leaves", config: "doublePH", sidelites: 0 }
+];
+const openingByKey = k => OPENINGS.find(o => o.key === k) || null;
+const HANDING_LABELS = { left: "Left hand", right: "Right hand" };
+const SWING_LABELS   = { inswing: "Inswing", outswing: "Outswing" };
 const titleize = s => String(s == null ? "" : s).replace(/[_-]+/g, " ").replace(/\b\w/g, m => m.toUpperCase());
 
 /* -------------------------------- 2. STATE ------------------------------- */
@@ -328,7 +344,7 @@ const state = {
   collection: null,                       // "fiberglass" | "wood" — chosen before anything shows
   filters: { q: "", line: "", family: "", glazing: "", type: "" },
   rendered: 0,                            // how many cards are in the DOM
-  quote: { lines: [] },                   // [{ uid, productId, finish, config, qty, accessories[] }]
+  quote: { lines: [] },                   // [{ uid, productId, finish, config, qty, accessories[], spec }]
   drawerOpen: false,
   draft: null                             // the product-detail working copy
 };
@@ -723,7 +739,10 @@ function optionButton(label, pressed, disabled, onClick, title, sub) {
 function openConfigurator(model) {
   state.draft = {
     model, glazing: null, sizeCode: null, grilleChoice: null, grille: null,
-    finish: null, stain: null, config: null, qty: 1, accessories: []
+    finish: null, stain: null,
+    opening: null, config: null, sidelite: null,
+    handing: null, swing: null, jambDepth: null,
+    qty: 1, accessories: []
   };
   const d = state.draft;
   // Anything with only one possible answer is settled without asking.
@@ -753,8 +772,11 @@ function draftProduct() {
   if (d.grilleChoice === "yes" && d.grille) return state.engine.productById(d.grille.productId);
   if (!d.sizeCode) return null;
   const match = p => (p.size && p.size.code) === d.sizeCode;
-  return d.model.products.find(p => match(p) && (p.glazing || null) === (d.glazing || null))
-      || d.model.products.find(match) || null;
+  const exact = d.model.products.find(p => match(p) && (p.glazing || null) === (d.glazing || null));
+  if (exact) return exact;
+  // Falling back across glass would price a different part than the one on
+  // screen, so only a model that carries no glass at all may fall back.
+  return d.model.glazings.length ? null : (d.model.products.find(match) || null);
 }
 /** Cheapest offered unit price for one glazing, for the delta shown per option. */
 function glazingFrom(model, glazing, sizeCode) {
@@ -766,6 +788,63 @@ function glazingFrom(model, glazing, sizeCode) {
     if (v !== null && (best === null || v < best)) best = v;
   });
   return best;
+}
+
+/* ------------------- the opening: sidelites, handing, jamb ----------------
+   Everything here is spec the order needs. Sidelites are priced (they are real
+   catalogue rows attached to the same opening, so they add no second prehang
+   charge). Handing, swing and jamb depth carry no price on either Hoelscher
+   sheet, so they are recorded and not charged — see openingSpec in
+   data/pricing-rules.json for what is still unconfirmed. */
+
+const openingSpec = () => (state.engine.rules && state.engine.rules.openingSpec) || {};
+const handingOptions = () => openingSpec().handing || ["left", "right"];
+const swingOptions   = () => openingSpec().swing   || ["inswing", "outswing"];
+const jambSpec       = () => openingSpec().jambDepths || {};
+
+/** Sidelites that can go beside this door: one per model and width, at a
+   height that matches the door (a 6'8" door takes a 6'9" sidelite), with the
+   door's glass preferred where the sidelite is offered in it. */
+function sideliteChoices(doorProduct, glazing) {
+  const h = doorProduct && doorProduct.size && doorProduct.size.heightIn;
+  const rows = state.engine.productsIn(state.collection).filter(p =>
+    p.type === "sidelite" &&
+    state.engine.availableOptions(p.id).configs.length &&
+    (!h || Math.abs(((p.size && p.size.heightIn) || 0) - h) <= 2));
+  const best = new Map();
+  rows.forEach(p => {
+    const key = modelKeyOf(p) + "|" + (p.size && p.size.code);
+    const cur = best.get(key);
+    const matches = q => (q.glazing || null) === (glazing || null);
+    if (!cur || (matches(p) && !matches(cur))) best.set(key, p);
+  });
+  return Array.from(best.values()).sort((a, b) =>
+    ((a.size && a.size.widthIn) || 0) - ((b.size && b.size.widthIn) || 0) ||
+    modelKeyOf(a).localeCompare(modelKeyOf(b)));
+}
+/** The finish a sidelite is actually offered in, preferring the door's. */
+function sideliteFinish(sl, doorFinish) {
+  const o = state.engine.availableOptions(sl.id);
+  if (o.isOffered(doorFinish, "singlePH")) return doorFinish;
+  const f = FINISHES.find(x => o.isOffered(x, "singlePH"));
+  return f || doorFinish;
+}
+/** The sidelites the chosen opening puts inside this one line item. */
+function openingAccessories(d) {
+  const o = openingByKey(d.opening);
+  if (!o || !o.sidelites || !d.sidelite) return [];
+  const sl = state.engine.productById(d.sidelite);
+  if (!sl) return [];
+  return [{ kind: "product", id: sl.id, qty: o.sidelites,
+            finish: sideliteFinish(sl, d.finish), config: "singlePH" }];
+}
+/** Everything priced on this line: the opening's sidelites, then extras. */
+const allAccessories = d => openingAccessories(d).concat(d.accessories);
+
+/** The catalogued jamb component at one depth, for reference in cost view. */
+function jambComponentAt(depth) {
+  const rx = new RegExp(depth.replace(/[-/]/g, m => "\\" + m) + '"');
+  return state.engine.componentsIn(state.collection).find(c => rx.test(c.description || "")) || null;
 }
 
 /** The questions this model will ask, in order, with any answer given.
@@ -784,20 +863,36 @@ function stepPlan(d) {
   plan.push({ key: "finish", title: "Finish", value: d.finish && FINISH_LABELS[d.finish] });
   if (d.finish === "prefinished" && stainsApplyTo(m.name))
     plan.push({ key: "stain", title: "Stain colour", value: d.stain });
-  plan.push({ key: "config", title: "Configuration", value: d.config && CONFIG_LABELS[d.config] });
+  const opening = openingByKey(d.opening);
+  plan.push({ key: "opening", title: "Opening", value: opening && opening.label });
+  if (opening && opening.sidelites > 0) {
+    const sl = d.sidelite && state.engine.productById(d.sidelite);
+    plan.push({ key: "sidelite", title: "Sidelite", value: sl && modelKeyOf(sl) });
+  }
+  if (opening && opening.config !== "slab") {
+    plan.push({ key: "handing", title: "Handing", value: d.handing && HANDING_LABELS[d.handing] });
+    plan.push({ key: "swing", title: "Swing", value: d.swing && SWING_LABELS[d.swing] });
+    plan.push({ key: "jamb", title: "Jamb depth", value: d.jambDepth && d.jambDepth + '"' });
+  }
   return plan;
 }
 /** Take back one answer, and every answer that depended on it. */
 function unanswerFrom(key) {
-  const d = state.draft, order = ["glazing", "size", "grille", "finish", "stain", "config"];
+  const d = state.draft;
+  const order = ["glazing", "size", "grille", "finish", "stain",
+                 "opening", "sidelite", "handing", "swing", "jamb"];
   const from = order.indexOf(key);
   const clear = {
-    glazing: () => { d.glazing = null; },
-    size:    () => { d.sizeCode = null; },
-    grille:  () => { d.grilleChoice = d.model.grilles.length ? null : "none"; d.grille = null; },
-    finish:  () => { d.finish = null; },
-    stain:   () => { d.stain = null; },
-    config:  () => { d.config = null; }
+    glazing:  () => { d.glazing = null; },
+    size:     () => { d.sizeCode = null; },
+    grille:   () => { d.grilleChoice = d.model.grilles.length ? null : "none"; d.grille = null; },
+    finish:   () => { d.finish = null; },
+    stain:    () => { d.stain = null; },
+    opening:  () => { d.opening = null; d.config = null; },
+    sidelite: () => { d.sidelite = null; },
+    handing:  () => { d.handing = null; },
+    swing:    () => { d.swing = null; },
+    jamb:     () => { d.jambDepth = null; }
   };
   order.slice(from).forEach(k => clear[k]());
   d.accessories = [];
@@ -837,7 +932,7 @@ function stepBlock(title, note) {
   head.appendChild(el("p", "text-[11px] uppercase tracking-widest text-ink-mute", title));
   if (note) head.appendChild(el("p", "text-[11px] text-ink-faint", note));
   wrap.appendChild(head);
-  const row = el("div", "flex flex-wrap gap-2");
+  const row = el("div", "steprow flex flex-wrap gap-2");
   wrap.appendChild(row);
   wrap.row = row;
   return wrap;
@@ -900,7 +995,15 @@ function renderDetail() {
       const v = glazingFrom(model, g, d.sizeCode);
       const delta = (v === null || v === base) ? null : "+" + formatCents(v - base);
       blk.row.appendChild(optionButton(g, d.glazing === g, v === null, () => {
-        d.glazing = g; renderDetail();
+        d.glazing = g;
+        // The size already chosen may not be offered in this glass; re-ask
+        // rather than silently resolving to a part in another glass.
+        if (d.sizeCode && !model.products.some(p => (p.size && p.size.code) === d.sizeCode &&
+                                                    (p.glazing || null) === (g || null))) {
+          d.sizeCode = null; d.grille = null;
+          if (model.grilles.length) d.grilleChoice = null;
+        }
+        renderDetail();
       }, null, delta));
     });
     body.appendChild(blk);
@@ -974,33 +1077,102 @@ function renderDetail() {
     gate(d.stain);
   }
 
-  // 6. how it is hung
+  // 6. the opening
+  const sidelites = sideliteChoices(product, d.glazing);
   if (!blocked && opts && d.finish) {
-    const blk = stepBlock("Configuration");
-    CONFIGS.forEach(c => {
-      const offered = opts.isOffered(d.finish, c);
-      blk.row.appendChild(optionButton(CONFIG_LABELS[c], d.config === c, !offered, () => {
-        d.config = c; renderDetail();
-      }, offered ? null : "Not offered in " + FINISH_LABELS[d.finish].toLowerCase()));
+    const blk = stepBlock("Opening");
+    OPENINGS.forEach(o => {
+      const hung = opts.isOffered(d.finish, o.config);
+      const needsSL = o.sidelites > 0 && !sidelites.length;
+      const why = !hung ? "Not offered in " + FINISH_LABELS[d.finish].toLowerCase()
+                : needsSL ? "This line carries no sidelites" : null;
+      blk.row.appendChild(optionButton(o.label, d.opening === o.key, !!why, () => {
+        d.opening = o.key;
+        d.config = o.config;
+        if (!o.sidelites) d.sidelite = null;
+        else if (!d.sidelite && sidelites.length === 1) d.sidelite = sidelites[0].id;
+        if (o.config === "slab") { d.handing = null; d.swing = null; d.jambDepth = null; }
+        renderDetail();
+      }, why, o.sub));
     });
     body.appendChild(blk);
-    gate(d.config);
+    gate(d.opening);
+  }
+  const opening = openingByKey(d.opening);
+
+  // 7. which sidelite goes in that opening
+  if (!blocked && opening && opening.sidelites > 0) {
+    const blk = stepBlock("Sidelite", opening.sidelites + " needed, priced each");
+    sidelites.forEach(sl => {
+      const f = sideliteFinish(sl, d.finish);
+      const l = state.engine.priceLine({ productId: sl.id, finish: f, config: "singlePH", qty: 1 }, curMargin());
+      const notes = [formatCents(isCost() ? l.unitCostCents : l.unitSellCents) + " ea"];
+      if (f !== d.finish) notes.push(FINISH_LABELS[f].toLowerCase() + " only");
+      if ((sl.glazing || null) !== (d.glazing || null) && sl.glazing) notes.push(sl.glazing);
+      blk.row.appendChild(optionButton(
+        modelKeyOf(sl) + "  " + ((sl.size && sl.size.label) || ""),
+        d.sidelite === sl.id, false, () => { d.sidelite = sl.id; renderDetail(); },
+        sl.sku, notes.join(" · ")));
+    });
+    body.appendChild(blk);
+    gate(d.sidelite);
   }
 
-  // 7. accessories and the price, once everything is answered
+  // 8-10. handing, swing and jamb depth. A slab has no frame, so it skips them.
+  const framed = !!opening && opening.config !== "slab";
+  if (!blocked && framed) {
+    const blk = stepBlock("Handing", "viewed from outside");
+    handingOptions().forEach(h => blk.row.appendChild(
+      optionButton(HANDING_LABELS[h] || titleize(h), d.handing === h, false,
+                   () => { d.handing = h; renderDetail(); })));
+    body.appendChild(blk);
+    gate(d.handing);
+  }
+  if (!blocked && framed) {
+    const blk = stepBlock("Swing");
+    swingOptions().forEach(w => blk.row.appendChild(
+      optionButton(SWING_LABELS[w] || titleize(w), d.swing === w, false,
+                   () => { d.swing = w; renderDetail(); })));
+    body.appendChild(blk);
+    gate(d.swing);
+  }
+  if (!blocked && framed) {
+    const js = jambSpec();
+    const depths = js.options || [];
+    const blk = stepBlock("Jamb depth", js.chargeUpgrade ? null : "no price difference");
+    depths.forEach(dep => {
+      const comp = jambComponentAt(dep);
+      // The dealer's own view names the catalogue jamb behind each depth; the
+      // customer sees only the depth, since neither is charged.
+      const sub = isCost() && comp ? comp.description : null;
+      blk.row.appendChild(optionButton(dep + '"', d.jambDepth === dep, false,
+                                       () => { d.jambDepth = dep; renderDetail(); }, comp ? comp.description : null, sub));
+    });
+    body.appendChild(blk);
+    gate(d.jambDepth);
+  }
+
+  // 11. accessories and the price, once everything is answered
   if (!blocked && product && d.finish && d.config) {
     body.appendChild(accessoryBlock(product, d));
 
     const line = state.engine.priceLine({
-      productId: product.id, finish: d.finish, config: d.config, qty: d.qty, accessories: d.accessories
+      productId: product.id, finish: d.finish, config: d.config, qty: d.qty, accessories: allAccessories(d)
     }, curMargin());
 
     const foot = el("div", "mt-auto rounded-xl bg-paper-rail p-4");
     // CFG-xxx is our own placeholder for the rows the price list prints as
     // CONFIGURED ITEM with no part number; never show it as a vendor number.
     const configured = /^CFG-/.test(product.sku);
+    const slProduct = d.sidelite && state.engine.productById(d.sidelite);
     const chosen = [d.glazing, d.stain, d.grille && d.grille.style + " grille",
                     product.size && product.size.label,
+                    opening && opening.label,
+                    opening && opening.sidelites && slProduct
+                      ? opening.sidelites + " × " + modelKeyOf(slProduct) : null,
+                    d.handing && HANDING_LABELS[d.handing],
+                    d.swing && SWING_LABELS[d.swing],
+                    d.jambDepth && d.jambDepth + '" jamb',
                     configured ? "configured item — Hoelscher prints no part number"
                                : product.sku].filter(Boolean).join(" · ");
     if (chosen) foot.appendChild(el("p", "mb-3 text-xs text-ink-mute", chosen));
@@ -1008,14 +1180,14 @@ function renderDetail() {
     const qtyRow = el("div", "flex items-center gap-3");
     qtyRow.appendChild(el("span", "text-[11px] uppercase tracking-widest text-ink-mute", "Quantity"));
     const dec = el("button", "h-8 w-8 rounded-lg border border-paper-line bg-paper-card text-lg leading-none", "\u2212");
-    dec.type = "button";
+    dec.type = "button"; dec.dataset.qty = "dec"; dec.setAttribute("aria-label", "One fewer");
     dec.addEventListener("click", () => { d.qty = Math.max(1, d.qty - 1); renderDetail(); });
     const qty = document.createElement("input");
     qty.type = "number"; qty.min = "1"; qty.value = String(d.qty);
     qty.className = "tnum w-16 rounded-lg border border-paper-line bg-paper-card px-2 py-1 text-center";
     qty.addEventListener("change", () => { d.qty = Math.max(1, parseInt(qty.value, 10) || 1); renderDetail(); });
     const inc = el("button", "h-8 w-8 rounded-lg border border-paper-line bg-paper-card text-lg leading-none", "+");
-    inc.type = "button";
+    inc.type = "button"; inc.dataset.qty = "inc"; inc.setAttribute("aria-label", "One more");
     inc.addEventListener("click", () => { d.qty += 1; renderDetail(); });
     qtyRow.append(dec, qty, inc);
     foot.appendChild(qtyRow);
@@ -1037,8 +1209,10 @@ function renderDetail() {
     add.addEventListener("click", () => {
       state.quote.lines.push({
         uid: nextUid(), productId: product.id, finish: d.finish, config: d.config,
-        qty: d.qty, accessories: d.accessories.slice(),
-        stain: d.stain || null, grilleStyle: d.grille ? d.grille.style : null
+        qty: d.qty, accessories: allAccessories(d),
+        stain: d.stain || null, grilleStyle: d.grille ? d.grille.style : null,
+        opening: d.opening || null, handing: d.handing || null,
+        swing: d.swing || null, jambDepth: d.jambDepth || null
       });
       saveQuote(); closeDetail(); renderQuote(); openDrawer();
     });
@@ -1198,17 +1372,23 @@ function renderQuote() {
 
     const info = el("div", "min-w-0 flex-1");
     info.appendChild(el("p", "font-display text-[15px] leading-snug line-clamp-2", l.description));
-    const spec2 = [FINISH_LABELS[l.finish], CONFIG_LABELS[l.config]];
-    if (spec.stain) spec2.push(spec.stain + " stain");
-    if (spec.grilleStyle) spec2.push(spec.grilleStyle + " grille");
-    info.appendChild(el("p", "mt-0.5 text-xs text-ink-mute", spec2.join(" · ")));
+    // The opening, when the configurator recorded one, says more than the raw
+    // configuration does — "Single + 2 sidelites" rather than "Single prehung".
+    const op = openingByKey(spec.opening);
+    const bits = [FINISH_LABELS[l.finish], op ? op.label : CONFIG_LABELS[l.config]];
+    if (spec.stain) bits.push(spec.stain + " stain");
+    if (spec.grilleStyle) bits.push(spec.grilleStyle + " grille");
+    if (spec.handing) bits.push(HANDING_LABELS[spec.handing] || spec.handing);
+    if (spec.swing) bits.push(SWING_LABELS[spec.swing] || spec.swing);
+    if (spec.jambDepth) bits.push(spec.jambDepth + '" jamb');
+    info.appendChild(el("p", "mt-0.5 text-xs text-ink-mute", bits.join(" · ")));
     if (l.notOffered) {
       info.appendChild(el("p", "mt-1 text-xs font-medium text-red-700",
         "No longer offered in this combination — remove or reconfigure."));
     }
     l.accessories.forEach(a => {
       info.appendChild(el("p", "mt-0.5 text-xs text-ink-faint",
-        "+ " + a.label + (a.notOffered ? " (unavailable)" : "")));
+        "+ " + (a.qty > 1 ? a.qty + " × " : "") + a.label + (a.notOffered ? " (unavailable)" : "")));
     });
     top.appendChild(info);
 
@@ -1224,11 +1404,11 @@ function renderQuote() {
 
     const ctrl = el("div", "mt-2 flex items-center gap-2");
     const dec = el("button", "h-7 w-7 rounded border border-paper-line text-sm", "−");
-    dec.type = "button";
+    dec.type = "button"; dec.dataset.qty = "dec"; dec.setAttribute("aria-label", "One fewer");
     dec.addEventListener("click", () => { spec.qty = Math.max(1, spec.qty - 1); saveQuote(); renderQuote(); });
     const n = el("span", "tnum w-8 text-center text-sm", String(l.qty));
     const inc = el("button", "h-7 w-7 rounded border border-paper-line text-sm", "+");
-    inc.type = "button";
+    inc.type = "button"; inc.dataset.qty = "inc"; inc.setAttribute("aria-label", "One more");
     inc.addEventListener("click", () => { spec.qty += 1; saveQuote(); renderQuote(); });
     const spacer = el("div", "flex-1");
     const rm = el("button", "text-xs text-ink-faint hover:text-red-700", "Remove");

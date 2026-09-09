@@ -11,7 +11,7 @@
     "decidedOn": "2026-09-07",
     "decidedBy": "dealer",
     "vendorConfirmed": false,
-    "note": "Every catalogued item carries priceBasis \"list\", so NET = list x netMultiplier for all four sections. Freight is quoted already net by the shipping schedule and is never multiplied. Still unconfirmed by Hoelscher: if they state that components, prehang adders or hardware are already net, remove those sections from appliesTo — leaving them here would understate those costs by 52%."
+    "note": "Every catalogued item carries priceBasis \"list\", so NET = list x netMultiplier for all four sections. Freight is quoted already net by the shipping schedule and is never multiplied. Still unconfirmed by Hoelscher: if they state that components, prehang adders or hardware are already net, remove those sections from appliesTo \u2014 leaving them here would understate those costs by 52%."
   },
   "currency": "USD",
   "roundingMode": "half-up-to-cent",
@@ -70,5 +70,27 @@
     "fallbackMarginPercent": 0.35,
     "laborCentsPerPrehungUnit": 0,
     "laborCentsPerSlab": 0
+  },
+  "openingSpec": {
+    "handing": [
+      "left",
+      "right"
+    ],
+    "swing": [
+      "inswing",
+      "outswing"
+    ],
+    "priceImpact": "none",
+    "note": "Handing and swing are recorded on the quote for the order. Neither Hoelscher price sheet prices them, so neither changes the price.",
+    "jambDepths": {
+      "options": [
+        "4-9/16",
+        "6-9/16"
+      ],
+      "includedDepth": "4-9/16",
+      "chargeUpgrade": false,
+      "vendorConfirmed": false,
+      "note": "Both lines catalogue a jamb at each depth (fiberglass PVC Jamb, wood Exterior Jamb Leg), but neither price sheet states whether a prehung price already includes a jamb, nor at which depth. Until Hoelscher confirms, the depth is recorded on the quote and no charge is applied. Setting chargeUpgrade true without also deciding how many pieces an opening takes would be a guess, so it stays false."
+    }
   }
 }

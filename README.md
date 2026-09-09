@@ -125,11 +125,33 @@ you commit anything.
 | `index.html` | App A — Price Manager |
 | `quoter/index.html` | App B — Quote Builder |
 | `packages/pricing-engine/index.js` | Shared money maths — the only place prices are computed |
-| `packages/pricing-engine/engine.test.mjs` | 32 unit tests, incl. a full-catalogue sweep |
+| `packages/pricing-engine/engine.test.mjs` | Engine unit tests, incl. a full-catalogue sweep |
+| `packages/pricing-engine/stress.test.mjs` | Engine figures recomputed from the raw catalogue |
+| `tests/run.sh` | Every suite, in order |
+| `tests/appa.test.mjs` | App A loads and edits both published files |
+| `tests/quoter.test.mjs` | App B end to end, incl. the whole configurator |
+| `tests/stress-ui.mjs` | Real quotes built through App B, checked against the sheets |
 | `quoter/assets/doors/` | Optional product photography, `{SKU}.webp` |
 | `data/catalog.json` | Master catalog — `products[]`, `prehangAdders[]`, `components[]`, `hardware[]` |
 | `data/pricing-rules.json` | Net multiplier, currency, rounding, freight and defaults |
 | `.nojekyll` | Serve files verbatim from Pages |
+
+## Tests
+
+```sh
+./tests/run.sh                       # all five suites, ~3 minutes
+TAILWIND_CSS=/path/to/tw.css ./tests/run.sh   # faithful screenshots
+```
+
+199 checks. The browser suites drive real Chromium through Playwright, resolved
+from `PLAYWRIGHT_MODULE` if the default install path does not exist. Screenshots
+land in `.test-output/` (override with `SHOT_DIR`).
+
+Every expected figure is recomputed inside the test from `data/catalog.json`
+and the printed shipping schedule rather than asked of the engine, so a bug
+shared by both sides cannot make them agree. The App B suites run with
+`cdn.tailwindcss.com` unreachable, which is also how the fallback stylesheet
+gets exercised.
 
 ## The catalog
 
@@ -315,6 +337,58 @@ stays available to both, since an iron mask fits either. The choice is
 remembered, shown in the header, and switching with work in progress asks
 whether to keep the existing quote lines or start fresh rather than silently
 dropping or hiding them.
+
+**The guided configurator.** The price sheets carry one part number per glass
+and per size, so a single door appears in the catalogue as many as sixteen
+times. The Quoter groups them into models — 222 fiberglass part numbers are 40
+doors — and each card opens a configurator that asks one question at a time:
+
+| # | Question | Where the answers come from | Priced? |
+| --- | --- | --- | --- |
+| 1 | Glass | the model's own glazings | yes — a dearer glass shows `+$x` |
+| 2 | Size | the sizes offered in that glass | yes |
+| 3 | Iron grille | `fiberglassIronGrilles` | yes — resolves to the grille row |
+| 4 | Finish | `availableOptions()` | yes |
+| 5 | Stain colour | `fiberglassStainColors`, grained skins only | no |
+| 6 | Opening | see below | yes |
+| 7 | Sidelite | sidelites of the line at a matching height | yes, each |
+| 8 | Handing | `openingSpec.handing` | no |
+| 9 | Swing | `openingSpec.swing` | no |
+| 10 | Jamb depth | `openingSpec.jambDepths` | not yet — see below |
+
+Each question appears only once the one before it is answered; anything with a
+single possible answer is settled without asking; no price shows until every
+question is answered. A rail across the top says which step you are on and
+holds each answer as a chip, and clicking a chip takes that answer back along
+with everything that depended on it.
+
+**The opening.** "Configuration" as a customer means it — slab only, single,
+single with one or two sidelites, or a double door. That is also the dimension
+both `*PrehangAdders` arrays are keyed by (`3068 Single`, `3068 Single,12-14"
+Sidelite`, `3068 Double`). It maps onto the engine's three priced
+configurations plus a count of sidelites, so the engine's vocabulary is left
+alone: single and its sidelite variants are `singlePH`, a double is `doublePH`,
+and the sidelites ride inside the same line. One line is one opening, so a door
+with two sidelites still carries exactly one $100 prehang charge and counts 2
+freight units (1 + 0.5 + 0.5).
+
+Sidelites are offered at a height that matches the door — a 6'8" door takes a
+6'9" sidelite — one option per model and width rather than per part number,
+with the door's glass preferred where the sidelite is offered in it. Fiberglass
+sidelites are offered unfinished only, which the option says on its face when
+the door is prefinished.
+
+**What is recorded but not charged.** Handing, swing and jamb depth are order
+spec. Neither price sheet prices handing or swing, so neither moves the total.
+Jamb depth is the open question: both lines catalogue a jamb at each depth
+(fiberglass `PVC Jamb 4-9/16"` $65.00 and `6-9/16"` $94.00; wood
+`Exterior Jamb Leg` at $90.00 / $111.00 mahogany), but neither sheet states
+whether a prehung price already includes a jamb, nor at which depth. Until
+Hoelscher confirms, the depth is recorded on the quote and nothing is charged —
+`openingSpec.jambDepths.vendorConfirmed` is `false` and `chargeUpgrade` is
+`false`. Turning the charge on also needs a decision about how many pieces an
+opening takes, which is why it is not a flag flip. Cost view names the
+catalogue jamb behind each depth so a dealer can see the difference exists.
 
 **Cost vs customer pricing.** A lock control in the header, mirrored inside the
 quote drawer, switches the whole app between `grandTotalSellCents` /
