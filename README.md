@@ -134,6 +134,9 @@ you commit anything.
 | `tools/audit-catalog.mjs` | Structural audit of the published data |
 | `docs/audit-2026-09-09.md` | What the last full audit found, and what is still open |
 | `quoter/assets/doors/` | Door photography extracted from the catalogs, plus `manifest.json` |
+| `quoter/assets/glass/` | Glass swatches with Hoelscher's privacy ratings |
+| `quoter/assets/designs/` | Iron grille designs, decorative glass and mask photography |
+| `docs/knotty-alder-deep-dive-2026-09-09.md` | Catalog pages 42-57 read in full: what was added, what is still open |
 | `tools/extract-door-images.py` | Pulls that photography out of the catalog PDFs |
 | `data/catalog.json` | Master catalog — `products[]`, `prehangAdders[]`, `components[]`, `hardware[]` |
 | `data/pricing-rules.json` | Net multiplier, currency, rounding, freight and defaults |
@@ -172,6 +175,9 @@ gets exercised.
 | `woodPrehangAdders` | 38 interior-casing / 1x4 adders |
 | `woodComponents` | 17 jamb legs, casing, mull covers, subsills, T-astragal, SDL bars |
 | `hardware` | 22 barn-hardware, iron-mask, speakeasy, clavos and strap SKUs — shared |
+| `ironGrilleDesigns` | 11 knotty alder grille designs, with the sizes each is made in |
+| `decorativeGlassDesigns` | 7 leaded glasses and the caming each is offered in |
+| `glassRules` | Where the catalog names glasses the price sheet does not |
 
 The split follows the vendor price sheets, not a guess: the fiberglass sheet
 carries its own Components, SDL Bars and Prehang Adders sections and no
@@ -382,8 +388,10 @@ doors — and each card opens a configurator that asks one question at a time:
 
 | # | Question | Where the answers come from | Priced? |
 | --- | --- | --- | --- |
-| 1 | Glass | the model's own glazings | yes — a dearer glass shows `+$x` |
+| 1 | Glass | the model's own glazings, or a `glassRules` list | yes — a dearer glass shows `+$x` |
+| 1b | Caming | `decorativeGlassDesigns`, where both leads are made | no |
 | 2 | Size | the sizes offered in that glass | yes |
+| 2b | Grille design | `ironGrilleDesigns`, filtered to the chosen size | no — one row prices them all |
 | 3 | Iron grille | `fiberglassIronGrilles` | yes — resolves to the grille row |
 | 4 | Finish | `availableOptions()` | yes |
 | 5 | Stain colour | `fiberglassStainColors`, grained skins only | no |

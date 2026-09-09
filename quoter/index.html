@@ -98,6 +98,15 @@ tailwind.config = {
   .no-tw .glassswatch { display:block; width:36px; height:36px; flex:0 0 auto;
                         border:1px solid #e4e0d9; border-radius:6px; overflow:hidden; }
   .no-tw .glassswatch img { width:100%; height:100%; object-fit:cover; }
+  .no-tw .opt:has(.grilleshot) { display:inline-flex; align-items:center; gap:.5rem; text-align:left; }
+  .no-tw .grilleshot { display:block; width:40px; height:80px; flex:0 0 auto;
+                       border:1px solid #e4e0d9; border-radius:6px; overflow:hidden; }
+  .no-tw .grilleshot img { width:100%; height:100%; object-fit:cover; }
+  .no-tw .optwords, .no-tw .optlabel { display:block; }
+  .no-tw .optsub { display:block; font-size:10px; opacity:.7; }
+  .no-tw .accshot { display:block; width:32px; height:32px; flex:0 0 auto;
+                    border:1px solid #e4e0d9; border-radius:6px; overflow:hidden; background:#20241f; }
+  .no-tw .accshot img { width:100%; height:100%; object-fit:contain; }
   .no-tw #detail > div { display:block; }
   .no-tw #detail > div > div:last-child { padding:1rem; }
   .no-tw .railchip, .no-tw .railstep { display:inline-block; border-radius:999px; font-size:11px;
@@ -325,6 +334,8 @@ const CONFIG = {
   manifestUrl:  "./assets/doors/manifest.json",
   glassBase:    "./assets/glass/",
   glassManifest:"./assets/glass/manifest.json",
+  designBase:   "./assets/designs/",
+  designManifest:"./assets/designs/manifest.json",
   pageSize:   48                     // cards rendered per chunk while scrolling
 };
 
@@ -357,6 +368,7 @@ const state = {
   engine: null,
   photos: {},                             // model name -> file, from the manifest
   glass: { glass: {}, privacy: {} },      // glass name -> swatch and privacy rating
+  designs: { grilles: {}, decorativeGlass: {}, accessories: {} },
   ready: false,
   mode: "customer",                       // "customer" | "cost"
   marginTier: null,                       // "builder" | "retail" — set from the rules file
@@ -525,6 +537,14 @@ async function loadData() {
   } catch (e) {
     state.glass = { glass: {}, privacy: {} };
   }
+  try {
+    const dz = await fetchJson(CONFIG.designManifest);
+    state.designs = { grilles: (dz && dz.grilles) || {},
+                      decorativeGlass: (dz && dz.decorativeGlass) || {},
+                      accessories: (dz && dz.accessories) || {} };
+  } catch (e) {
+    state.designs = { grilles: {}, decorativeGlass: {}, accessories: {} };
+  }
   state.ready = true;
   return state.engine;
 }
@@ -553,12 +573,45 @@ function glassSwatch(name) {
     const starts = names.filter(n => glassKey(n).startsWith(want));
     if (starts.length === 1) hit = starts[0];
   }
-  if (!hit) return null;
-  return {
+  if (hit) return {
     src: CONFIG.glassBase + encodeURIComponent(state.glass.glass[hit]),
     privacy: state.glass.privacy[hit],
     printedAs: hit
   };
+  // The decorative glasses have no flat swatch in the catalogs; they are shown
+  // as a door glazed with them, which serves the same purpose here.
+  const dec = Object.keys(state.designs.decorativeGlass);
+  const d = dec.find(n => glassKey(n) === want);
+  if (!d) return null;
+  return {
+    src: CONFIG.designBase + encodeURIComponent(state.designs.decorativeGlass[d].file),
+    privacy: null,
+    printedAs: d,
+    decorative: true
+  };
+}
+
+/* A row's glazing field is sometimes a list rather than one glass: the
+   decorative-glass and speakeasy rows cost the same whichever of the listed
+   glasses is chosen, and the catalog prints them as "Columbia, Medina, Pecos,
+   San Jacinto" or "Wood, Clear Low E, Rain or Flemish". Split them so the
+   customer picks one glass instead of a sentence. */
+function glazingOptions(value) {
+  if (!value) return [];
+  return String(value).split(/\s*,\s*|\s+or\s+/i).map(t => t.trim()).filter(Boolean);
+}
+function glazingOffers(product, glazing) {
+  if (!glazing) return !product.glazing;
+  return glazingOptions(product.glazing).indexOf(glazing) >= 0;
+}
+/* Where the price sheet records no glass at all but the catalog page does.
+   The iron-grille page lists five glasses for every grille door; the sheet
+   prices one generic row, so the choice is a specification, not a part. */
+function glassRuleFor(modelName, collection) {
+  const rules = (state.engine.catalog.glassRules) || [];
+  return rules.find(r =>
+    (!r.appliesToCollection || r.appliesToCollection === collection) &&
+    new RegExp(r.appliesToModelPattern, "i").test(modelName)) || null;
 }
 
 /** Put the photo in, or the drawn silhouette when there is none. */
@@ -596,7 +649,7 @@ function matchesFiltersIgnoringGroup(p) {
   const { q, line, family, glazing, type } = state.filters;
   if (line && p.line !== line) return false;
   if (family && p.family !== family) return false;
-  if (glazing && p.glazing !== glazing) return false;
+  if (glazing && !glazingOffers(p, glazing)) return false;
   if (type && p.type !== type) return false;
   const terms = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
   if (!terms.length) return true;
@@ -638,6 +691,23 @@ function optionOnlyIds() {
 function grillesForModel(name) {
   return (state.engine.catalog.fiberglassIronGrilles || []).filter(g => g.baseModel === name);
 }
+/* The wood price sheet prices one generic "3/4 Lite Iron Grille" row and the
+   catalog then shows eleven designs against it, each offered in its own set of
+   sizes. The design costs nothing extra, so it is a choice on the model rather
+   than a part of its own. */
+/* The decorative glasses are leaded, and the catalog offers the lead caming
+   in patina or zinc where both are made. It does not change the price. */
+function camingFor(glazing) {
+  if (!glazing) return [];
+  const d = (state.engine.catalog.decorativeGlassDesigns || [])
+    .find(x => x.name === glazing);
+  return (d && d.caming) || [];
+}
+function grilleDesignsFor(model) {
+  if (!/Iron Grille/i.test(model.name)) return [];
+  return (state.engine.catalog.ironGrilleDesigns || [])
+    .filter(g => !g.line || g.line === model.line);
+}
 /** Stain colours apply to grained skins only, never the Smooth Collection. */
 function stainsApplyTo(modelName) {
   return /Mahogany Grain|Oak Grain/i.test(modelName) &&
@@ -658,8 +728,12 @@ function buildModels() {
   const models = Array.from(map.values());
   models.forEach(m => {
     m.sizes = Array.from(new Set(m.products.map(p => p.size && p.size.code).filter(Boolean)));
-    m.glazings = Array.from(new Set(m.products.map(p => p.glazing).filter(Boolean)));
+    m.glassRule = glassRuleFor(m.name, state.collection);
+    m.glazings = m.glassRule
+      ? m.glassRule.options.slice()
+      : Array.from(new Set(m.products.flatMap(p => glazingOptions(p.glazing))));
     m.grilles = grillesForModel(m.name);
+    m.grilleDesigns = grilleDesignsFor(m);
     m.sample = m.products[0];
   });
   return models;
@@ -929,7 +1003,8 @@ function renderFilters() {
   };
   put("#fLine",    uniq(p => p.line),    "All lines",    v => LINE_LABELS[v] || titleize(v));
   put("#fFamily",  uniq(p => p.family),  "All families");
-  put("#fGlazing", uniq(p => p.glazing), "All glass");
+  const glasses = Array.from(new Set(rows.flatMap(p => glazingOptions(p.glazing)))).sort();
+  put("#fGlazing", glasses, "All glass");
   put("#fType",    uniq(p => p.type),    "All types",    v => TYPE_LABELS[v] || titleize(v));
 }
 
@@ -944,9 +1019,9 @@ function optionButton(label, pressed, disabled, onClick, title, sub, art) {
     // sit beside it.
     b.classList.add("flex", "items-center", "gap-2.5", "text-left");
     b.appendChild(art);
-    const words = el("span", "block");
-    words.appendChild(el("span", "block", label));
-    if (sub) words.appendChild(el("span", "block text-[10px] opacity-70", sub));
+    const words = el("span", "optwords block");
+    words.appendChild(el("span", "optlabel block", label));
+    if (sub) words.appendChild(el("span", "optsub block text-[10px] opacity-70", sub));
     b.appendChild(words);
     b.setAttribute("aria-pressed", String(!!pressed));
     b.disabled = !!disabled;
@@ -954,8 +1029,8 @@ function optionButton(label, pressed, disabled, onClick, title, sub, art) {
     if (!disabled) b.addEventListener("click", onClick);
     return b;
   }
-  b.appendChild(el("span", "block", label));
-  if (sub) b.appendChild(el("span", "block text-[10px] opacity-70", sub));
+  b.appendChild(el("span", "optlabel block", label));
+  if (sub) b.appendChild(el("span", "optsub block text-[10px] opacity-70", sub));
   b.setAttribute("aria-pressed", String(!!pressed));
   b.disabled = !!disabled;
   if (title) b.title = title;
@@ -970,7 +1045,8 @@ function optionButton(label, pressed, disabled, onClick, title, sub, art) {
 
 function openConfigurator(model) {
   state.draft = {
-    model, glazing: null, sizeCode: null, grilleChoice: null, grille: null,
+    model, glazing: null, caming: null, sizeCode: null,
+    grilleChoice: null, grille: null, grilleDesign: null,
     finish: null, stain: null,
     opening: null, config: null, sidelite: null,
     handing: null, swing: null, jambDepth: null,
@@ -1004,7 +1080,8 @@ function draftProduct() {
   if (d.grilleChoice === "yes" && d.grille) return state.engine.productById(d.grille.productId);
   if (!d.sizeCode) return null;
   const match = p => (p.size && p.size.code) === d.sizeCode;
-  const exact = d.model.products.find(p => match(p) && (p.glazing || null) === (d.glazing || null));
+  const exact = d.model.products.find(p => match(p) &&
+    (d.model.glassRule ? true : glazingOffers(p, d.glazing)));
   if (exact) return exact;
   // Falling back across glass would price a different part than the one on
   // screen, so only a model that carries no glass at all may fall back.
@@ -1014,7 +1091,9 @@ function draftProduct() {
 function glazingFrom(model, glazing, sizeCode) {
   let best = null;
   model.products.forEach(p => {
-    if ((p.glazing || null) !== (glazing || null)) return;
+    // Under a glass rule the glass is a specification, not a part selector:
+    // the sheet prices one row whichever of the listed glasses is chosen.
+    if (!model.glassRule && !glazingOffers(p, glazing)) return;
     if (sizeCode && (p.size && p.size.code) !== sizeCode) return;
     const v = fromPrice(p);
     if (v !== null && (best === null || v < best)) best = v;
@@ -1052,7 +1131,7 @@ function sideliteChoices(doorProduct, glazing) {
   rows.forEach(p => {
     const key = modelKeyOf(p) + "|" + (p.size && p.size.code);
     const cur = best.get(key);
-    const matches = q => (q.glazing || null) === (glazing || null);
+    const matches = q => glazingOffers(q, glazing);
     if (!cur || (matches(p) && !matches(cur))) best.set(key, p);
   });
   return Array.from(best.values()).sort((a, b) =>
@@ -1141,7 +1220,9 @@ function stepPlan(d) {
   };
   const plan = [];
   if (m.glazings.length > 1) plan.push({ key: "glazing", title: "Glass", value: d.glazing });
+  if (camingFor(d.glazing).length > 1) plan.push({ key: "caming", title: "Caming", value: d.caming });
   if (m.sizes.length > 1) plan.push({ key: "size", title: "Size", value: d.sizeCode && sizeLabel(d.sizeCode) });
+  if (m.grilleDesigns.length) plan.push({ key: "grilleDesign", title: "Grille design", value: d.grilleDesign });
   if (m.grilles.length) plan.push({ key: "grille", title: "Iron grille",
     value: d.grilleChoice === "none" ? "No grille" : (d.grille && d.grille.style) || null });
   plan.push({ key: "finish", title: "Finish", value: d.finish && FINISH_LABELS[d.finish] });
@@ -1163,12 +1244,14 @@ function stepPlan(d) {
 /** Take back one answer, and every answer that depended on it. */
 function unanswerFrom(key) {
   const d = state.draft;
-  const order = ["glazing", "size", "grille", "finish", "stain",
+  const order = ["glazing", "caming", "size", "grilleDesign", "grille", "finish", "stain",
                  "opening", "sidelite", "handing", "swing", "jamb"];
   const from = order.indexOf(key);
   const clear = {
     glazing:  () => { d.glazing = null; },
+    caming:   () => { d.caming = null; },
     size:     () => { d.sizeCode = null; },
+    grilleDesign: () => { d.grilleDesign = null; },
     grille:   () => { d.grilleChoice = d.model.grilles.length ? null : "none"; d.grille = null; },
     finish:   () => { d.finish = null; },
     stain:    () => { d.stain = null; },
@@ -1294,8 +1377,9 @@ function renderDetail() {
         d.glazing = g;
         // The size already chosen may not be offered in this glass; re-ask
         // rather than silently resolving to a part in another glass.
-        if (d.sizeCode && !model.products.some(p => (p.size && p.size.code) === d.sizeCode &&
-                                                    (p.glazing || null) === (g || null))) {
+        if (d.sizeCode && !model.glassRule &&
+            !model.products.some(p => (p.size && p.size.code) === d.sizeCode &&
+                                      glazingOffers(p, g))) {
           d.sizeCode = null; d.grille = null;
           if (model.grilles.length) d.grilleChoice = null;
         }
@@ -1306,12 +1390,28 @@ function renderDetail() {
     if (!gate(d.glazing)) { /* stop here */ }
   }
 
+  // 1b. caming, where the decorative glass is made with either lead
+  if (!blocked) {
+    const caming = camingFor(d.glazing);
+    if (caming.length > 1) {
+      const blk = stepBlock("Caming", "the leading around the glass");
+      caming.forEach(c => blk.row.appendChild(
+        optionButton(c, d.caming === c, false, () => { d.caming = c; renderDetail(); })));
+      body.appendChild(blk);
+      gate(d.caming);
+    } else if (caming.length === 1) {
+      d.caming = caming[0];
+    } else {
+      d.caming = null;
+    }
+  }
+
   // 2. size
   if (!blocked && model.sizes.length > 1) {
     const blk = stepBlock("Size");
     model.sizes.forEach(code => {
       const p = model.products.find(x => (x.size && x.size.code) === code &&
-                                         (x.glazing || null) === (d.glazing || null));
+        (model.glassRule ? true : glazingOffers(x, d.glazing)));
       blk.row.appendChild(optionButton((p && p.size.label) || code, d.sizeCode === code, !p, () => {
         d.sizeCode = code;
         if (d.grille && d.grille.sizeCode !== code) { d.grille = null; d.grilleChoice = null; }
@@ -1320,6 +1420,39 @@ function renderDetail() {
     });
     body.appendChild(blk);
     gate(d.sizeCode);
+  }
+
+  // 2b. which iron grille design, where the model is a grille door
+  if (!blocked && model.grilleDesigns.length) {
+    const fits = g => !d.sizeCode || (g.sizeCodes || []).indexOf(d.sizeCode) >= 0;
+    const offered = model.grilleDesigns.filter(fits);
+    const blk = stepBlock("Grille design",
+      offered.length < model.grilleDesigns.length
+        ? (model.grilleDesigns.length - offered.length) + " not made in this size"
+        : null);
+    model.grilleDesigns.forEach(g => {
+      const ok = fits(g);
+      const rec = state.designs.grilles[g.name];
+      let art = null;
+      if (rec) {
+        art = el("span", "grilleshot block h-20 w-10 shrink-0 overflow-hidden rounded border border-paper-line bg-paper-rail");
+        const im = document.createElement("img");
+        im.src = CONFIG.designBase + encodeURIComponent(rec.file);
+        im.alt = ""; im.loading = "lazy"; im.decoding = "async";
+        im.className = "h-full w-full object-cover";
+        im.addEventListener("error", function onE() {
+          im.removeEventListener("error", onE); art.remove();
+        }, { once: true });
+        art.appendChild(im);
+      }
+      blk.row.appendChild(optionButton(g.name, d.grilleDesign === g.name, !ok, () => {
+        d.grilleDesign = g.name; renderDetail();
+      }, ok ? (g.stainShown ? "Shown in " + g.stainShown : null)
+            : "Not made in this size",
+        ok ? null : "not this size", art));
+    });
+    body.appendChild(blk);
+    gate(d.grilleDesign);
   }
 
   // 3. iron grille
@@ -1413,7 +1546,7 @@ function renderDetail() {
       const l = state.engine.priceLine({ productId: sl.id, finish: f, config: "singlePH", qty: 1 }, curMargin());
       const notes = [formatCents(isCost() ? l.unitCostCents : l.unitSellCents) + " ea"];
       if (f !== d.finish) notes.push(FINISH_LABELS[f].toLowerCase() + " only");
-      if ((sl.glazing || null) !== (d.glazing || null) && sl.glazing) notes.push(sl.glazing);
+      if (!glazingOffers(sl, d.glazing) && sl.glazing) notes.push(sl.glazing);
       blk.row.appendChild(optionButton(
         modelKeyOf(sl) + "  " + ((sl.size && sl.size.label) || ""),
         d.sidelite === sl.id, false, () => { d.sidelite = sl.id; renderDetail(); },
@@ -1470,7 +1603,9 @@ function renderDetail() {
     // CONFIGURED ITEM with no part number; never show it as a vendor number.
     const configured = /^CFG-/.test(product.sku);
     const slProduct = d.sidelite && state.engine.productById(d.sidelite);
-    const chosen = [d.glazing, d.stain, d.grille && d.grille.style + " grille",
+    const chosen = [d.glazing, d.caming && d.caming + " caming",
+                    d.grilleDesign && d.grilleDesign + " grille",
+                    d.stain, d.grille && d.grille.style + " grille",
                     product.size && product.size.label,
                     opening && opening.label,
                     opening && opening.sidelites && slProduct
@@ -1516,6 +1651,8 @@ function renderDetail() {
         uid: nextUid(), productId: product.id, finish: d.finish, config: d.config,
         qty: d.qty, accessories: allAccessories(d),
         stain: d.stain || null, grilleStyle: d.grille ? d.grille.style : null,
+        glazing: d.glazing || null, caming: d.caming || null,
+        grilleDesign: d.grilleDesign || null,
         opening: d.opening || null, handing: d.handing || null,
         swing: d.swing || null, jambDepth: d.jambDepth || null
       });
@@ -1538,6 +1675,19 @@ function renderDetail() {
 
 /* --- 5e. accessories ----------------------------------------------------- */
 
+/* The catalog photographs the three iron masks. The picker is a <select> and
+   cannot hold pictures, so the photo appears beside the item once it is on the
+   opening — which is where seeing it matters. */
+function accessoryPhoto(label) {
+  const text = String(label || "");
+  if (!/iron mask/i.test(text)) return null;
+  const hit = Object.keys(state.designs.accessories).find(k => {
+    const rec = state.designs.accessories[k];
+    return rec.kind === "ironMask" && new RegExp("\\b" + k + "\\b", "i").test(text);
+  });
+  return hit ? CONFIG.designBase + encodeURIComponent(state.designs.accessories[hit].file) : null;
+}
+
 function accessoryBlock(product, draft) {
   const block = el("div", "");
   block.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-mute",
@@ -1549,6 +1699,18 @@ function accessoryBlock(product, draft) {
       productId: product.id, finish: draft.finish, config: draft.config, qty: 1, accessories: [acc]
     }).accessories[0];
     const row = el("div", "flex items-center gap-2 rounded-lg border border-paper-line bg-paper-card px-3 py-2");
+    const shot = accessoryPhoto(priced.label);
+    if (shot) {
+      const thumb = el("span", "accshot block h-8 w-8 shrink-0 overflow-hidden rounded border border-paper-line bg-ink");
+      const im = document.createElement("img");
+      im.src = shot; im.alt = ""; im.loading = "lazy"; im.decoding = "async";
+      im.className = "h-full w-full object-contain";
+      im.addEventListener("error", function onE() {
+        im.removeEventListener("error", onE); thumb.remove();
+      }, { once: true });
+      thumb.appendChild(im);
+      row.appendChild(thumb);
+    }
     row.appendChild(el("span", "flex-1 truncate text-sm", priced.label));
     row.appendChild(el("span", "tnum text-sm text-ink-mute",
       formatCents(isCost() ? priced.costCents : applyMargin(priced.costCents, curMargin()))));
@@ -1677,7 +1839,10 @@ function renderQuote() {
     // configuration does — "Single + 2 sidelites" rather than "Single prehung".
     const op = openingByKey(spec.opening);
     const bits = [FINISH_LABELS[l.finish], op ? op.label : CONFIG_LABELS[l.config]];
+    if (spec.glazing) bits.push(spec.glazing);
+    if (spec.caming) bits.push(spec.caming + " caming");
     if (spec.stain) bits.push(spec.stain + " stain");
+    if (spec.grilleDesign) bits.push(spec.grilleDesign + " grille");
     if (spec.grilleStyle) bits.push(spec.grilleStyle + " grille");
     if (spec.handing) bits.push(HANDING_LABELS[spec.handing] || spec.handing);
     if (spec.swing) bits.push(SWING_LABELS[spec.swing] || spec.swing);

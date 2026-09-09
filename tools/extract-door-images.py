@@ -10,6 +10,7 @@ reported and skipped rather than filed under a guess.
     python3 tools/extract-door-images.py CATALOG.pdf [CATALOG.pdf ...]
     python3 tools/extract-door-images.py --dry-run CATALOG.pdf
     python3 tools/extract-door-images.py --glass CATALOG.pdf   # the glass swatches
+    python3 tools/extract-door-images.py --designs CATALOG.pdf # grilles, decorative glass, masks
 
 Writes quoter/assets/doors/<slug>.webp and manifest.json. Needs pypdf + Pillow.
 """
@@ -289,6 +290,260 @@ def extract_glass(pdfs, dry):
         print(f'  {label:<22} privacy {meta.get(label, "-")}')
     return files
 
+DESIGN_DIR = os.path.join(ROOT, 'quoter', 'assets', 'designs')
+GRILLE_PN = re.compile(r'\bKA34([A-Z]{3})C(\d{4})\b')
+
+def _cell(x, y, xs, ys):
+    """Which half of the page a thing sits in. The catalog lays these pages out
+    as a 2x2 of panels, so a column and a row band is all it takes."""
+    return ('R' if x >= xs else 'L', 'T' if y >= ys else 'B')
+
+def extract_grilles(reader, pdf, found):
+    """The iron-grille pages carry four doors in a 2x2, each with its own
+    part numbers. The price sheet prices them as one generic '3/4 Lite Iron
+    Grille' row, so the design is a choice rather than a product and the photo
+    has to be filed by the design's name, not by a part number.
+
+    The design code in the part number (KA34*AVI*C3068) is always positioned,
+    so the code fixes which cell of the 2x2 a design occupies. The printed
+    name is read from the caption above that cell; where the PDF has lost the
+    caption's transform, the leftover names are assigned to the leftover cells
+    in reading order, and only when the two counts agree.
+    """
+    for pno, page in enumerate(reader.pages, 1):
+        text = page.extract_text() or ''
+        if 'Iron Grille' not in text:
+            continue
+        runs = text_runs(page)
+        codes = {}
+        for x, y, t in runs:
+            for m in GRILLE_PN.finditer(t):
+                codes.setdefault(m.group(1), {'xs': [], 'ys': [], 'sizes': set()})
+                codes[m.group(1)]['xs'].append(x)
+                codes[m.group(1)]['ys'].append(y)
+                codes[m.group(1)]['sizes'].add(m.group(2))
+        if not codes:
+            continue
+        photos = [(n, x, y, w, h) for n, x, y, w, h in placements(page)
+                  if h >= 200 and w >= 80 and 1.8 <= h / max(w, 1) <= 3.4]
+        if not photos:
+            continue
+        xs = (min(p[1] for p in photos) + max(p[1] for p in photos)) / 2 + 1
+        ys = (min(p[2] for p in photos) + max(p[2] for p in photos)) / 2 + 1
+        by_cell = {}
+        for n, x, y, w, h in photos:
+            by_cell.setdefault(_cell(x, y, xs, ys), (n, x, y, w, h))
+
+        placed, unnamed = {}, []
+        for code, d in codes.items():
+            cx = sum(d['xs']) / len(d['xs'])
+            cy = sum(d['ys']) / len(d['ys'])
+            key = _cell(cx, cy, xs + 150, ys)   # text sits right of its photo
+            shot = by_cell.get(key)
+            if not shot:
+                continue
+            n, x, y, w, h = shot
+            # The design's name is printed just above its photo.
+            above = [(ry - (y + h), t) for rx, ry, t in runs
+                     if 0 < ry - (y + h) < 30 and abs(rx - x) < 60]
+            label = min(above)[1].strip() if above else None
+            # 'Stain Shown:' sits in the same column as the part numbers and
+            # names the finish in the photo, which is worth showing with it.
+            stain = None
+            for rx, ry, t in runs:
+                if t.strip().startswith('Stain Shown') and abs(rx - cx) < 40 \
+                        and abs(ry - cy) < 120:
+                    below = [r for r in runs if abs(r[0] - rx) < 30 and 0 < ry - r[1] < 20]
+                    if below:
+                        stain = min(below, key=lambda r: ry - r[1])[2].strip()
+            if label:
+                placed[label] = (page, n, code, sorted(d['sizes']), 'caption', pno, stain)
+            else:
+                unnamed.append((key, page, n, code, sorted(d['sizes']), pno, stain))
+
+        # Names whose transform the PDF dropped come through at the origin.
+        lost = [t.strip() for x, y, t in runs if x == 0 and y == 0
+                and re.fullmatch(r"[A-Z][a-z]+", t.strip()) and t.strip() not in placed]
+        if unnamed and len(lost) == len(unnamed):
+            order = {('L', 'T'): 0, ('R', 'T'): 1, ('L', 'B'): 2, ('R', 'B'): 3}
+            unnamed.sort(key=lambda u: order.get(u[0], 9))
+            for name, (key, page, n, code, sizes, pn, stain) in zip(lost, unnamed):
+                placed[name] = (page, n, code, sizes, 'remainder', pn, stain)
+        elif unnamed:
+            for key, page, n, code, sizes, pn, stain in unnamed:
+                print(f'  skipped grille {code} on p{pn}: the page does not name it')
+
+        for name, (page, n, code, sizes, basis, pn, stain) in placed.items():
+            found['grilles'].setdefault(name, {
+                'page': page, 'xobj': n, 'code': code, 'sizes': sizes,
+                'basis': basis, 'stainShown': stain,
+                'source': f'{os.path.basename(pdf)} p{pn} {n}'})
+
+def extract_decorative(reader, pdf, found, vocab):
+    """The decorative-glass panels print the glass the photo shows, then a row
+    of smaller doors under 'Other Available Decorative Glass Options'. Each
+    thumbnail sits above its own name in the part-number table, so it is filed
+    by the column it lines up with; the option that never appears as a
+    thumbnail is the one the big photo shows."""
+    for pno, page in enumerate(reader.pages, 1):
+        text = page.extract_text() or ''
+        if 'Other Available Decorative Glass Options' not in text:
+            continue
+        runs = text_runs(page)
+        # Which glasses this page names. The vocabulary is the set of glazings
+        # our own catalog records, so a heading is only read as a glass name
+        # when it is one we already price.
+        names = {}
+        for x, y, t in runs:
+            t = t.strip().rstrip(':').strip()
+            if t in vocab:
+                names.setdefault(t, []).append((x, y))
+        thumbs = [(n, x, y, w, h) for n, x, y, w, h in placements(page)
+                  if 150 <= h <= 230 and 55 <= w <= 100]
+        if not thumbs:
+            continue
+        # 'Glass Shown:' appears once per panel and most panels say
+        # 'Open For Glass'; the one that names a decorative glass is the one
+        # that tells us what the big photo is.
+        shown = None
+        for x, y, t in runs:
+            if not t.strip().startswith('Glass Shown'):
+                continue
+            below = [r for r in runs if abs(r[0] - x) < 30 and 0 < y - r[1] < 20]
+            if below and min(below, key=lambda r: y - r[1])[2].strip() in vocab:
+                shown = min(below, key=lambda r: y - r[1])[2].strip()
+        used = set()
+        for n, x, y, w, h in sorted(thumbs, key=lambda t: t[1]):
+            # the column whose heading this thumbnail sits over
+            cands = [(abs(px - x), nm) for nm, pos in names.items()
+                     for px, py in pos if abs(px - x) < 12 and py < y]
+            label = min(cands)[1] if cands else None
+            if label is None:
+                continue
+            used.add(label)
+            found['decorative'].setdefault(label, {
+                'page': page, 'xobj': n, 'basis': 'column',
+                'source': f'{os.path.basename(pdf)} p{pno} {n}'})
+        # Thumbnails whose transform is gone: assign leftover names in order.
+        lost = [t.strip() for x, y, t in runs if x == 0 and y == 0
+                and t.strip() in vocab]
+        spare = [t for t in sorted(thumbs, key=lambda t: t[1])
+                 if not any(abs(px - t[1]) < 12 for nm in used for px, py in names[nm])]
+        if lost and len(lost) == len(spare):
+            for label, (n, x, y, w, h) in zip(lost, spare):
+                used.add(label)
+                found['decorative'].setdefault(label, {
+                    'page': page, 'xobj': n, 'basis': 'remainder',
+                    'source': f'{os.path.basename(pdf)} p{pno} {n}'})
+        # The big photo shows the option the thumbnails leave out.
+        big = [(n, x, y, w, h) for n, x, y, w, h in placements(page)
+               if h >= 240 and w >= 80 and x < 200]
+        if big:
+            rest = [nm for nm in names if nm not in used and len(names[nm]) >= 1]
+            pick = shown if shown in names else (rest[0] if len(rest) == 1 else None)
+            if pick and pick not in used:
+                n, x, y, w, h = max(big, key=lambda t: t[2])
+                found['decorative'].setdefault(pick, {
+                    'page': page, 'xobj': n,
+                    'basis': 'caption' if pick == shown else 'remainder',
+                    'source': f'{os.path.basename(pdf)} p{pno} {n}'})
+
+def extract_accessories(reader, pdf, found):
+    """The speakeasy page shows the two insert options and the three iron
+    masks. Several of its captions have lost their transform, so the rows are
+    read by position and named in the printed left-to-right order, which was
+    checked against the images themselves."""
+    for pno, page in enumerate(reader.pages, 1):
+        text = page.extract_text() or ''
+        if 'Iron Masks Options' not in text:
+            continue
+        small = [p for p in placements(page)
+                 if 50 <= p[3] <= 70 and 70 <= p[4] <= 90]
+        rows = {}
+        for p in small:
+            rows.setdefault(round(p[2] / 40), []).append(p)
+        # The masks are the row of three, the inserts the row of two.
+        masks = sorted(next((r for r in rows.values() if len(r) == 3), []), key=lambda p: p[1])
+        inserts = sorted(next((r for r in rows.values() if len(r) == 2), []), key=lambda p: p[1])
+        for names, row, kind in ((['Standard', 'Balfour', 'Windsor'], masks, 'ironMask'),
+                                 (['Wood Insert', 'Glass Insert'], inserts, 'speakeasyInsert')):
+            if len(row) != len(names):
+                print(f'  skipped {kind} on p{pno}: found {len(row)} images for {len(names)} names')
+                continue
+            for name, (n, x, y, w, h) in zip(names, row):
+                found['accessories'].setdefault(f'{kind}:{name}', {
+                    'page': page, 'xobj': n, 'kind': kind, 'label': name,
+                    'source': f'{os.path.basename(pdf)} p{pno} {n}'})
+
+def glazing_vocabulary():
+    """Every decorative glass our own catalog names, so the page reader has a
+    closed set to match against instead of guessing at capitalised words."""
+    catalog = json.load(open(os.path.join(ROOT, 'data', 'catalog.json')))
+    vocab = set()
+    for key in ('woodProducts', 'fiberglassProducts'):
+        for p in catalog.get(key, []):
+            for part in str(p.get('glazing') or '').split(','):
+                part = part.strip()
+                if part:
+                    vocab.add(part)
+    return vocab
+
+def extract_designs(pdfs, dry):
+    found = {'grilles': {}, 'decorative': {}, 'accessories': {}}
+    vocab = glazing_vocabulary()
+    for pdf in pdfs:
+        reader = PdfReader(pdf)
+        extract_grilles(reader, pdf, found)
+        extract_decorative(reader, pdf, found, vocab)
+        extract_accessories(reader, pdf, found)
+
+    if not dry:
+        os.makedirs(DESIGN_DIR, exist_ok=True)
+    out = {'grilles': {}, 'decorativeGlass': {}, 'accessories': {}}
+    caps = {'grilles': 560, 'decorative': 420, 'accessories': 300}
+    total = 0
+    for group, prefix, dest in (('grilles', 'grille', 'grilles'),
+                                ('decorative', 'glass', 'decorativeGlass'),
+                                ('accessories', 'acc', 'accessories')):
+        for label, d in sorted(found[group].items()):
+            fn = f'{prefix}-{slug(label)}.webp'
+            rec = {'file': fn, 'source': d['source']}
+            for k in ('code', 'sizes', 'basis', 'stainShown', 'kind', 'label'):
+                if k in d:
+                    rec[k] = d[k]
+            if not dry:
+                im = load_image(d['page'], d['xobj'])
+                if im is None:
+                    print('  ERROR decoding', label)
+                    continue
+                im = trim(im)
+                cap = caps[group]
+                if im.height > cap:
+                    im = im.resize((round(im.width * cap / im.height), cap), Image.LANCZOS)
+                path = os.path.join(DESIGN_DIR, fn)
+                im.save(path, 'WEBP', quality=WEBP_QUALITY, method=6)
+                total += os.path.getsize(path)
+            out[dest][rec.pop('label', label) if group == 'accessories' else label] = rec
+
+    if not dry:
+        with open(os.path.join(DESIGN_DIR, 'manifest.json'), 'w') as f:
+            json.dump({'note': 'Iron grille designs, decorative glass and speakeasy '
+                               'hardware from the Hoelscher catalogs, by the name the '
+                               'catalog prints. basis says how the name was tied to the '
+                               'photo: caption (printed above or beside it), column '
+                               '(aligned with its column of part numbers) or remainder '
+                               '(the only option the page had left).',
+                       **out}, f, indent=2, sort_keys=True)
+            f.write('\n')
+    for dest in out:
+        print(f'{len(out[dest])} {dest}')
+        for k, v in sorted(out[dest].items()):
+            extra = v.get('code', '') and (f" {v['code']} {'/'.join(v.get('sizes', []))}"
+                                           f"  {v.get('stainShown') or ''}")
+            print(f"   {k:<18} {v.get('basis','-'):<9}{extra}")
+    print(f'{total // 1024} KB total')
+    return out
+
 def main(argv):
     dry = '--dry-run' in argv
     pdfs = [a for a in argv if not a.startswith('--')]
@@ -296,6 +551,9 @@ def main(argv):
         sys.exit(__doc__)
     if '--glass' in argv:
         extract_glass(pdfs, dry)
+        return
+    if '--designs' in argv:
+        extract_designs(pdfs, dry)
         return
 
     catalog = json.load(open(os.path.join(ROOT, 'data', 'catalog.json')))

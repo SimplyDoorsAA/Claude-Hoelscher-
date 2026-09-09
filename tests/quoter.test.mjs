@@ -706,6 +706,76 @@ ok('the page reference was kept, in its own field',
    catalog.woodProducts.filter(p=>p.priceSheetPage).length===208,
    String(catalog.woodProducts.filter(p=>p.priceSheetPage).length));
 
+/* --- the knotty alder deep dive: grille designs, caming, glass lists ----- */
+const designs=JSON.parse(fs.readFileSync(ROOT+'/quoter/assets/designs/manifest.json','utf8'));
+const grilleDesigns=catalog.ironGrilleDesigns||[];
+
+ok('every iron grille design in the catalogue has a photo',
+   grilleDesigns.every(g=>designs.grilles[g.name]),
+   grilleDesigns.filter(g=>!designs.grilles[g.name]).map(g=>g.name).join(' | ')||grilleDesigns.length+' designs');
+ok('every decorative glass the catalogue names has a photo',
+   [...new Set((catalog.decorativeGlassDesigns||[]).map(d=>d.name))]
+     .every(n=>designs.decorativeGlass[n]),
+   Object.keys(designs.decorativeGlass).join(' | '));
+
+/* The wood sheet prices one generic iron-grille row, so the design is a free
+   choice; the catalog page restricts which sizes each design is made in. */
+await page.click('#groupChip'); await page.waitForTimeout(500);
+await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/^Knotty Alder/.test(n.textContent.trim())).click();});
+await page.waitForSelector('#catalog article',{timeout:30000});
+await openModel('KA 3/4 Lite Iron Grille');
+const grilleGlass=await optionsOf('Glass');
+const ruleOpts=(catalog.glassRules||[]).find(r=>/Iron Grille/i.test(r.appliesToModelPattern)).options;
+ok('a grille door offers exactly the five glasses the grille page lists',
+   grilleGlass.length===ruleOpts.length &&
+   ruleOpts.every(o=>grilleGlass.some(g=>g.startsWith(o))),
+   grilleGlass.join(' | '));
+ok('and not the wider Legacy list',
+   !grilleGlass.some(g=>/Baroque|Small Reeded|Satin|Bevel/i.test(g)), grilleGlass.join(' | '));
+await pick(ruleOpts[0]);
+const grilleSizes=await optionsOf('Size');
+ok('the grille door is offered its four sizes', grilleSizes.length===4, grilleSizes.join(' | '));
+await pick('3\'6"');
+const designOpts=await page.$$eval('#detail .steprow',ns=>{
+  const row=ns.find(r=>{const h=r.parentElement.querySelector('p');
+    return h&&h.textContent.trim()==='Grille design';});
+  return row?[...row.querySelectorAll('.opt')].map(n=>({t:n.textContent.trim(),off:n.disabled})):[];});
+ok('all eleven grille designs are shown', designOpts.length===11, String(designOpts.length));
+const madeIn3680=grilleDesigns.filter(g=>g.sizeCodes.includes('3680')).map(g=>g.name);
+ok('and the ones not made in 3\'6" are shown but disabled',
+   designOpts.filter(o=>!o.off).length===madeIn3680.length,
+   designOpts.filter(o=>!o.off).map(o=>o.t.split('\n')[0]).join(' | '));
+ok('a disabled design is one the catalogue does not list in that size',
+   designOpts.filter(o=>o.off).every(o=>!madeIn3680.some(n=>o.t.startsWith(n))),
+   designOpts.filter(o=>o.off).map(o=>o.t.split('\n')[0]).join(' | '));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+/* A glazing field that lists several glasses is a list of choices, not one
+   option called "Columbia, Medina, Pecos, San Jacinto". */
+await openModel('KA 3/4 Lite RM - Decorative Glass');
+const decOpts=await optionsOf('Glass');
+ok('a decorative-glass door offers each glass separately',
+   decOpts.length>=4 && decOpts.some(o=>o.startsWith('Columbia')) &&
+   decOpts.some(o=>o.startsWith('Medina')), decOpts.join(' | '));
+ok('and never offers a comma-separated list as one option',
+   decOpts.every(o=>!/,/.test(o.split('\n')[0])), decOpts.join(' | '));
+await pick('Columbia');
+const caming=await optionsOf('Caming');
+ok('a glass made in both lead finishes asks which',
+   caming.length===2 && caming.some(c=>/Patina/.test(c)) && caming.some(c=>/Zinc/.test(c)),
+   caming.join(' | '));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+await openModel('KA Arch Top Arch 1/2 Lite NRM Decorative Glass');
+const bowieGlass=await optionsOf('Glass');
+ok('the arch-top decorative door offers Bowie, Kerrville and Mason',
+   ['Bowie','Kerrville','Mason'].every(n=>bowieGlass.some(g=>g.startsWith(n))),
+   bowieGlass.join(' | '));
+await pick('Bowie');
+ok('and asks no caming question where only patina is made',
+   (await optionsOf('Caming')).length===0);
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
 ok('no console or page errors', errs.length===0, errs.slice(0,2).join(' | '));
 console.log(T.join('\n'));
 console.log('\n'+T.filter(t=>t.startsWith('PASS')).length+' passed, '+T.filter(t=>t.startsWith('FAIL')).length+' failed');

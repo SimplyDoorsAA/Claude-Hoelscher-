@@ -20676,5 +20676,327 @@
       "requiresOpening": "sidelites",
       "notes": "Mull covers and the mullion trim the joint between a door and a sidelite."
     }
+  ],
+  "ironGrilleDesigns": [
+    {
+      "name": "Avignon",
+      "code": "AVI",
+      "line": "knotty_alder",
+      "sizeCodes": [
+        "2880",
+        "3068",
+        "3080",
+        "3680"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Special Walnut",
+      "priceImpact": "none",
+      "sourcePage": "55",
+      "nameBasis": "caption",
+      "notes": null,
+      "id": "e54cc3052d"
+    },
+    {
+      "name": "Balfour",
+      "code": "BAL",
+      "line": "knotty_alder",
+      "sizeCodes": [
+        "2880",
+        "3068",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Red Oak",
+      "priceImpact": "none",
+      "sourcePage": "55",
+      "nameBasis": "remainder",
+      "notes": null,
+      "id": "4d33095446"
+    },
+    {
+      "name": "Barcelona",
+      "code": "BAR",
+      "line": "knotty_alder",
+      "sizeCodes": [
+        "2880",
+        "3068",
+        "3080",
+        "3680"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "English Chestnut",
+      "priceImpact": "none",
+      "sourcePage": "55",
+      "nameBasis": "caption",
+      "notes": null,
+      "id": "424ec587be"
+    },
+    {
+      "name": "Berkley",
+      "code": "BER",
+      "line": "knotty_alder",
+      "sizeCodes": [
+        "2880",
+        "3068",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Aged Barrel",
+      "priceImpact": "none",
+      "sourcePage": "55",
+      "nameBasis": "remainder",
+      "notes": null,
+      "id": "0e51edbb4e"
+    },
+    {
+      "name": "Cordoba",
+      "code": "CRD",
+      "line": "knotty_alder",
+      "sizeCodes": [
+        "2880",
+        "3068",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Ebony",
+      "priceImpact": "none",
+      "sourcePage": "56",
+      "nameBasis": "caption",
+      "notes": null,
+      "id": "8088f795cd"
+    },
+    {
+      "name": "Hammond",
+      "code": "HMM",
+      "line": "knotty_alder",
+      "sizeCodes": [
+        "2880",
+        "3068",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Jacobean",
+      "priceImpact": "none",
+      "sourcePage": "56",
+      "nameBasis": "caption",
+      "notes": null,
+      "id": "c1f5c8cad2"
+    },
+    {
+      "name": "Saltillo",
+      "code": "SLT",
+      "line": "knotty_alder",
+      "sizeCodes": [
+        "2880",
+        "3080",
+        "3680"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Special Walnut",
+      "priceImpact": "none",
+      "sourcePage": "56",
+      "nameBasis": "caption",
+      "notes": null,
+      "id": "1388d48684"
+    },
+    {
+      "name": "Santiago",
+      "code": "STG",
+      "line": "knotty_alder",
+      "sizeCodes": [
+        "2880",
+        "3068",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Red Oak",
+      "priceImpact": "none",
+      "sourcePage": "56",
+      "nameBasis": "caption",
+      "notes": null,
+      "id": "ab5a4040be"
+    },
+    {
+      "name": "Sienna",
+      "code": "SIE",
+      "line": "knotty_alder",
+      "sizeCodes": [
+        "2880",
+        "3068",
+        "3080",
+        "3680"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "English Chestnut",
+      "priceImpact": "none",
+      "sourcePage": "57",
+      "nameBasis": "caption",
+      "notes": null,
+      "id": "5f7c81349f"
+    },
+    {
+      "name": "Southampton",
+      "code": "SHN",
+      "line": "knotty_alder",
+      "sizeCodes": [
+        "2880",
+        "3080",
+        "3680"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Aged Barrel",
+      "priceImpact": "none",
+      "sourcePage": "57",
+      "nameBasis": "remainder",
+      "notes": null,
+      "id": "255e077ab9"
+    },
+    {
+      "name": "Whitney",
+      "code": "WHI",
+      "line": "knotty_alder",
+      "sizeCodes": [
+        "2880",
+        "3068",
+        "3080",
+        "3680"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Ebony",
+      "priceImpact": "none",
+      "sourcePage": "57",
+      "nameBasis": "caption",
+      "notes": null,
+      "id": "11aa279096"
+    }
+  ],
+  "decorativeGlassDesigns": [
+    {
+      "name": "Bowie",
+      "partNumberInfix": "BOW",
+      "caming": [
+        "Patina"
+      ],
+      "priceImpact": "none",
+      "sourcePage": "49",
+      "nameBasis": "caption",
+      "notes": null,
+      "id": "b6d415c334"
+    },
+    {
+      "name": "Columbia",
+      "partNumberInfix": "COL",
+      "caming": [
+        "Patina",
+        "Zinc"
+      ],
+      "priceImpact": "none",
+      "sourcePage": "48",
+      "nameBasis": "remainder",
+      "notes": null,
+      "id": "62a7919c04"
+    },
+    {
+      "name": "Kerrville",
+      "partNumberInfix": "KER",
+      "caming": [
+        "Patina"
+      ],
+      "priceImpact": "none",
+      "sourcePage": "49",
+      "nameBasis": "remainder",
+      "notes": null,
+      "id": "07c97a260f"
+    },
+    {
+      "name": "Mason",
+      "partNumberInfix": "MAS",
+      "caming": [
+        "Patina"
+      ],
+      "priceImpact": "none",
+      "sourcePage": "49",
+      "nameBasis": "remainder",
+      "notes": null,
+      "id": "6fe4f26692"
+    },
+    {
+      "name": "Medina",
+      "partNumberInfix": "MED",
+      "caming": [
+        "Patina",
+        "Zinc"
+      ],
+      "priceImpact": "none",
+      "sourcePage": "48",
+      "nameBasis": "column",
+      "notes": null,
+      "id": "63c5374b57"
+    },
+    {
+      "name": "Pecos",
+      "partNumberInfix": "PEC",
+      "caming": [
+        "Patina",
+        "Zinc"
+      ],
+      "priceImpact": "none",
+      "sourcePage": "48",
+      "nameBasis": "column",
+      "notes": null,
+      "id": "6d316ad4db"
+    },
+    {
+      "name": "San Jacinto",
+      "partNumberInfix": "SJC",
+      "caming": [
+        "Patina",
+        "Zinc"
+      ],
+      "priceImpact": "none",
+      "sourcePage": "48",
+      "nameBasis": "column",
+      "notes": null,
+      "id": "b61cdd3adc"
+    }
+  ],
+  "glassRules": [
+    {
+      "kind": "glass",
+      "appliesToCollection": "wood",
+      "appliesToModelPattern": "Iron Grille",
+      "options": [
+        "Clear Low-E",
+        "Flemish",
+        "Stippolyte",
+        "Rain",
+        "Reeded"
+      ],
+      "sourcePage": "54",
+      "notes": "The iron-grille page lists these five glasses and no others. The wider Legacy & Panel list (Baroque, Water, Small Reeded, Satin, Clear Bevel Low-E) is not offered behind a grille.",
+      "id": "1c3747d23d"
+    }
   ]
 }
