@@ -203,15 +203,46 @@ const lineCount=await page.$$eval('#quoteLines > div',n=>n.length);
 ok('six lines on the quote', lineCount===6, String(lineCount));
 await page.screenshot({path:OUT+'/s2-mixed.png'});
 
-/* ---------------- sidelites in one opening vs separate lines ---------------- */
+/* ---------------- a mahogany opening with two sidelites -------------------
+   Sidelites belong to the opening, so they are chosen there and not in the
+   accessory picker. The figures are recomputed here from the raw sheet. */
 await page.click('#quoteTotals button:has-text("Clear")'); await page.waitForTimeout(600);
-const mSL=cat.woodProducts.find(p=>p.type==='sidelite'&&p.line==='mahogany'&&p.prices.unfinished.slab!==null);
-await addDoor('M1LV--3080','unfinished','singlePH',1,[mSL.sku,mSL.sku]);
-const withSL=cost(m1.prices.unfinished.singlePH)+cost(mSL.prices.unfinished.slab)*2+PREHANG;
+await page.click('#closeQuote').catch(()=>{}); await page.waitForTimeout(300);
+const m1080=bySku('M1LV--3080');
+const mSL=cat.woodProducts.find(p=>p.type==='sidelite'&&p.line==='mahogany'&&
+  Math.abs(p.size.heightIn-m1080.size.heightIn)<=2&&p.prices.unfinished.singlePH!==null);
+ok('a mahogany door has a mahogany sidelite at its height', !!mSL,
+   m1080.size.heightIn+'in door');
+await page.fill('#q',keyOf(m1080)); await page.waitForTimeout(600);
+await page.$$eval('#catalog article',(ns,m)=>{
+  ns.find(a=>a.querySelector('h3').textContent.trim()===m).querySelector('button').click();},keyOf(m1080));
+await page.waitForSelector('#detail:not(.hidden)');
+const pk2=async l=>{const h=await page.$$eval('#detail .steprow .opt',(ns,x)=>{
+  const n=[...ns].reverse().find(m=>m.textContent.trim().startsWith(x)&&!m.disabled);
+  if(!n)return false; n.click(); return true;},l);
+  if(!h) throw new Error('cannot pick '+l); await page.waitForTimeout(250);};
+if(new Set(cat.woodProducts.filter(p=>keyOf(p)===keyOf(m1080)).map(p=>p.size.code)).size>1)
+  await pk2(m1080.size.label);
+await pk2('Unfinished'); await pk2('Single + 2 sidelites');
+const slPicked=await page.$$eval('#detail .steprow',ns=>{
+  const row=ns.find(r=>{const h=r.parentElement.querySelector('p');
+    return h && h.textContent.trim()==='Sidelite';});
+  return row ? [...row.querySelectorAll('.opt')].map(n=>n.textContent.trim()) : [];});
+ok('only mahogany sidelites are offered beside a mahogany door',
+   slPicked.length>0 && slPicked.every(o=>!/Knotty|KA /.test(o)), slPicked.slice(0,2).join(' | '));
+await pk2(keyOf(mSL));
+await pk2('Left hand'); await pk2('Inswing'); await pk2('4-9/16');
+const withSL=cost(m1080.prices.unfinished.singlePH)+cost(mSL.prices.unfinished.singlePH)*2+PREHANG;
+ok('door + 2 sidelites is ONE prehang charge',
+   (await page.$eval('#detail .font-display.text-3xl',n=>n.textContent))===fmt(sell(withSL,0.40)),
+   fmt(sell(withSL,0.40)));
+await page.click('#detail button:has-text("Add to quote")'); await page.waitForTimeout(700);
 const uSL=1+0.5+0.5;
 exp=sell(withSL,0.40)+sell(band(uSL),0.40);
-ok('door + 2 sidelites is ONE prehang charge', await total()===fmt(exp), await total()+' vs '+fmt(exp));
+ok('and totals with its own crate band', await total()===fmt(exp), await total()+' vs '+fmt(exp));
 ok('and counts 2 freight units', /2 freight units/.test(await totalsText()), (await totalsText()).slice(-90));
+
+await page.click('#closeQuote').catch(()=>{}); await page.waitForTimeout(300);
 
 /* --- a real opening built through the configurator ----------------------
    Door + 2 sidelites picked as an opening, with every figure recomputed here

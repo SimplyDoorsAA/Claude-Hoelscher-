@@ -1579,6 +1579,40 @@ function validate(){
           r=> r.sku || r.code || r.configuration || r.description || r.id || "", isProducts);
   });
 
+  /* A part number shared by two doors is what a dealer orders by, so it is
+     worth saying — as a warning, since the published sheet already has some
+     and blocking a publish over vendor data would be worse. */
+  const bySku = new Map();
+  S.secOrder.forEach(k=>{
+    const S1 = sec(k);
+    if(S1.preset!==PRODUCT_PRESET) return;
+    S1.rows.forEach(r=>{
+      if(typeof r.sku!=="string" || !r.sku.trim()) return;
+      if(!bySku.has(r.sku)) bySku.set(r.sku, []);
+      bySku.get(r.sku).push(r.description || r.id);
+    });
+  });
+  let dupSkuCount = 0;
+  bySku.forEach((rows, sku)=>{
+    if(rows.length<2) return;
+    dupSkuCount++;
+    if(dupSkuCount<=8)
+      warnings.push('part number "' + sku + '" is used by ' + rows.length + " rows: " + rows.join(" / "));
+  });
+  if(dupSkuCount>8) warnings.push((dupSkuCount-8) + " further part number(s) are shared by more than one row.");
+
+  /* The glass column once held price-sheet page references, which the Quoter
+     showed customers as a glass type. Catch it at the point of entry. */
+  S.secOrder.forEach(k=>{
+    const S1 = sec(k);
+    if(S1.preset!==PRODUCT_PRESET) return;
+    S1.rows.forEach(r=>{
+      if(typeof r.glazing==="string" && /^P\.?\s*\d/i.test(r.glazing))
+        errors.push((r.sku||r.id) + ': glazing looks like a page reference (' +
+                    JSON.stringify(r.glazing) + '), not a glass type.');
+    });
+  });
+
   if(S.rules && typeof S.rules==="object"){
     const nm = S.rules.netMultiplier;
     if(typeof nm!=="number" || !isFinite(nm) || nm<=0) errors.push("pricing-rules: netMultiplier must be a positive number.");

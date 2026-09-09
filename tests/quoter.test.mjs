@@ -519,8 +519,25 @@ ok('the quote line records the iron grille style',
 await page.click('#closeQuote'); await page.waitForTimeout(300);
 await openModel(simple.name);
 await driveModel(UNFIN_SLAB);
-const accOptions=await page.$$eval('#detail select option',ns=>ns.length);
-ok('accessory picker is populated', accOptions>20, String(accOptions));
+const accOptions=await page.$$eval('#detail select option',ns=>ns.map(n=>n.textContent.trim()));
+ok('accessory picker is populated', accOptions.length>5, String(accOptions.length));
+// A sidelite belongs to the opening. Offering it here too puts a second one
+// on the line at full price.
+const slNames=[...new Set(engine.products.filter(p=>p.type==='sidelite').map(p=>p.description))];
+ok('no sidelite is offered in the accessory picker',
+   accOptions.every(o=>!slNames.includes(o)) && !/sidelite/i.test(accOptions[0]),
+   accOptions.filter(o=>slNames.includes(o)).slice(0,2).join(' | ')||accOptions[0]);
+ok('the picker says sidelites live in the opening',
+   /Sidelites are part of the opening/.test(await page.textContent('#detail')));
+// Barn hardware hangs a sliding slab, never a fiberglass entry door.
+const barnHw=(catalog.hardware||[]).filter(h=>h.category==='Barn Door Hardware').map(h=>h.description);
+ok('barn hardware is not offered on a fiberglass door',
+   barnHw.length>0 && accOptions.every(o=>!barnHw.some(b=>o.startsWith(b))),
+   accOptions.filter(o=>barnHw.some(b=>o.startsWith(b))).slice(0,2).join(' | '));
+ok('an iron mask is not offered on a fiberglass door',
+   accOptions.every(o=>!/Iron Mask/i.test(o)), accOptions.filter(o=>/Iron Mask/i.test(o)).join(' | '));
+ok('the picker says how many items it is hiding',
+   /are not offered on this door/.test(await page.textContent('#detail')));
 await page.selectOption('#detail select',{index:1});
 await page.click('#detail button:has-text("Add")'); await page.waitForTimeout(400);
 const accRows=await page.$$eval('#detail .flex.items-center.gap-2.rounded-lg',n=>n.length);
@@ -582,6 +599,69 @@ ok('no mahogany door leaks into the knotty alder catalogue',
    woodLines.length>0 && woodLines.every(l=>/Knotty/i.test(l)),
    [...new Set(woodLines)].join(' | '));
 ok('switching lines clears the search box', (await page.inputValue('#q'))==='');
+
+/* --- which accessories a wood door may take ----------------------------- */
+const accRules=catalog.accessoryRules||[];
+ok('the catalogue carries accessory rules', accRules.length>0, String(accRules.length));
+await page.click('#groupChip'); await page.waitForTimeout(500);
+await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/^Mahogany/.test(n.textContent.trim())).click();});
+await page.waitForSelector('#catalog article',{timeout:30000});
+
+const pickerFor=async(model,want)=>{
+  await page.click('#clearFilters').catch(()=>{});
+  await page.fill('#q',model); await page.waitForTimeout(500);
+  await page.$$eval('#catalog article',(ns,n)=>{
+    const hit=ns.find(a=>a.querySelector('h3').textContent.trim()===n);
+    hit.querySelector('button').click();},model);
+  await page.waitForSelector('#detail:not(.hidden)');
+  await driveModel(want);
+  const o=await page.$$eval('#detail select option',ns=>ns.map(n=>n.textContent.trim()));
+  return o;
+};
+const SINGLE={Finish:'Unfinished',Opening:'Single door',Handing:'Left hand',Swing:'Inswing','Jamb depth':'4-9/16'};
+const DOUBLE=Object.assign({},SINGLE,{Opening:'Double door'});
+
+const twoPanel=await pickerFor('2 Panel Square VG',SINGLE);
+ok('a two-panel mahogany door is offered all three iron masks',
+   ['Standard','Balfour','Windsor'].every(m=>twoPanel.some(o=>o.includes('Iron Mask')&&o.includes(m))),
+   twoPanel.filter(o=>/Iron Mask/.test(o)).join(' | '));
+ok('and the mahogany speakeasy kit, not the knotty alder one',
+   twoPanel.some(o=>/Speakeasy Kit.*Mahogany/.test(o)) &&
+   !twoPanel.some(o=>/Speakeasy Kit.*Knotty/.test(o)),
+   twoPanel.filter(o=>/Speakeasy/.test(o)).join(' | '));
+ok('barn hardware is never offered on a hinged wood door',
+   twoPanel.every(o=>!barnHw.some(b=>o.startsWith(b))));
+ok('a T-astragal is not offered on a single opening',
+   twoPanel.every(o=>!/T-Astragal/i.test(o)), twoPanel.filter(o=>/Astragal/i.test(o)).join(' | '));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+const plain=await pickerFor('1 Lite Vertical',SINGLE);
+ok('a door outside the two-panel family gets no iron mask',
+   plain.every(o=>!/Iron Mask/i.test(o)), plain.filter(o=>/Iron Mask/i.test(o)).join(' | '));
+ok('and no speakeasy kit', plain.every(o=>!/Speakeasy/i.test(o)),
+   plain.filter(o=>/Speakeasy/i.test(o)).join(' | '));
+ok('but still gets the trim any wood door takes',
+   plain.some(o=>/Jamb Leg/i.test(o)) && plain.some(o=>/Casing/i.test(o)),
+   plain.slice(1,4).join(' | '));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+const dblPicker=await pickerFor('1 Lite Vertical',DOUBLE);
+ok('a double opening is offered the T-astragal that closes it',
+   dblPicker.some(o=>/T-Astragal/i.test(o)), dblPicker.filter(o=>/Astragal/i.test(o)).join(' | '));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+/* --- the glass filter holds glass, not page numbers --------------------- */
+await page.click('#clearFilters').catch(()=>{});
+await page.waitForTimeout(300);
+const glassOpts2=await page.$$eval('#fGlazing option',ns=>ns.map(n=>n.textContent.trim()));
+ok('the glass filter offers no page references',
+   glassOpts2.every(g=>!/^P\.?\s*\d/i.test(g)), glassOpts2.filter(g=>/^P\.?\s*\d/i.test(g)).join(' | '));
+ok('no product carries a page reference as its glass',
+   engine.products.every(p=>!/^P\.?\s*\d/i.test(String(p.glazing||''))),
+   engine.products.filter(p=>/^P\.?\s*\d/i.test(String(p.glazing||''))).length+' rows');
+ok('the page reference was kept, in its own field',
+   catalog.woodProducts.filter(p=>p.priceSheetPage).length===208,
+   String(catalog.woodProducts.filter(p=>p.priceSheetPage).length));
 
 ok('no console or page errors', errs.length===0, errs.slice(0,2).join(' | '));
 console.log(T.join('\n'));

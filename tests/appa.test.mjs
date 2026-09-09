@@ -57,6 +57,22 @@ ok('the jamb charge switch is editable', /openingSpec\.jambDepths\.chargeUpgrade
 const handVal=await page.$eval('#rulesBody tr:has-text("openingSpec.handing") input',n=>n.value).catch(()=>null);
 ok('a string array reads back as a comma list', handVal==='left, right', String(handVal));
 
+/* The publish check must name the duplicate part numbers rather than let them
+   through silently, and must refuse a page reference in the glass column. */
+await page.click('#tabs button:has-text("Rules"), button:has-text("Pricing Rules")').catch(()=>{});
+const issues=await page.evaluate(()=>{
+  const v=validate();
+  return {errors:v.errors.length, warnings:v.warnings.length,
+          dupWarn:v.warnings.filter(w=>/part number/.test(w)).length,
+          glassErr:v.errors.filter(e=>/page reference/.test(e)).length,
+          sample:v.warnings.filter(w=>/part number/.test(w))[0]||''};
+});
+ok('publishing warns about part numbers shared by two doors',
+   issues.dupWarn>0, JSON.stringify(issues.sample).slice(0,110));
+ok('the published catalog has no page reference left in a glass field',
+   issues.glassErr===0, String(issues.glassErr));
+ok('and otherwise validates clean', issues.errors===0, String(issues.errors));
+
 // nothing may look modified on a clean load
 const dirty=await page.textContent('body');
 ok('a clean load reports no unsaved changes', !/unsaved|modified/i.test(

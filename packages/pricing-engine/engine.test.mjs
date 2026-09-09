@@ -347,7 +347,14 @@ t("facets expose the filters the UI needs", () => {
   const f = engine.facets();
   assert.deepEqual(f.lines, ["barn", "fiberglass", "knotty_alder", "mahogany"]);
   assert.equal(f.families.length, 5);
-  assert.ok(f.glazings.length > 20);
+  assert.ok(f.glazings.length > 10);
+  // The glass facet must hold glass. 208 wood rows once carried a price-sheet
+  // page reference here, which the Quoter offered as a glass type.
+  const pageish = f.glazings.filter(g => /^P\.?\s*\d/i.test(g));
+  assert.deepEqual(pageish, [], "page references in the glazing facet: " + pageish.join(", "));
+  // And one glass must have one spelling, or it shows twice in the filter.
+  const norm = f.glazings.map(g => g.toLowerCase().replace(/[^a-z0-9]/g, ""));
+  assert.equal(new Set(norm).size, norm.length, "the same glass spelled two ways");
 });
 
 console.log(pass + " passed, " + fails.length + " failed");

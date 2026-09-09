@@ -131,6 +131,8 @@ you commit anything.
 | `tests/appa.test.mjs` | App A loads and edits both published files |
 | `tests/quoter.test.mjs` | App B end to end, incl. the whole configurator |
 | `tests/stress-ui.mjs` | Real quotes built through App B, checked against the sheets |
+| `tools/audit-catalog.mjs` | Structural audit of the published data |
+| `docs/audit-2026-09-09.md` | What the last full audit found, and what is still open |
 | `quoter/assets/doors/` | Optional product photography, `{SKU}.webp` |
 | `data/catalog.json` | Master catalog — `products[]`, `prehangAdders[]`, `components[]`, `hardware[]` |
 | `data/pricing-rules.json` | Net multiplier, currency, rounding, freight and defaults |
@@ -139,8 +141,9 @@ you commit anything.
 ## Tests
 
 ```sh
-./tests/run.sh                       # all five suites, ~3 minutes
+./tests/run.sh                       # all five suites, ~4 minutes
 TAILWIND_CSS=/path/to/tw.css ./tests/run.sh   # faithful screenshots
+node tools/audit-catalog.mjs         # data contracts and cross-references
 ```
 
 227 checks. The browser suites drive real Chromium through Playwright, resolved
@@ -423,6 +426,27 @@ Hoelscher confirms, the depth is recorded on the quote and nothing is charged �
 `false`. Turning the charge on also needs a decision about how many pieces an
 opening takes, which is why it is not a flag flip. Cost view names the
 catalogue jamb behind each depth so a dealer can see the difference exists.
+
+**Which accessories fit which door.** Not every component or piece of hardware
+pairs with every door. `accessoryRules` in `data/catalog.json` says which do;
+an accessory no rule matches stays offered on any door in its line. Each rule
+names the accessories it constrains (by category or a description pattern) and
+what the door must be, so widening one is an edit in App A rather than a code
+change.
+
+| Accessory | Offered on |
+| --- | --- |
+| Barn Door Hardware | barn slabs |
+| Iron Mask — Standard, Balfour, Windsor | wood two-panel square and arch doors |
+| Speakeasy Kit — Mahogany / Knotty Alder | two-panel doors of that wood |
+| Dentil Shelf | Craftsman models |
+| T-Astragal | a double opening |
+| Mull Cover, Fat Boy Mullion | an opening with sidelites |
+
+Sidelites are deliberately **not** in the picker: they belong to the opening,
+and the Opening step asks for them, so offering them twice would put a second
+sidelite on the line at full price. The picker says how many items it hid, so a
+missing accessory reads as a rule rather than a bug.
 
 **Cost vs customer pricing.** A lock control in the header, mirrored inside the
 quote drawer, switches the whole app between `grandTotalSellCents` /

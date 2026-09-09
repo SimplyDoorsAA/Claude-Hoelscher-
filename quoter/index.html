@@ -997,6 +997,53 @@ function openingAccessories(d) {
 /** Everything priced on this line: the opening's sidelites, then extras. */
 const allAccessories = d => openingAccessories(d).concat(d.accessories);
 
+/* ------------------- which accessories fit which door ---------------------
+   Not every component or piece of hardware pairs with every door: barn strap
+   kits hang a sliding slab, an iron mask goes on a two-panel door, a T-astragal
+   closes a double opening. The rules live in the catalogue (accessoryRules) so
+   the Price Manager can widen one without a code change; an accessory no rule
+   matches stays unconstrained. */
+
+const accessoryRules = () => state.engine.catalog.accessoryRules || [];
+const rxTest = (pattern, value) => {
+  if (!pattern) return true;
+  try { return new RegExp(pattern, "i").test(String(value || "")); } catch (e) { return true; }
+};
+
+/** Every rule that speaks to this accessory. */
+function rulesFor(kind, acc) {
+  return accessoryRules().filter(r =>
+    r.kind === kind &&
+    (r.matchCategory ? r.matchCategory === acc.category : true) &&
+    (r.matchDescription ? rxTest(r.matchDescription, acc.description) : true) &&
+    (r.matchCategory || r.matchDescription));
+}
+
+/** May this accessory be fitted to the door the draft describes? */
+function accessoryFits(kind, acc, d) {
+  const applicable = rulesFor(kind, acc);
+  if (!applicable.length) return { ok: true, why: null };
+  const product = draftProduct();
+  const opening = openingByKey(d.opening);
+  const model = d.model ? d.model.name : "";
+  for (const r of applicable) {
+    const okType = !r.requiresType || (product && product.type === r.requiresType);
+    const okColl = !r.requiresCollection ||
+                   (product && state.engine.collectionOf(product) === r.requiresCollection);
+    const okLine = !r.requiresLine || (product && product.line === r.requiresLine);
+    const okModel = rxTest(r.requiresModelPattern, model);
+    const okOpen = !r.requiresOpening || (opening &&
+      (r.requiresOpening === "double" ? opening.config === "doublePH"
+       : r.requiresOpening === "sidelites" ? opening.sidelites > 0
+       : opening.key === r.requiresOpening));
+    if (okType && okColl && okLine && okModel && okOpen) return { ok: true, why: null };
+  }
+  // Say which condition failed, in the vendor's own words where there are any.
+  const r = applicable[0];
+  return { ok: false, why: r.notes ||
+    ("Not offered on this door" + (r.requiresOpening ? " in this opening" : "")) };
+}
+
 /** The catalogued jamb component at one depth, for reference in cost view. */
 function jambComponentAt(depth) {
   const rx = new RegExp(depth.replace(/[-/]/g, m => "\\" + m) + '"');
@@ -1125,8 +1172,12 @@ function renderDetail() {
   /* heading */
   const head = el("div", "flex items-start gap-3");
   const ht = el("div", "min-w-0 flex-1");
+  // On wood the family repeats the line ("Mahogany · Mahogany"), so say it once.
+  const lineName = LINE_LABELS[model.line] || titleize(model.line);
+  const family = model.sample.family || "";
   ht.appendChild(el("p", "text-[10px] uppercase tracking-[.16em] text-brass",
-    (LINE_LABELS[model.line] || titleize(model.line)) + " · " + (model.sample.family || "")));
+    family && family.toLowerCase() !== lineName.toLowerCase()
+      ? lineName + " · " + family : lineName));
   const h2 = el("h2", "font-display text-2xl sm:text-3xl leading-tight", model.name);
   h2.id = "detailTitle";
   ht.appendChild(h2);
@@ -1206,6 +1257,8 @@ function renderDetail() {
 
   // 4. finish
   if (!blocked && opts) {
+    const only = FINISHES.filter(f => CONFIGS.some(c => opts.isOffered(f, c)));
+    if (!d.finish && only.length === 1) d.finish = only[0];
     const blk = stepBlock("Finish");
     FINISHES.forEach(f => {
       const any = CONFIGS.some(c => opts.isOffered(f, c));
@@ -1235,7 +1288,14 @@ function renderDetail() {
 
   // 6. the opening
   const sidelites = sideliteChoices(product, d.glazing);
+  const openable = o => opts && opts.isOffered(d.finish, o.config) &&
+                        (o.sidelites === 0 || sidelites.length > 0);
   if (!blocked && opts && d.finish) {
+    const only = OPENINGS.filter(openable);
+    if (!d.opening && only.length === 1) {
+      d.opening = only[0].key; d.config = only[0].config;
+      if (only[0].config === "slab") { d.handing = null; d.swing = null; d.jambDepth = null; }
+    }
     const blk = stepBlock("Opening");
     OPENINGS.forEach(o => {
       const hung = opts.isOffered(d.finish, o.config);
@@ -1391,7 +1451,8 @@ function renderDetail() {
 
 function accessoryBlock(product, draft) {
   const block = el("div", "");
-  block.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-mute", "Add to this opening"));
+  block.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-mute",
+    (openingByKey(draft.opening) || {}).config === "slab" ? "Add to this door" : "Add to this opening"));
 
   const chosen = el("div", "mb-2 flex flex-col gap-1.5");
   draft.accessories.forEach((acc, i) => {
@@ -1416,23 +1477,18 @@ function accessoryBlock(product, draft) {
   sel.className = "flex-1 min-w-[200px] rounded-lg border border-paper-line bg-paper-card px-3 py-2 text-sm";
 
   const optgroup = (label) => { const g = document.createElement("optgroup"); g.label = label; sel.appendChild(g); return g; };
-  const placeholder = el("option", null, "Choose a sidelite, component or hardware…");
+  const placeholder = el("option", null, "Choose a component or hardware item…");
   placeholder.value = "";
   sel.appendChild(placeholder);
 
-  // sidelites of the same line read first — they are what actually pairs
-  const sidelites = state.engine.productsIn(state.collection)
-    .filter(p => p.type === "sidelite" && p.line === product.line)
-    .slice(0, 80);
-  if (sidelites.length) {
-    const g = optgroup("Sidelites — " + (LINE_LABELS[product.line] || titleize(product.line)));
-    sidelites.forEach(p => {
-      const o = el("option", null, p.description);
-      o.value = "product:" + p.id;
-      g.appendChild(o);
-    });
-  }
-  const hw = state.engine.hardwareList();
+  // Sidelites are not here. They belong to an opening, and the Opening step
+  // asks for them, so offering them again would double the count and the price.
+  let offered = 0, hidden = 0;
+  const hw = state.engine.hardwareList().filter(h => {
+    const fit = accessoryFits("hardware", h, draft);
+    if (!fit.ok) hidden++;
+    return fit.ok;
+  });
   if (hw.length) {
     const g = optgroup("Hardware");
     hw.forEach(h => {
@@ -1441,24 +1497,30 @@ function accessoryBlock(product, draft) {
         variants.forEach(v => {
           const o = el("option", null, (h.description || h.sku) + " — " + titleize(v));
           o.value = "hardware:" + h.id + ":" + v;
-          g.appendChild(o);
+          g.appendChild(o); offered++;
         });
       } else {
         const o = el("option", null, h.description || h.sku);
         o.value = "hardware:" + h.id + (variants.length ? ":" + variants[0] : "");
-        g.appendChild(o);
+        g.appendChild(o); offered++;
       }
     });
   }
-  const comps = state.engine.componentsIn(state.collection);
+  const comps = state.engine.componentsIn(state.collection).filter(c => {
+    const fit = accessoryFits("component", c, draft);
+    if (!fit.ok) hidden++;
+    return fit.ok;
+  });
   if (comps.length) {
     const g = optgroup("Components");
     comps.forEach(c => {
       const o = el("option", null, c.description);
       o.value = "component:" + c.id;
-      g.appendChild(o);
+      g.appendChild(o); offered++;
     });
   }
+  if (!offered) placeholder.textContent = "Nothing else is offered on this door";
+  sel.disabled = !offered;
   picker.appendChild(sel);
 
   const addBtn = el("button",
@@ -1469,7 +1531,7 @@ function accessoryBlock(product, draft) {
     const [kind, id, variant] = sel.value.split(":");
     const acc = { kind, id, qty: 1 };
     if (variant) acc.variant = variant;
-    if (kind === "product") { acc.finish = draft.finish; acc.config = "slab"; }
+    if (kind === "product") { acc.finish = draft.finish; acc.config = "singlePH"; }
     draft.accessories.push(acc);
     sel.value = "";
     renderDetail();
@@ -1477,10 +1539,13 @@ function accessoryBlock(product, draft) {
   picker.appendChild(addBtn);
   block.appendChild(picker);
 
-  if (!state.engine.products.some(p => p.type === "transom")) {
-    block.appendChild(el("p", "mt-2 text-[11px] text-ink-faint",
-      "The published catalog contains no transoms; sidelites, components and hardware are shown."));
-  }
+  const notes = [];
+  if (hidden) notes.push(hidden + " item" + (hidden === 1 ? "" : "s") +
+    " in the catalog are not offered on this door.");
+  if (!state.engine.products.some(p => p.type === "transom"))
+    notes.push("The published catalog contains no transoms.");
+  notes.push("Sidelites are part of the opening, chosen above.");
+  block.appendChild(el("p", "mt-2 text-[11px] text-ink-faint", notes.join(" ")));
   return block;
 }
 
