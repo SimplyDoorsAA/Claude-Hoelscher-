@@ -18,7 +18,9 @@ const srv=http.createServer((q,r)=>{const p=decodeURIComponent(q.url.split('?')[
   const f=ROOT+(p.endsWith('/')?p+'index.html':p);
   let b=null; try{b=fs.readFileSync(f);}catch(e){r.writeHead(404);r.end('');return;}
   r.writeHead(200,{'Content-Type':MIME[path.extname(f)]||'application/octet-stream'});r.end(b);});
-await new Promise(r=>srv.listen(8093,r));
+// Port 0: the OS picks a free one, so a killed run cannot poison the next.
+await new Promise(r=>srv.listen(0,'127.0.0.1',r));
+const BASE='http://127.0.0.1:'+srv.address().port;
 
 const cat=JSON.parse(fs.readFileSync(ROOT+'/data/catalog.json','utf8'));
 const all=[...cat.fiberglassProducts,...cat.woodProducts];
@@ -45,7 +47,9 @@ const totalsText=async()=>(await page.textContent('#quoteTotals'));
 const SIZE_PREFIX=/^\d{4,5}[A-Z]?\s+/;
 const keyOf=p=>{
   const d=String(p.description||'').trim(), code=p.size&&p.size.code;
-  if(code&&d.startsWith(code)&&/^\s/.test(d.slice(String(code).length))) return d.slice(String(code).length).trim();
+  // The size code is not always first: knotty alder prints "KA 2680 4 Lite".
+  if(code){ const rx=new RegExp('(^|\\s)'+String(code)+'(?=\\s|$)');
+    if(rx.test(d)) return d.replace(rx,'$1').replace(/\s+/g,' ').trim(); }
   return d.replace(SIZE_PREFIX,'').trim();
 };
 const stains=(cat.fiberglassStainColors||[]).map(x=>x.name);
@@ -101,10 +105,21 @@ async function addDoor(sku,finish,config,qty=1,accSkus=[]){
   await page.click('#detail button:has-text("Add to quote")'); await page.waitForTimeout(700);
 }
 
-await page.goto('http://127.0.0.1:8093/quoter/');
+/* The gate runs in two steps now: the line, then the collection inside it. */
+async function enter(...labels){
+  for(const l of labels){
+    if(!(await page.isVisible('#lineGate'))) break;
+    const hit=await page.$$eval('#lineChoices button',(ns,x)=>{
+      const n=ns.find(y=>y.textContent.trim().startsWith(x));
+      if(!n) return false; n.click(); return true;},l);
+    if(hit) await page.waitForTimeout(500);
+  }
+  await page.waitForSelector('#catalog article',{timeout:30000});
+}
+
+await page.goto(BASE+'/quoter/');
 await page.waitForSelector('#lineGate:not(.hidden)',{timeout:30000});
-await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/Fiberglass/.test(n.textContent)).click();});
-await page.waitForSelector('#catalog article',{timeout:30000});
+await enter('Fiberglass','Woodgrain');
 
 /* ---------------- fiberglass, several styles and configurations ---------------- */
 const fg1=bySku('FG1LVCLE3080'), fg3=bySku('FG3GPWCLE3068'), fg5=bySku('FG5GPWCLE3080');
@@ -156,11 +171,21 @@ await page.click('#closeQuote'); await page.waitForTimeout(300);
 await page.click('#lineChip'); await page.waitForTimeout(600);
 ok('switching lines with a quote asks first', await page.isVisible('text=Start fresh'));
 await page.click('button:has-text("Keep them")'); await page.waitForTimeout(800);
+ok('the wood line then asks which wood',
+   await page.isVisible('#lineGate') && /which wood/i.test(await page.textContent('#gateTitle')),
+   await page.textContent('#gateTitle'));
+await page.$$eval('#lineChoices button',ns=>{
+  const n=ns.find(x=>x.textContent.trim().startsWith('Mahogany')); n&&n.click();});
+await page.waitForSelector('#catalog article',{timeout:30000});
 ok('now showing the wood line', /Wood/.test(await page.textContent('#lineChip')));
+ok('and the collection within it', /Mahogany/.test(await page.textContent('#groupChipLabel')));
 const woodCount=await page.textContent('#resultCount');
-const woodModels=new Set(cat.woodProducts.map(keyOf)).size;
-ok('catalog switched to wood only, filters cleared',
+const woodModels=new Set(cat.woodProducts.filter(p=>p.line==='mahogany').map(keyOf)).size;
+ok('catalog switched to mahogany only, filters cleared',
    woodCount.startsWith(woodModels+' of '+woodModels), woodCount+' expected '+woodModels);
+ok('no knotty alder card is in the mahogany catalogue',
+   (await page.$$eval('#catalog article',ns=>ns.map(a=>a.querySelector('p').textContent.trim())))
+     .every(l=>/Mahogany/i.test(l)));
 ok('the search box was cleared on switch', (await page.inputValue('#q'))==='', await page.inputValue('#q'));
 
 const m1=bySku('M1LV--3080'), m3=bySku('M3GPW--3068');
@@ -195,10 +220,9 @@ await page.click('#quoteTotals button:has-text("Clear")').catch(()=>{});
 await page.waitForTimeout(500);
 await page.click('#closeQuote').catch(()=>{}); await page.waitForTimeout(300);
 await page.click('#lineChip'); await page.waitForTimeout(500);
-await page.$$eval('#lineChoices button',ns=>{const n=ns.find(x=>/Fiberglass/.test(x.textContent)); n&&n.click();});
-await page.waitForTimeout(400);
 await page.click('button:has-text("Start fresh")').catch(()=>{});
-await page.waitForSelector('#catalog article',{timeout:30000});
+await page.waitForTimeout(400);
+await enter('Fiberglass','Woodgrain');
 
 const door=bySku('FG34LE1P3068RN')||cat.fiberglassProducts.find(p=>p.type==='door'&&
   p.prices.unfinished.singlePH!==null&&/3068/.test(p.description));
@@ -216,12 +240,22 @@ await pk('No grille').catch(()=>{});
 await pk('Unfinished');
 await pk('Single + 2 sidelites');
 const slOffered=await page.$$eval('#detail .steprow',ns=>{
-  const l=ns[ns.length-1]; return [...l.querySelectorAll('.opt')].map(n=>n.textContent.trim());});
-ok('an 6-8 door is offered only 6-9 sidelites',
+  const row=ns.find(r=>{const h=r.parentElement.querySelector('p');
+    return h && h.textContent.trim()==='Sidelite';});
+  return row ? [...row.querySelectorAll('.opt')].map(n=>n.textContent.trim()) : [];});
+ok('a 6-8 door is offered only 6-9 sidelites',
    slOffered.length>0 && slOffered.every(o=>/6'9"/.test(o)) && !slOffered.some(o=>/8'1"/.test(o)),
    slOffered.join(' | '));
+const otherSkinNames=[...new Set(cat.fiberglassProducts
+  .filter(p=>p.type==='sidelite'&&p.skin!==door.skin).map(keyOf))];
+ok('and none from the other skin',
+   otherSkinNames.length>0 && slOffered.every(o=>!otherSkinNames.some(n=>o.startsWith(n))),
+   slOffered.join(' | '));
+// The sidelite has to share the door's skin — a woodgrain door never takes a
+// smooth-skin sidelite — as well as its height.
 const sl=cat.fiberglassProducts.find(p=>p.type==='sidelite'&&p.size.heightIn===81&&
-  p.prices.unfinished.singlePH!==null);
+  p.skin===door.skin&&p.prices.unfinished.singlePH!==null);
+ok('a sidelite of the door\'s own skin is offered', !!sl, door.skin);
 await pk(keyOf(sl));
 await pk('Left hand'); await pk('Inswing'); await pk('4-9/16');
 const openingCost=cost(door.prices.unfinished.singlePH)+cost(sl.prices.unfinished.singlePH)*2+PREHANG;
@@ -245,12 +279,17 @@ await page.click('#closeQuote').catch(()=>{}); await page.waitForTimeout(300);
 
 /* --- the configurator on a phone, with the real stylesheet loaded ------- */
 await page.click('#closeQuote').catch(()=>{});
-await page.click('#lineChip'); await page.waitForTimeout(500);
-await page.$$eval('#lineChoices button',ns=>{const n=ns.find(x=>/Fiberglass/.test(x.textContent)); n&&n.click();});
-await page.waitForTimeout(400);
-await page.click('button:has-text("Start fresh")').catch(()=>{});
-await page.waitForSelector('#catalog article',{timeout:30000});
+await page.waitForTimeout(300);
 await page.setViewportSize({width:390,height:844}); await page.waitForTimeout(600);
+// Both scope chips are visible here, and they are what last pushed the header
+// past the viewport, so name the offender rather than only the symptom.
+const overflow=await page.evaluate(()=>[...document.querySelectorAll('header *')]
+  .filter(n=>n.getBoundingClientRect().right>window.innerWidth+1)
+  .map(n=>n.tagName+(n.id?'#'+n.id:'')));
+ok('the header fits a phone with both scope chips showing',
+   overflow.length===0 &&
+   (await page.isVisible('#lineChip')) && (await page.isVisible('#groupChip')),
+   overflow.join(', ')||'chips visible');
 await page.fill('#q','3/4 Lite 1 Panel - Mahogany'); await page.waitForTimeout(600);
 await page.$$eval('#catalog article',ns=>ns.find(a=>
   a.querySelector('h3').textContent.trim()==='3/4 Lite 1 Panel - Mahogany Grain Skin').querySelector('button').click());

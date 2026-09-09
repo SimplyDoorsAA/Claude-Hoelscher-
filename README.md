@@ -143,9 +143,10 @@ you commit anything.
 TAILWIND_CSS=/path/to/tw.css ./tests/run.sh   # faithful screenshots
 ```
 
-199 checks. The browser suites drive real Chromium through Playwright, resolved
-from `PLAYWRIGHT_MODULE` if the default install path does not exist. Screenshots
-land in `.test-output/` (override with `SHOT_DIR`).
+227 checks. The browser suites drive real Chromium through Playwright, resolved
+from `PLAYWRIGHT_MODULE` if the default install path does not exist. Each serves
+the repo on a port the OS picks, so a killed run cannot block the next one.
+Screenshots land in `.test-output/` (override with `SHOT_DIR`).
 
 Every expected figure is recomputed inside the test from `data/catalog.json`
 and the printed shipping schedule rather than asked of the engine, so a bug
@@ -160,12 +161,12 @@ gets exercised.
 
 | Section | Items |
 | --- | --- |
-| `fiberglassProducts` | 222 fiberglass doors and sidelites |
+| `fiberglassProducts` | 222 fiberglass doors and sidelites, each carrying a `skin` |
 | `fiberglassPrehangAdders` | 24 interior-casing / 1x4 adders |
 | `fiberglassComponents` | 11 PVC jambs, brickmould, T-astragal, dentil shelf, SDL bars |
-| `woodProducts` | 367 mahogany, knotty alder and barn doors, sidelites and slabs |
+| `woodProducts` | 365 mahogany, knotty alder and barn doors, sidelites and slabs |
 | `woodPrehangAdders` | 38 interior-casing / 1x4 adders |
-| `woodComponents` | 15 jamb legs, casing, mull covers, subsills, T-astragal |
+| `woodComponents` | 17 jamb legs, casing, mull covers, subsills, T-astragal, SDL bars |
 | `hardware` | 22 barn-hardware, iron-mask, speakeasy, clavos and strap SKUs — shared |
 
 The split follows the vendor price sheets, not a guess: the fiberglass sheet
@@ -176,7 +177,9 @@ reason not to file them under one line.
 
 Every one of the 2,994 door price cells was verified against the source
 spreadsheet after conversion, with zero mismatches. The 546 `N/A` cells became
-`null` (not offered), never `0`. `NET` columns were not imported: they are
+`null` (not offered), never `0`. Two of those rows — the mahogany Simulated
+Divided Lite Bars — have since moved to `woodComponents`, where the fiberglass
+SDL bars already were, so the door arrays now hold 2,982 cells. `NET` columns were not imported: they are
 `list x 0.48` throughout and are derived at quote time from
 `pricing-rules.json`, so storing them would be duplicated state that can drift.
 
@@ -338,6 +341,36 @@ remembered, shown in the header, and switching with work in progress asks
 whether to keep the existing quote lines or start fresh rather than silently
 dropping or hiding them.
 
+**Choosing a collection.** One line is still too much to scroll, so the gate
+runs in two steps and the second is the division the price sheets already make:
+
+| Line | Question | Collections | Field |
+| --- | --- | --- | --- |
+| Fiberglass | Woodgrain or smooth? | Woodgrain, Smooth | `skin` |
+| Wood | Which wood? | Mahogany, Knotty Alder, Barn Doors | `line` |
+
+`skin` is a catalogue field added for this, classified from each row's own
+description (`Mahogany Grain`, `Oak Grain` and `Fir` are woodgrain; everything
+carrying `Smooth`, brushed or not, is smooth) and editable in App A like any
+other column. Wood needed no new field — the sheet already splits on `line`.
+Both are read from the data, so a new value appears in the gate on its own;
+only the labels and blurbs live in the app.
+
+The choice scopes the catalogue, the facet filters and the sidelites offered
+inside an opening. It shows as a second chip in the header, next to the line,
+and either chip reopens its step. A facet with nothing left to choose between
+hides itself, so picking Knotty Alder does not leave a Line filter offering
+mahogany. A search that finds nothing here but matches in a sibling collection
+says so and offers to switch, rather than showing an empty page.
+
+**The catalogue and the gate always agree.** One function decides what a card
+counts — models, not part numbers, with option-only rows excluded — and what to
+call them, and both the gate cards and the result count read it. Model keys
+strip the row's own size code wherever it appears, not only at the front:
+knotty alder prints it after the line prefix (`KA 2680 4 Lite 1 Panel RM`),
+which had been leaving all 144 of its part numbers as their own card. It now
+shows 63.
+
 **The guided configurator.** The price sheets carry one part number per glass
 and per size, so a single door appears in the catalogue as many as sixteen
 times. The Quoter groups them into models — 222 fiberglass part numbers are 40
@@ -373,10 +406,11 @@ with two sidelites still carries exactly one $100 prehang charge and counts 2
 freight units (1 + 0.5 + 0.5).
 
 Sidelites are offered at a height that matches the door — a 6'8" door takes a
-6'9" sidelite — one option per model and width rather than per part number,
-with the door's glass preferred where the sidelite is offered in it. Fiberglass
-sidelites are offered unfinished only, which the option says on its face when
-the door is prefinished.
+6'9" sidelite — and in the door's own collection: a woodgrain door is never
+offered a smooth-skin sidelite, a mahogany door never a knotty alder one. One
+option per model and width rather than per part number, with the door's glass
+preferred where the sidelite is offered in it. Fiberglass sidelites are offered
+unfinished only, which the option says on its face when the door is prefinished.
 
 **What is recorded but not charged.** Handing, swing and jamb depth are order
 spec. Neither price sheet prices handing or swing, so neither moves the total.

@@ -14,7 +14,9 @@ const srv=http.createServer((q,r)=>{const p=decodeURIComponent(q.url.split('?')[
   const f=ROOT+(p.endsWith('/')?p+'index.html':p); let b=null;
   try{b=fs.readFileSync(f);}catch(e){r.writeHead(404);r.end('');return;}
   r.writeHead(200,{'Content-Type':MIME[path.extname(f)]||'application/octet-stream'});r.end(b);});
-await new Promise(r=>srv.listen(8087,r));
+// Port 0: the OS picks a free one, so a killed run cannot poison the next.
+await new Promise(r=>srv.listen(0,'127.0.0.1',r));
+const BASE='http://127.0.0.1:'+srv.address().port;
 
 const catalog=fs.readFileSync(ROOT+'/data/catalog.json','utf8');
 const rules  =fs.readFileSync(ROOT+'/data/pricing-rules.json','utf8');
@@ -34,7 +36,7 @@ await page.route('https://api.github.com/**',route=>{
   route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(body)});
 });
 
-await page.goto('http://127.0.0.1:8087/');
+await page.goto(BASE+'/');
 await page.waitForSelector('#gate',{timeout:20000});
 await page.fill('#fTok','ghp_test_not_a_real_token');
 await page.fill('#fOwner','SimplyDoorsAA');

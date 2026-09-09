@@ -109,7 +109,7 @@ T('whole catalogue: 2,988 combinations price to positive integers',()=>{
     if(q.crateShippingCents===0) throw new Error(p.sku+' single item should pay crate');
     n++;
   }
-  if(n!==2988) throw new Error('expected 2988 combinations, priced '+n);
+  if(n!==2986) throw new Error('expected 2986 combinations, priced '+n);
 });
 console.log(pass+' passed, '+fails.length+' failed');
 fails.forEach(f=>console.log('  FAIL '+f));

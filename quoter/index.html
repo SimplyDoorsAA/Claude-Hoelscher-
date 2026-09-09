@@ -149,31 +149,42 @@ tailwind.config = {
     <div class="text-center">
       <h1 class="font-display text-4xl sm:text-5xl leading-none tracking-tight">Simply<span class="text-brass">Doors</span></h1>
       <p class="mt-3 text-[11px] uppercase tracking-[.2em] text-ink-mute">Millwork Catalog &amp; Quote Builder</p>
-      <h2 class="mt-10 font-display text-2xl sm:text-3xl">What are you building?</h2>
-      <p class="mt-2 text-sm text-ink-mute">The two lines price from separate schedules, so pick one to begin.</p>
+      <h2 id="gateTitle" class="mt-10 font-display text-2xl sm:text-3xl">What are you building?</h2>
+      <p id="gateBlurb" class="mt-2 text-sm text-ink-mute">The two lines price from separate schedules, so pick one to begin.</p>
     </div>
     <div id="lineChoices" class="mt-8 grid gap-4 sm:grid-cols-2"></div>
-    <p class="mt-8 text-center text-[11px] text-ink-faint">You can switch lines at any time from the header.</p>
+    <button id="gateBack" type="button"
+      class="mx-auto mt-8 hidden rounded-lg px-3 py-2 text-sm text-ink-mute hover:bg-paper-rail">&larr; Back</button>
+    <p id="gateFoot" class="mt-8 text-center text-[11px] text-ink-faint">You can switch lines at any time from the header.</p>
   </div>
 </div>
 
 <!-- ============================== HEADER ============================== -->
 <header class="sticky top-0 z-30 bg-paper/90 backdrop-blur-md rule">
   <div class="mx-auto max-w-[1600px] px-4 sm:px-6">
-    <div class="flex items-center gap-3 h-16">
+    <!-- Two scope chips plus the tier, mode and quote controls do not fit one
+         phone row, so the bar wraps below sm and keeps its fixed height above. -->
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5 sm:h-16 sm:flex-nowrap sm:py-0">
       <div class="min-w-0">
         <h1 class="font-display text-2xl sm:text-3xl leading-none tracking-tight">Simply<span class="text-brass">Doors</span></h1>
         <p class="hidden sm:block text-[11px] uppercase tracking-[.18em] text-ink-mute mt-0.5">Millwork Catalog &amp; Quote Builder</p>
       </div>
 
-      <div class="flex-1"></div>
+      <div class="hidden flex-1 sm:block"></div>
 
-      <!-- which line is being quoted -->
-      <button id="lineChip" type="button" title="Switch between the wood and fiberglass lines"
-        class="hidden items-center gap-1.5 rounded-full border border-brass/40 bg-brass-pale px-3 py-1.5 text-xs font-medium text-brass-deep hover:border-brass transition-colors sm:flex">
-        <span id="lineChipLabel"></span>
-        <svg class="h-3 w-3 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 10 5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
+      <!-- which line, and which collection inside it -->
+      <div class="order-last flex w-full min-w-0 flex-wrap items-center gap-2 sm:order-none sm:w-auto sm:contents">
+        <button id="lineChip" type="button" title="Switch between the wood and fiberglass lines"
+          class="hidden min-w-0 items-center gap-1.5 rounded-full border border-brass/40 bg-brass-pale px-3 py-1.5 text-xs font-medium text-brass-deep hover:border-brass transition-colors">
+          <span id="lineChipLabel" class="truncate"></span>
+          <svg class="h-3 w-3 shrink-0 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 10 5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button id="groupChip" type="button" title="Change which collection you are browsing"
+          class="hidden min-w-0 items-center gap-1.5 rounded-full border border-paper-line bg-paper-card px-3 py-1.5 text-xs font-medium text-ink-soft hover:border-brass transition-colors">
+          <span id="groupChipLabel" class="truncate"></span>
+          <svg class="h-3 w-3 shrink-0 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 10 5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
 
       <!-- customer tier -->
       <div id="tierWrap" class="hidden sm:flex items-center rounded-full border border-paper-line bg-paper-card p-0.5">
@@ -239,7 +250,7 @@ tailwind.config = {
   </div>
   <div id="catalog" class="catalog-grid"></div>
   <div id="sentinel" class="h-16"></div>
-  <p id="emptyState" class="hidden py-24 text-center text-ink-mute">No doors match these filters.</p>
+  <div id="emptyState" class="hidden py-24 text-center text-ink-mute"></div>
 </main>
 
 <!-- ======================= MOBILE STICKY QUOTE BAR ===================== -->
@@ -342,6 +353,7 @@ const state = {
   mode: "customer",                       // "customer" | "cost"
   marginTier: null,                       // "builder" | "retail" — set from the rules file
   collection: null,                       // "fiberglass" | "wood" — chosen before anything shows
+  group: null,                            // the collection within it, e.g. "woodgrain", "mahogany"
   filters: { q: "", line: "", family: "", glazing: "", type: "" },
   rendered: 0,                            // how many cards are in the DOM
   quote: { lines: [] },                   // [{ uid, productId, finish, config, qty, accessories[], spec }]
@@ -361,13 +373,94 @@ const LINE_LOOK = {
   fiberglass: { title:"Fiberglass", blurb:"Mahogany- and oak-grain skins, smooth collection, sidelites." },
   wood:       { title:"Wood",       blurb:"Mahogany, knotty alder and barn doors, sidelites and slabs." }
 };
-function saveLine() { try { localStorage.setItem(LINE_KEY, state.collection); } catch (e) {} }
+const GROUP_KEY = "simplydoors.group.v1";
+function saveLine() {
+  try {
+    localStorage.setItem(LINE_KEY, state.collection);
+    localStorage.setItem(GROUP_KEY, state.group || "");
+  } catch (e) {}
+}
 function restoreLine() {
-  let v = null;
-  try { v = localStorage.getItem(LINE_KEY); } catch (e) {}
+  let v = null, g = null;
+  try { v = localStorage.getItem(LINE_KEY); g = localStorage.getItem(GROUP_KEY); } catch (e) {}
   const all = state.engine.collections();
   state.collection = (v && all.indexOf(v) >= 0) ? v : null;
+  state.group = (state.collection && g && groupsIn(state.collection).some(x => x.value === g)) ? g : null;
 }
+
+/* --------------------------- collections within a line -------------------
+   40 fiberglass doors or 251 wood ones is more than anyone wants to scroll,
+   and the sheets already divide them the way a customer thinks. Fiberglass
+   splits on the row's skin, wood on its line. Both are real catalogue fields,
+   so a new value appears here on its own; only the labels live in the app. */
+const GROUPING = {
+  fiberglass: {
+    field: "skin",
+    title: "Woodgrain or smooth?",
+    blurb: "The fiberglass sheet carries two skin families. Sidelites follow the door.",
+    labels: { woodgrain: "Woodgrain", smooth: "Smooth" },
+    blurbs: {
+      woodgrain: "Mahogany, oak and fir grain. Takes stain, and the iron-grille doors live here.",
+      smooth:    "Smooth, white brushed and black brushed. Paint-grade, including the impact-rated doors."
+    }
+  },
+  wood: {
+    field: "line",
+    title: "Which wood?",
+    blurb: "Each wood prices from its own section of the sheet.",
+    labels: { mahogany: "Mahogany", knotty_alder: "Knotty Alder", barn: "Barn Doors" },
+    blurbs: {
+      mahogany:     "The full mahogany range — lites, panels, arch and circle tops, sidelites.",
+      knotty_alder: "Knotty alder doors and sidelites, flat and decorative glass.",
+      barn:         "Barn slabs — X, Z and double patterns. Hardware is shared across both lines."
+    }
+  }
+};
+const groupingFor = c => GROUPING[c] || null;
+/** The value of a row's grouping field, or null when the line is not grouped. */
+function groupOf(product) {
+  const g = groupingFor(state.engine.collectionOf(product));
+  return g ? (product[g.field] || null) : null;
+}
+/* What a card counts, and what to call it. The gate and the catalogue read
+   this same function, so the two numbers can never disagree. */
+function tally(rows) {
+  const hidden = optionOnlyIds();
+  const models = new Set(), sidelites = new Set();
+  rows.forEach(p => {
+    if (hidden.has(p.id)) return;
+    const k = modelKeyOf(p);
+    models.add(k);
+    if (p.type === "sidelite") sidelites.add(k);
+  });
+  return {
+    count: models.size,
+    noun: sidelites.size && sidelites.size < models.size ? "doors & sidelites"
+        : sidelites.size ? "sidelites" : "doors"
+  };
+}
+
+/** Every group in a line, in catalogue order, with what it holds. */
+function groupsIn(collection) {
+  const g = groupingFor(collection);
+  if (!g) return [];
+  const buckets = new Map();
+  state.engine.productsIn(collection).forEach(p => {
+    const v = p[g.field];
+    if (!v) return;
+    if (!buckets.has(v)) buckets.set(v, []);
+    buckets.get(v).push(p);
+  });
+  return Array.from(buckets.entries()).map(([value, rows]) => Object.assign({
+    value,
+    label: g.labels[value] || titleize(value),
+    blurb: g.blurbs[value] || ""
+  }, tally(rows)));
+}
+const groupLabel = v => {
+  const g = groupingFor(state.collection);
+  return (g && g.labels[v]) || titleize(v || "");
+};
 
 const TIER_KEY = "simplydoors.tier.v1";
 function saveTier() { try { localStorage.setItem(TIER_KEY, state.marginTier); } catch (e) {} }
@@ -417,6 +510,11 @@ async function loadData() {
 /* ------------------------------ 4. SELECTORS ----------------------------- */
 
 function matchesFilters(p) {
+  const g = groupingFor(state.collection);
+  if (state.group && g && p[g.field] !== state.group) return false;
+  return matchesFiltersIgnoringGroup(p);
+}
+function matchesFiltersIgnoringGroup(p) {
   const { q, line, family, glazing, type } = state.filters;
   if (line && p.line !== line) return false;
   if (family && p.family !== family) return false;
@@ -439,15 +537,16 @@ function filteredModels() {
    number, so the browser groups them into models and the configurator asks for
    glass, size and finish one question at a time. */
 const SIZE_PREFIX = /^\d{4,5}[A-Z]?\s+/;
-/* Descriptions lead with the size code, and codes are four or five digits
-   (2'10" is "21068"), so strip the row's own code when it is there and fall
-   back to the shape only when it is not. */
+/* Strip the row's own size code so every size of one door lands on one card.
+   The code is usually first ("3080 3 Lite") but not always — knotty alder
+   prints it after the line prefix ("KA 2680 4 Lite 1 Panel RM") — so match it
+   as a whole word anywhere rather than only at the front. */
 function modelKeyOf(p) {
   const d = String(p.description || "").trim();
   const code = p.size && p.size.code;
-  if (code && d.startsWith(code)) {
-    const rest = d.slice(String(code).length);
-    if (/^\s/.test(rest)) return rest.trim();
+  if (code) {
+    const rx = new RegExp("(^|\\s)" + String(code) + "(?=\\s|$)");
+    if (rx.test(d)) return d.replace(rx, "$1").replace(/\s+/g, " ").trim();
   }
   return d.replace(SIZE_PREFIX, "").trim();
 }
@@ -469,9 +568,11 @@ function stainsApplyTo(modelName) {
 
 function buildModels() {
   const hidden = optionOnlyIds();
+  const g = groupingFor(state.collection);
   const map = new Map();
   state.engine.productsIn(state.collection).forEach(p => {
     if (hidden.has(p.id)) return;
+    if (state.group && g && p[g.field] !== state.group) return;
     const key = modelKeyOf(p);
     if (!map.has(key)) map.set(key, { key, name: key, products: [], line: p.line, type: p.type });
     map.get(key).products.push(p);
@@ -659,14 +760,14 @@ function productCard(model) {
   if (model.grilles.length) bits.push("iron grille available");
   body.appendChild(el("p", "text-xs text-ink-mute", bits.join(" · ")));
 
-  const foot = el("div", "mt-auto flex items-end justify-between pt-2");
+  const foot = el("div", "mt-auto flex items-end justify-between gap-2 pt-2");
   const from = modelFromPrice(model);
-  const priceWrap = el("div", "");
+  const priceWrap = el("div", "min-w-0 shrink-0");
   priceWrap.appendChild(el("p", "text-[10px] uppercase tracking-widest text-ink-faint",
     isCost() ? "Cost from" : "From"));
   priceWrap.appendChild(el("p", "tnum font-display text-xl leading-none", formatCents(from)));
   foot.appendChild(priceWrap);
-  foot.appendChild(el("span", "text-xs font-mono text-ink-faint",
+  foot.appendChild(el("span", "min-w-0 shrink truncate text-right text-xs font-mono text-ink-faint",
     model.products.length > 1 ? model.products.length + " variants" : product.sku));
   body.appendChild(foot);
 
@@ -686,11 +787,51 @@ function renderCatalog(reset = true) {
   grid.appendChild(frag);
   state.rendered += slice.length;
 
-  const totalModels = buildModels().length;
+  const g = groupingFor(state.collection);
+  const scope = state.engine.productsIn(state.collection)
+    .filter(p => !state.group || !g || p[g.field] === state.group);
+  const t = tally(scope);
   $("#resultCount").textContent =
-    list.length.toLocaleString() + " of " + totalModels.toLocaleString() + " doors";
-  $("#emptyState").classList.toggle("hidden", list.length > 0);
+    list.length.toLocaleString() + " of " + t.count.toLocaleString() + " " + t.noun;
+  renderEmptyState(list.length);
   return list.length;
+}
+
+/* A search that matches nothing here may well match in a sibling collection.
+   Saying so beats an empty page that looks like the catalogue is broken. */
+function renderEmptyState(shown) {
+  const host = $("#emptyState");
+  host.classList.toggle("hidden", shown > 0);
+  if (shown > 0) return;
+  host.textContent = "";
+  host.appendChild(el("p", "", "No doors match these filters."));
+  const g = groupingFor(state.collection);
+  if (!g || !state.group) return;
+  const elsewhere = groupsIn(state.collection)
+    .filter(gr => gr.value !== state.group)
+    .map(gr => ({ gr, n: tally(state.engine.productsIn(state.collection)
+        .filter(p => p[g.field] === gr.value && matchesFiltersIgnoringGroup(p))).count }))
+    .filter(x => x.n > 0);
+  if (!elsewhere.length) return;
+  const row = el("p", "mt-3 flex flex-wrap items-center justify-center gap-2 text-sm");
+  row.appendChild(el("span", "", "Found in"));
+  elsewhere.forEach(x => {
+    const b = el("button",
+      "rounded-full border border-brass/40 bg-brass-pale px-3 py-1 text-xs text-brass-deep hover:border-brass",
+      x.gr.label + " · " + x.n);
+    b.type = "button";
+    b.addEventListener("click", () => {
+      const keep = Object.assign({}, state.filters);
+      state.group = x.gr.value;
+      saveLine();
+      state.filters = keep;
+      renderLineChip();
+      renderFilters();
+      renderCatalog(true);
+    });
+    row.appendChild(b);
+  });
+  host.appendChild(row);
 }
 
 /* --- 5c. filters --------------------------------------------------------- */
@@ -708,12 +849,22 @@ function fillSelect(sel, values, allLabel, labeller) {
 }
 
 function renderFilters() {
-  const f = state.engine.facets(state.collection);
-  fillSelect($("#fLine"), f.lines, "All lines", v => LINE_LABELS[v] || titleize(v));
-  $("#fLine").classList.toggle("hidden", f.lines.length < 2);
-  fillSelect($("#fFamily"), f.families, "All families");
-  fillSelect($("#fGlazing"), f.glazings, "All glass");
-  fillSelect($("#fType"), f.types, "All types", v => TYPE_LABELS[v] || titleize(v));
+  // Facets are computed over what is actually on screen, so choosing Knotty
+  // Alder does not leave a Line filter offering mahogany, or a Family filter
+  // with one entry. A facet with nothing to choose between hides itself.
+  const g = groupingFor(state.collection);
+  const rows = state.engine.productsIn(state.collection)
+    .filter(p => !state.group || !g || p[g.field] === state.group);
+  const uniq = pick => Array.from(new Set(rows.map(pick).filter(v => v != null && v !== ""))).sort();
+  const put = (sel, values, all, labeller) => {
+    const n = $(sel);
+    fillSelect(n, values, all, labeller);
+    n.classList.toggle("hidden", values.length < 2);
+  };
+  put("#fLine",    uniq(p => p.line),    "All lines",    v => LINE_LABELS[v] || titleize(v));
+  put("#fFamily",  uniq(p => p.family),  "All families");
+  put("#fGlazing", uniq(p => p.glazing), "All glass");
+  put("#fType",    uniq(p => p.type),    "All types",    v => TYPE_LABELS[v] || titleize(v));
 }
 
 /* --- 5d. product detail sheet -------------------------------------------- */
@@ -807,9 +958,14 @@ const jambSpec       = () => openingSpec().jambDepths || {};
    door's glass preferred where the sidelite is offered in it. */
 function sideliteChoices(doorProduct, glazing) {
   const h = doorProduct && doorProduct.size && doorProduct.size.heightIn;
+  const g = groupingFor(state.collection);
+  // A woodgrain door takes a woodgrain sidelite, a mahogany door a mahogany
+  // one. The skin or line has to match or the opening will not look right.
+  const want = g && doorProduct ? doorProduct[g.field] : null;
   const rows = state.engine.productsIn(state.collection).filter(p =>
     p.type === "sidelite" &&
     state.engine.availableOptions(p.id).configs.length &&
+    (!want || p[g.field] === want) &&
     (!h || Math.abs(((p.size && p.size.heightIn) || 0) - h) <= 2));
   const best = new Map();
   rows.forEach(p => {
@@ -1494,44 +1650,100 @@ function renderTotals(q) {
 const LOCK_CLOSED = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
 const LOCK_OPEN   = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.5-2"/></svg>';
 
+/* The gate runs in two steps in the same panel: which line, then which
+   collection inside it. Both are answered before any door is shown. */
+function gateCard(title, blurb, count, noun, sample, onClick) {
+  const card = el("button",
+    "group rounded-2xl border border-paper-line bg-paper-card p-6 text-left shadow-card transition-all hover:-translate-y-0.5 hover:border-brass hover:shadow-lift focus:outline-none focus:ring-2 focus:ring-brass/40");
+  card.type = "button";
+  const art = el("div", "mb-4 h-28 w-20 overflow-hidden rounded-lg bg-paper-rail");
+  if (sample) art.appendChild(doorSilhouette(sample));
+  card.appendChild(art);
+  card.appendChild(el("h3", "font-display text-2xl leading-none", title));
+  if (blurb) card.appendChild(el("p", "mt-2 text-sm text-ink-mute", blurb));
+  card.appendChild(el("p", "mt-3 text-[11px] uppercase tracking-widest text-brass",
+    count.toLocaleString() + " " + noun));
+  card.addEventListener("click", onClick);
+  return card;
+}
+function showGate(title, blurb, foot, back) {
+  $("#gateTitle").textContent = title;
+  $("#gateBlurb").textContent = blurb;
+  $("#gateFoot").textContent = foot;
+  const b = $("#gateBack");
+  b.classList.toggle("hidden", !back);
+  b.onclick = back || null;
+  $("#lineGate").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+function hideGate() {
+  $("#lineGate").classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
 function renderLineGate() {
   const host = $("#lineChoices");
   host.textContent = "";
+  host.className = "mt-8 grid gap-4 sm:grid-cols-2";
   state.engine.collections().forEach(c => {
     const look = LINE_LOOK[c] || { title: titleize(c), blurb: "" };
-    const n = new Set(state.engine.productsIn(c)
-      .filter(p => p.type !== "sidelite" && !optionOnlyIds().has(p.id))
-      .map(modelKeyOf)).size;
-    const card = el("button",
-      "group rounded-2xl border border-paper-line bg-paper-card p-6 text-left shadow-card transition-all hover:-translate-y-0.5 hover:border-brass hover:shadow-lift focus:outline-none focus:ring-2 focus:ring-brass/40");
-    card.type = "button";
-    const art = el("div", "mb-4 h-28 w-20 overflow-hidden rounded-lg bg-paper-rail");
+    const t = tally(state.engine.productsIn(c));
     const sample = state.engine.productsIn(c).find(p => p.type === "door") ||
                    state.engine.productsIn(c)[0];
-    if (sample) art.appendChild(doorSilhouette(sample));
-    card.appendChild(art);
-    card.appendChild(el("h3", "font-display text-2xl leading-none", look.title));
-    card.appendChild(el("p", "mt-2 text-sm text-ink-mute", look.blurb));
-    card.appendChild(el("p", "mt-3 text-[11px] uppercase tracking-widest text-brass",
-      n.toLocaleString() + " doors"));
-    card.addEventListener("click", () => chooseLine(c));
-    host.appendChild(card);
+    host.appendChild(gateCard(look.title, look.blurb, t.count, t.noun, sample, () => chooseLine(c)));
   });
-  $("#lineGate").classList.remove("hidden");
-  document.body.style.overflow = "hidden";
+  showGate("What are you building?",
+           "The two lines price from separate schedules, so pick one to begin.",
+           "You can switch lines at any time from the header.", null);
+}
+
+/** Step two: the collection inside the chosen line. */
+function renderGroupGate() {
+  const g = groupingFor(state.collection);
+  const groups = groupsIn(state.collection);
+  if (!g || groups.length < 2) { state.group = null; return false; }
+  const host = $("#lineChoices");
+  host.textContent = "";
+  host.className = groups.length > 2
+    ? "mt-8 grid gap-4 sm:grid-cols-3" : "mt-8 grid gap-4 sm:grid-cols-2";
+  const field = g.field;
+  groups.forEach(gr => {
+    const sample = state.engine.productsIn(state.collection)
+      .find(p => p[field] === gr.value && p.type === "door");
+    host.appendChild(gateCard(gr.label, gr.blurb, gr.count, gr.noun, sample, () => chooseGroup(gr.value)));
+  });
+  showGate(g.title, g.blurb, "You can change collection at any time from the header.",
+           () => renderLineGate());
+  return true;
+}
+
+function clearFiltersForNewScope() {
+  // A search or facet carried over almost never matches anything in the new
+  // scope, which reads as an empty catalogue rather than a stale filter.
+  state.filters = { q: "", line: "", family: "", glazing: "", type: "" };
+  $("#q").value = "";
+  ["#fLine", "#fFamily", "#fGlazing", "#fType"].forEach(sel => { const n = $(sel); if (n) n.value = ""; });
 }
 
 function chooseLine(c) {
   state.collection = c;
+  state.group = null;
   saveLine();
-  $("#lineGate").classList.add("hidden");
-  document.body.style.overflow = "";
-  // A search or facet carried over from the other line almost never matches
-  // anything here, which reads as an empty catalogue rather than a stale
-  // filter. Clear them so the new line opens on its full range.
-  state.filters = { q: "", line: "", family: "", glazing: "", type: "" };
-  $("#q").value = "";
-  ["#fLine", "#fFamily", "#fGlazing", "#fType"].forEach(sel => { const n = $(sel); if (n) n.value = ""; });
+  clearFiltersForNewScope();
+  // A line with more than one collection asks which before showing anything.
+  if (renderGroupGate()) { renderLineChip(); return; }
+  hideGate();
+  renderLineChip();
+  renderFilters();
+  renderCatalog(true);
+  renderQuote();
+}
+
+function chooseGroup(v) {
+  state.group = v;
+  saveLine();
+  hideGate();
+  clearFiltersForNewScope();
   renderLineChip();
   renderFilters();
   renderCatalog(true);
@@ -1539,11 +1751,15 @@ function chooseLine(c) {
 }
 
 function renderLineChip() {
-  const chip = $("#lineChip");
-  if (!state.collection) { chip.classList.add("hidden"); return; }
-  chip.classList.remove("hidden");
+  const chip = $("#lineChip"), gchip = $("#groupChip");
+  const show = (n, on) => { n.classList.toggle("hidden", !on); n.classList.toggle("flex", !!on); };
+  if (!state.collection) { show(chip, false); show(gchip, false); return; }
+  show(chip, true);
   const look = LINE_LOOK[state.collection] || { title: titleize(state.collection) };
   $("#lineChipLabel").textContent = look.title;
+  const hasGroups = groupsIn(state.collection).length > 1;
+  show(gchip, hasGroups && !!state.group);
+  if (hasGroups && state.group) $("#groupChipLabel").textContent = groupLabel(state.group);
 }
 
 /* Switching lines with a quote in progress: the quote may hold doors from the
@@ -1659,6 +1875,7 @@ function wire() {
   });
 
   $("#lineChip").addEventListener("click", switchLine);
+  $("#groupChip").addEventListener("click", () => { renderGroupGate(); });
   $("#modeToggle").addEventListener("click", toggleMode);
   $("#drawerMode").addEventListener("click", toggleMode);
 
@@ -1726,6 +1943,7 @@ async function boot() {
     return;
   }
   renderLineChip();
+  if (!state.group && renderGroupGate()) return;
   renderFilters();
   renderCatalog(true);
   renderQuote();

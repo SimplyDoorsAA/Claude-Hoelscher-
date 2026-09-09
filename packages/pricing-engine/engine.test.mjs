@@ -328,7 +328,7 @@ t("every offered combination in the catalogue prices to a positive integer", () 
       priced++;
     }
   }
-  assert.equal(priced, 2988);
+  assert.equal(priced, 2986);
 });
 t("every unoffered combination prices to null across the catalogue", () => {
   let nulls = 0;
@@ -341,7 +341,7 @@ t("every unoffered combination prices to null across the catalogue", () => {
       nulls++;
     }
   }
-  assert.equal(nulls, 546);
+  assert.equal(nulls, 536);
 });
 t("facets expose the filters the UI needs", () => {
   const f = engine.facets();
