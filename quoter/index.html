@@ -317,8 +317,8 @@ import {
 const CONFIG = {
   catalogUrl: "../data/catalog.json",
   rulesUrl:   "../data/pricing-rules.json",
-  imageBase:  "./assets/doors/",     // ./assets/doors/{sku}.webp
-  imageExt:   ".webp",
+  imageBase:    "./assets/doors/",
+  manifestUrl:  "./assets/doors/manifest.json",
   pageSize:   48                     // cards rendered per chunk while scrolling
 };
 
@@ -349,6 +349,7 @@ const titleize = s => String(s == null ? "" : s).replace(/[_-]+/g, " ").replace(
 
 const state = {
   engine: null,
+  photos: {},                             // model name -> file, from the manifest
   ready: false,
   mode: "customer",                       // "customer" | "cost"
   marginTier: null,                       // "builder" | "retail" — set from the rules file
@@ -503,8 +504,49 @@ async function loadData() {
     fetchJson(CONFIG.rulesUrl)
   ]);
   state.engine = createEngine(catalog, rules);
+  // Photography is optional: the drawn silhouette carries the catalogue on its
+  // own, so a missing or unreadable manifest must not stop the app loading.
+  try {
+    const m = await fetchJson(CONFIG.manifestUrl);
+    state.photos = (m && m.models) || {};
+  } catch (e) {
+    state.photos = {};
+  }
   state.ready = true;
   return state.engine;
+}
+
+/** The catalog photograph for a door, or null when there is none.
+   Keyed by model, because that is what the catalogs photograph: one picture of
+   the door, not one per part number. Returning null rather than a guessed path
+   keeps the page from firing a request per card that can only 404. */
+function photoFor(nameOrProduct) {
+  const key = typeof nameOrProduct === "string" ? nameOrProduct : modelKeyOf(nameOrProduct);
+  const file = state.photos[key];
+  return file ? CONFIG.imageBase + encodeURIComponent(file) : null;
+}
+/** Put the photo in, or the drawn silhouette when there is none. */
+function fillArt(holder, product, modelName, cls) {
+  const src = photoFor(modelName || product);
+  if (!src) {
+    const svg = doorSilhouette(product);
+    if (cls) svg.classList.add(...cls.split(" "));
+    holder.appendChild(svg);
+    return;
+  }
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = modelName || product.description || product.sku;
+  img.loading = "lazy";
+  img.decoding = "async";
+  img.className = "h-full w-full object-contain" + (cls ? " " + cls : "");
+  img.addEventListener("error", function onErr() {
+    img.removeEventListener("error", onErr);
+    const svg = doorSilhouette(product);
+    if (cls) svg.classList.add(...cls.split(" "));
+    img.replaceWith(svg);
+  }, { once: true });
+  holder.appendChild(img);
 }
 
 /* ------------------------------ 4. SELECTORS ----------------------------- */
@@ -724,20 +766,8 @@ function productCard(model) {
   btn.addEventListener("click", () => openConfigurator(model));
 
   const frame = el("div", "door-frame relative w-full overflow-hidden bg-paper-rail");
-  const img = document.createElement("img");
-  img.src = CONFIG.imageBase + encodeURIComponent(product.sku) + CONFIG.imageExt;
-  img.alt = product.description || product.sku;
-  img.loading = "lazy";
-  img.decoding = "async";
-  img.className = "h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]";
-  // Required fallback: swap a missing photo for the drawn silhouette.
-  img.addEventListener("error", function onImgError() {
-    img.removeEventListener("error", onImgError);
-    const svg = doorSilhouette(product);
-    svg.classList.add("transition-transform", "duration-500", "group-hover:scale-[1.03]");
-    img.replaceWith(svg);
-  }, { once: true });
-  frame.appendChild(img);
+  fillArt(frame, product, model.name,
+          "transition-transform duration-500 group-hover:scale-[1.03]");
 
   if (product.type !== "door") {
     const tag = el("span",
@@ -1156,15 +1186,7 @@ function renderDetail() {
   const imgCol = el("div", "relative bg-paper-rail p-6 hidden md:flex items-start justify-center");
   const holder = el("div", "door-frame w-full max-w-[240px] overflow-hidden rounded-lg bg-paper-card shadow-card");
   const shown = draftProduct() || model.sample;
-  const img = document.createElement("img");
-  img.src = CONFIG.imageBase + encodeURIComponent(shown.sku) + CONFIG.imageExt;
-  img.alt = model.name;
-  img.className = "h-full w-full object-cover";
-  img.addEventListener("error", function onErr() {
-    img.removeEventListener("error", onErr);
-    img.replaceWith(doorSilhouette(shown));
-  }, { once: true });
-  holder.appendChild(img);
+  fillArt(holder, shown, model.name);
   imgCol.appendChild(holder);
 
   const body = el("div", "min-w-0 p-5 sm:p-6 flex flex-col gap-5");
@@ -1579,16 +1601,7 @@ function renderQuote() {
     const top = el("div", "flex gap-3");
 
     const thumb = el("div", "h-16 w-11 shrink-0 overflow-hidden rounded bg-paper-rail");
-    if (l.product) {
-      const im = document.createElement("img");
-      im.src = CONFIG.imageBase + encodeURIComponent(l.sku) + CONFIG.imageExt;
-      im.alt = ""; im.className = "h-full w-full object-cover";
-      im.addEventListener("error", function onE() {
-        im.removeEventListener("error", onE);
-        im.replaceWith(doorSilhouette(l.product));
-      }, { once: true });
-      thumb.appendChild(im);
-    }
+    if (l.product) fillArt(thumb, l.product, modelKeyOf(l.product));
     top.appendChild(thumb);
 
     const info = el("div", "min-w-0 flex-1");
@@ -1722,7 +1735,7 @@ function gateCard(title, blurb, count, noun, sample, onClick) {
     "group rounded-2xl border border-paper-line bg-paper-card p-6 text-left shadow-card transition-all hover:-translate-y-0.5 hover:border-brass hover:shadow-lift focus:outline-none focus:ring-2 focus:ring-brass/40");
   card.type = "button";
   const art = el("div", "mb-4 h-28 w-20 overflow-hidden rounded-lg bg-paper-rail");
-  if (sample) art.appendChild(doorSilhouette(sample));
+  if (sample) fillArt(art, sample, modelKeyOf(sample));
   card.appendChild(art);
   card.appendChild(el("h3", "font-display text-2xl leading-none", title));
   if (blurb) card.appendChild(el("p", "mt-2 text-sm text-ink-mute", blurb));

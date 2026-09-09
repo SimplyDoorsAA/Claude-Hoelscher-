@@ -133,7 +133,8 @@ you commit anything.
 | `tests/stress-ui.mjs` | Real quotes built through App B, checked against the sheets |
 | `tools/audit-catalog.mjs` | Structural audit of the published data |
 | `docs/audit-2026-09-09.md` | What the last full audit found, and what is still open |
-| `quoter/assets/doors/` | Optional product photography, `{SKU}.webp` |
+| `quoter/assets/doors/` | Door photography extracted from the catalogs, plus `manifest.json` |
+| `tools/extract-door-images.py` | Pulls that photography out of the catalog PDFs |
 | `data/catalog.json` | Master catalog — `products[]`, `prehangAdders[]`, `components[]`, `hardware[]` |
 | `data/pricing-rules.json` | Net multiplier, currency, rounding, freight and defaults |
 | `.nojekyll` | Serve files verbatim from Pages |
@@ -456,10 +457,32 @@ a display switch only — no credential, no gate. Anyone who opens the page can
 flip it, and cost is derived from data the page already downloads, so treat the
 published catalogue as public.
 
-**Images.** Products look for `quoter/assets/doors/{SKU}.webp`. A missing file
-triggers the `onerror` fallback, which draws an architectural silhouette from
-the product's own description — lite count, arch, sidelite proportion, barn
-slab. With no photography loaded the catalogue still reads as a catalogue.
+**Images.** The door photography is pulled straight out of the Hoelscher
+catalog PDFs by `tools/extract-door-images.py` and filed by **model**, which is
+what a catalog photographs — one picture of the door, not one per part number:
+
+```sh
+python3 tools/extract-door-images.py FIBERGLASS.pdf WOOD.pdf   # --dry-run to look first
+```
+
+The catalogs set one tall photo beside the part numbers for that door, so the
+tool reads the part numbers that fall in a photo's vertical band and nearest
+column, resolves them against `catalog.json`, and files the photo under the
+model they agree on. Nothing is guessed: a photo whose part numbers do not
+resolve to one model is reported and skipped. Two wrinkles it handles rather
+than fudges — the wood catalog and the wood price sheet spell part numbers
+differently (`M3GPWNSR2880L` against `M3GPWN--2880--`), so matching falls back
+to the size code plus the longest letter prefix; and where one photo covers a
+door offered in two skins it is shared, except when the skins differ by colour,
+where the photos are ranked by brightness so the black door never stands in for
+the white one.
+
+Output is `quoter/assets/doors/*.webp` plus a `manifest.json` the Quoter reads
+at boot. A model with no photograph falls back to an architectural silhouette
+drawn from its own description — lite count, arch, sidelite proportion, barn
+slab — and because the manifest says which models have one, the page never
+fires a request that can only 404. A missing or unreadable manifest is not
+fatal: the catalogue still reads as a catalogue.
 
 **CDN resilience.** If `cdn.tailwindcss.com` is unreachable — a locked-down job
 site network, a CDN outage — the page flags itself and a structural fallback

@@ -214,13 +214,25 @@ const cardPrice=await page.$$eval('#catalog article',(ns,n)=>{
 ok('card "from" price is the cheapest variant, per the engine',
    cardPrice===formatCents(modelFrom(iron)), cardPrice+' vs '+formatCents(modelFrom(iron)));
 
-/* ---------------- image fallback ---------------------------------------- */
+/* ---------------- photography, and the silhouette behind it -------------- */
 for(let y=0;y<6;y++){ await page.mouse.wheel(0,1400); await page.waitForTimeout(200); }
-await page.evaluate(()=>window.scrollTo(0,0)); await page.waitForTimeout(400);
+await page.evaluate(()=>window.scrollTo(0,0)); await page.waitForTimeout(600);
+const manifest=JSON.parse(fs.readFileSync(ROOT+'/quoter/assets/doors/manifest.json','utf8'));
+const withPhoto=FG.filter(m=>manifest.models[m.name]).length;
 const svgCount=await page.$$eval('#catalog article svg[role="img"]',n=>n.length);
+const imgCount=await page.$$eval('#catalog article img',n=>n.length);
 const broken=await page.$$eval('#catalog article img',ns=>ns.filter(i=>i.complete&&i.naturalWidth===0).length);
-ok('every attempted photo falls back to a drawn silhouette', broken===0&&svgCount>=FG.length,
-   'svg='+svgCount+' broken='+broken);
+ok('the catalogue shows the real door photography',
+   withPhoto>0 && imgCount===withPhoto, imgCount+' photos for '+withPhoto+' models with one');
+ok('no photograph is broken', broken===0, String(broken));
+ok('a model with no photograph still draws a silhouette',
+   svgCount===FG.length-withPhoto, 'svg='+svgCount+' of '+(FG.length-withPhoto)+' without a photo');
+ok('every photo the manifest names is actually on disk',
+   Object.values(manifest.models).every(f=>fs.existsSync(ROOT+'/quoter/assets/doors/'+f)),
+   Object.values(manifest.models).filter(f=>!fs.existsSync(ROOT+'/quoter/assets/doors/'+f)).slice(0,3).join(', '));
+ok('the manifest names only models that exist in the catalog',
+   Object.keys(manifest.models).every(k=>engine.products.some(p=>keyOf(p)===k)),
+   Object.keys(manifest.models).filter(k=>!engine.products.some(p=>keyOf(p)===k)).slice(0,3).join(' | '));
 
 /* ---------------- filters still scope the model list -------------------- */
 await page.selectOption('#fType','sidelite'); await page.waitForTimeout(400);
