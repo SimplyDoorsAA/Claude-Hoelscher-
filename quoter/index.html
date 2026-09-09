@@ -104,7 +104,7 @@ tailwind.config = {
   .no-tw .grilleshot img { width:100%; height:100%; object-fit:cover; }
   .no-tw .optwords, .no-tw .optlabel { display:block; }
   .no-tw .optsub { display:block; font-size:10px; opacity:.7; }
-  .no-tw .accshot { display:block; width:32px; height:32px; flex:0 0 auto;
+  .no-tw .accshot { display:block; width:40px; height:40px; flex:0 0 auto;
                     border:1px solid #e4e0d9; border-radius:6px; overflow:hidden; background:#20241f; }
   .no-tw .accshot img { width:100%; height:100%; object-fit:contain; }
   .no-tw #detail > div { display:block; }
@@ -148,6 +148,9 @@ tailwind.config = {
   .tierbtn[aria-pressed="true"] { background:#2f4538; color:#fff; }
   .tierbtn[aria-pressed="false"] { color:#78716c; }
   .opt:disabled { opacity:.32; cursor:not-allowed; text-decoration:line-through; }
+  /* The iron add-ons are photographed on black; a small lift makes the shape
+     read at thumbnail size without touching the file. */
+  .accshot img { filter: brightness(1.45) contrast(1.15); }
   /* Hide number spinners */
   input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
   input[type=number]{ -moz-appearance:textfield; }
@@ -596,6 +599,16 @@ function glassSwatch(name) {
    glasses is chosen, and the catalog prints them as "Columbia, Medina, Pecos,
    San Jacinto" or "Wood, Clear Low E, Rain or Flemish". Split them so the
    customer picks one glass instead of a sentence. */
+/* The price sheet prints a part number with (--) standing in for the glass and
+   a legend of codes to fill it with, so a quote can name the part the customer
+   actually orders rather than the template. */
+function completeSku(product, glazing) {
+  const sku = String((product && product.sku) || "");
+  if (!sku.includes("--")) return sku;
+  const want = glassKey(glazing);
+  const hit = (state.engine.catalog.glassCodes || []).find(c => glassKey(c.name) === want);
+  return hit ? sku.replace("--", hit.code) : sku;
+}
 function glazingOptions(value) {
   if (!value) return [];
   return String(value).split(/\s*,\s*|\s+or\s+/i).map(t => t.trim()).filter(Boolean);
@@ -607,16 +620,36 @@ function glazingOffers(product, glazing) {
 /* Where the price sheet records no glass at all but the catalog page does.
    The iron-grille page lists five glasses for every grille door; the sheet
    prices one generic row, so the choice is a specification, not a part. */
-function glassRuleFor(modelName, collection) {
+function glassRuleFor(model, collection) {
   const rules = (state.engine.catalog.glassRules) || [];
-  return rules.find(r =>
-    (!r.appliesToCollection || r.appliesToCollection === collection) &&
-    new RegExp(r.appliesToModelPattern, "i").test(modelName)) || null;
+  const pages = new Set((model.products || []).map(p => p.priceSheetPage).filter(Boolean));
+  return rules.find(r => {
+    if (r.appliesToCollection && r.appliesToCollection !== collection) return false;
+    if (r.appliesToPriceSheetPage) return pages.has(r.appliesToPriceSheetPage);
+    if (r.appliesToModelPattern) return new RegExp(r.appliesToModelPattern, "i").test(model.name);
+    return false;
+  }) || null;
 }
 
 /** Put the photo in, or the drawn silhouette when there is none. */
-function fillArt(holder, product, modelName, cls) {
-  const src = photoFor(modelName || product);
+/* Some models the door pages never photograph on their own are photographed
+   elsewhere in the catalog as exactly that door: an iron-grille door appears
+   once per grille design, and a decorative-glass door appears glazed with each
+   of its glasses. Either is a true picture of the model, so it stands in. */
+function standInPhoto(model) {
+  if (!model) return null;
+  const g = (model.grilleDesigns || [])[0];
+  const rec = g && state.designs.grilles[g.name];
+  if (rec) return CONFIG.designBase + encodeURIComponent(rec.file);
+  for (const name of model.glazings || []) {
+    const dec = state.designs.decorativeGlass[name];
+    if (dec) return CONFIG.designBase + encodeURIComponent(dec.file);
+  }
+  return null;
+}
+
+function fillArt(holder, product, modelName, cls, model) {
+  const src = photoFor(modelName || product) || standInPhoto(model);
   if (!src) {
     const svg = doorSilhouette(product);
     if (cls) svg.classList.add(...cls.split(" "));
@@ -657,9 +690,16 @@ function matchesFiltersIgnoringGroup(p) {
                " " + (p.glazing || "")).toLowerCase();
   return terms.every(t => hay.includes(t));
 }
-/** Models with at least one product matching the filters. */
+/** Models with at least one product matching the filters.
+   Sidelites sort last: they are an add-on to an opening rather than a door
+   somebody shops for, and the Opening step is where they are really chosen. */
 function filteredModels() {
-  return buildModels().filter(m => m.products.some(matchesFilters));
+  const list = buildModels().filter(m => m.products.some(matchesFilters));
+  return list.sort((a, b) => (isSideliteModel(a) ? 1 : 0) - (isSideliteModel(b) ? 1 : 0));
+}
+function isSideliteModel(m) {
+  return m.products.every(p => p.type === "sidelite") ||
+         /\bsidelite\b/i.test(m.name);
 }
 
 /* ------------------------- model grouping --------------------------------
@@ -728,7 +768,7 @@ function buildModels() {
   const models = Array.from(map.values());
   models.forEach(m => {
     m.sizes = Array.from(new Set(m.products.map(p => p.size && p.size.code).filter(Boolean)));
-    m.glassRule = glassRuleFor(m.name, state.collection);
+    m.glassRule = glassRuleFor(m, state.collection);
     m.glazings = m.glassRule
       ? m.glassRule.options.slice()
       : Array.from(new Set(m.products.flatMap(p => glazingOptions(p.glazing))));
@@ -877,7 +917,7 @@ function productCard(model) {
 
   const frame = el("div", "door-frame relative w-full overflow-hidden bg-paper-rail");
   fillArt(frame, product, model.name,
-          "transition-transform duration-500 group-hover:scale-[1.03]");
+          "transition-transform duration-500 group-hover:scale-[1.03]", model);
 
   if (product.type !== "door") {
     const tag = el("span",
@@ -1191,12 +1231,21 @@ function accessoryFits(kind, acc, d) {
     const okColl = !r.requiresCollection ||
                    (product && state.engine.collectionOf(product) === r.requiresCollection);
     const okLine = !r.requiresLine || (product && product.line === r.requiresLine);
-    const okModel = rxTest(r.requiresModelPattern, model);
+    const okModel = rxTest(r.requiresModelPattern, model) &&
+                    !(r.excludesModelPattern && rxTest(r.excludesModelPattern, model));
+    const okNotLine = !r.excludesLine || !(product && product.line === r.excludesLine);
+    // The vendor prints the add-ons on one page and the doors they belong to on
+    // the pages around it, so the page a door is printed on is what decides.
+    // A row can span pages ("50 - 51"), so every number in it counts.
+    const pages = product ? String(product.catalogPage || "").match(/\d+/g) || [] : [];
+    const okPage = !r.requiresCatalogPage ||
+                   pages.some(n => r.requiresCatalogPage.indexOf(n) >= 0);
     const okOpen = !r.requiresOpening || (opening &&
       (r.requiresOpening === "double" ? opening.config === "doublePH"
        : r.requiresOpening === "sidelites" ? opening.sidelites > 0
        : opening.key === r.requiresOpening));
-    if (okType && okColl && okLine && okModel && okOpen) return { ok: true, why: null };
+    if (okType && okColl && okLine && okModel && okOpen && okNotLine && okPage)
+      return { ok: true, why: null };
   }
   // Say which condition failed, in the vendor's own words where there are any.
   const r = applicable[0];
@@ -1320,7 +1369,7 @@ function renderDetail() {
   const imgCol = el("div", "relative bg-paper-rail p-6 hidden md:flex items-start justify-center");
   const holder = el("div", "door-frame w-full max-w-[240px] overflow-hidden rounded-lg bg-paper-card shadow-card");
   const shown = draftProduct() || model.sample;
-  fillArt(holder, shown, model.name);
+  fillArt(holder, shown, model.name, null, model);
   imgCol.appendChild(holder);
 
   const body = el("div", "min-w-0 p-5 sm:p-6 flex flex-col gap-5");
@@ -1614,7 +1663,7 @@ function renderDetail() {
                     d.swing && SWING_LABELS[d.swing],
                     d.jambDepth && d.jambDepth + '" jamb',
                     configured ? "configured item — Hoelscher prints no part number"
-                               : product.sku].filter(Boolean).join(" · ");
+                               : completeSku(product, d.glazing)].filter(Boolean).join(" · ");
     if (chosen) foot.appendChild(el("p", "mb-3 text-xs text-ink-mute", chosen));
 
     const qtyRow = el("div", "flex items-center gap-3");
@@ -1675,17 +1724,30 @@ function renderDetail() {
 
 /* --- 5e. accessories ----------------------------------------------------- */
 
-/* The catalog photographs the three iron masks. The picker is a <select> and
-   cannot hold pictures, so the photo appears beside the item once it is on the
-   opening — which is where seeing it matters. */
+/* Catalog page 50 photographs every one of its add-ons. The picker is a
+   <select> and cannot hold pictures, so the photo appears beside the item once
+   it is on the opening — which is where seeing it matters.
+
+   Two of the price sheet's rows cover a choice the sheet does not price
+   separately: clavos come round or square at one price, and the speakeasy kit
+   takes a wood or a glass insert. Those rows show one of the two and say so. */
+const ACCESSORY_ART = [
+  { match: /iron mask/i, pick: t => ["Standard", "Balfour", "Windsor"]
+      .find(n => new RegExp("\\b" + n + "\\b", "i").test(t)), note: null },
+  { match: /clavos/i,    pick: () => "Round Clavos",
+    note: "Round shown — round or square, same price" },
+  { match: /strap/i,     pick: () => "Straps", note: null },
+  { match: /speakeasy kit/i, pick: () => "Glass Insert",
+    note: "Glass insert shown — the kit takes a wood or a glass insert" }
+];
 function accessoryPhoto(label) {
   const text = String(label || "");
-  if (!/iron mask/i.test(text)) return null;
-  const hit = Object.keys(state.designs.accessories).find(k => {
-    const rec = state.designs.accessories[k];
-    return rec.kind === "ironMask" && new RegExp("\\b" + k + "\\b", "i").test(text);
-  });
-  return hit ? CONFIG.designBase + encodeURIComponent(state.designs.accessories[hit].file) : null;
+  const rule = ACCESSORY_ART.find(r => r.match.test(text));
+  if (!rule) return null;
+  const name = rule.pick(text);
+  const rec = name && state.designs.accessories[name];
+  if (!rec) return null;
+  return { src: CONFIG.designBase + encodeURIComponent(rec.file), note: rule.note };
 }
 
 function accessoryBlock(product, draft) {
@@ -1701,9 +1763,10 @@ function accessoryBlock(product, draft) {
     const row = el("div", "flex items-center gap-2 rounded-lg border border-paper-line bg-paper-card px-3 py-2");
     const shot = accessoryPhoto(priced.label);
     if (shot) {
-      const thumb = el("span", "accshot block h-8 w-8 shrink-0 overflow-hidden rounded border border-paper-line bg-ink");
+      const thumb = el("span", "accshot block h-10 w-10 shrink-0 overflow-hidden rounded border border-paper-line bg-ink");
+      if (shot.note) thumb.title = shot.note;
       const im = document.createElement("img");
-      im.src = shot; im.alt = ""; im.loading = "lazy"; im.decoding = "async";
+      im.src = shot.src; im.alt = ""; im.loading = "lazy"; im.decoding = "async";
       im.className = "h-full w-full object-contain";
       im.addEventListener("error", function onE() {
         im.removeEventListener("error", onE); thumb.remove();

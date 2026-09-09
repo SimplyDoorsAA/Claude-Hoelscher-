@@ -776,6 +776,125 @@ ok('and asks no caming question where only patina is made',
    (await optionsOf('Caming')).length===0);
 await page.keyboard.press('Escape'); await page.waitForTimeout(300);
 
+/* --- the page-50 add-ons belong to the doors on pages 50-53 ------------- */
+const PAGE_ADDONS=['Speakeasy Kit','Iron Mask','Clavos','Straps'];
+async function addonsOffered(model){
+  await page.click('#clearFilters').catch(()=>{});
+  await page.fill('#q',model); await page.waitForTimeout(500);
+  const found=await page.$$eval('#catalog article',(ns,n)=>{
+    const h=ns.find(a=>a.querySelector('h3').textContent.trim()===n);
+    if(!h) return false; h.querySelector('button').click(); return true;},model);
+  if(!found) return null;
+  await page.waitForSelector('#detail:not(.hidden)');
+  for(let g=0;g<12;g++){
+    if(await page.$('#detail select')) break;
+    const stop=await page.$$eval('#detail .steprow',ns=>{
+      if(!ns.length) return true;
+      const opts=[...ns[ns.length-1].querySelectorAll('.opt')].filter(o=>!o.disabled);
+      if(!opts.length) return true; opts[0].click(); return false;});
+    if(stop) break;
+    await page.waitForTimeout(200);
+  }
+  const opts=await page.$$eval('#detail select option',ns=>ns.map(n=>n.textContent.trim()));
+  await page.keyboard.press('Escape'); await page.waitForTimeout(250);
+  const out={};
+  PAGE_ADDONS.forEach(a=>{ out[a]=opts.some(o=>new RegExp(a,'i').test(o)); });
+  return out;
+}
+/* the page a door is printed on, straight from the catalogue */
+const pageOfModel=name=>{
+  const p=catalog.woodProducts.find(x=>x.line==='knotty_alder'&&keyOf(x)===name);
+  return p?String(p.catalogPage||''):'';
+};
+const on5053=await addonsOffered('KA 2 Panel Square VG');
+ok('a door on catalog page 50 takes all four add-ons',
+   on5053 && PAGE_ADDONS.every(a=>on5053[a]), JSON.stringify(on5053)+' page '+pageOfModel('KA 2 Panel Square VG'));
+const onPlank=await addonsOffered('KA Square Top Plank VG');
+ok('so does a door on page 53',
+   onPlank && PAGE_ADDONS.every(a=>onPlank[a]), JSON.stringify(onPlank)+' page '+pageOfModel('KA Square Top Plank VG'));
+const on44=await addonsOffered('KA 6 Lite NRM');
+ok('a door on page 44 takes none of them',
+   on44 && PAGE_ADDONS.every(a=>!on44[a]), JSON.stringify(on44)+' page '+pageOfModel('KA 6 Lite NRM'));
+const onGrille=await addonsOffered('KA 3/4 Lite Iron Grille');
+ok('nor does the iron grille door on page 55',
+   onGrille && PAGE_ADDONS.every(a=>!onGrille[a]), JSON.stringify(onGrille)+' page '+pageOfModel('KA 3/4 Lite Iron Grille'));
+
+/* A speakeasy door's price is the plain door plus the kit plus the mask, so
+   offering either again would charge for it twice. */
+const onSE=await addonsOffered('KA 2PSQ VG, SE + Glass + IM');
+ok('a door that already has a speakeasy is not offered the kit again',
+   onSE && !onSE['Speakeasy Kit'] && !onSE['Iron Mask'], JSON.stringify(onSE));
+ok('but it still takes clavos and straps',
+   onSE && onSE['Clavos'] && onSE['Straps'], JSON.stringify(onSE));
+const kit=engine.hardwareList().find(h=>/Speakeasy Kit.*Knotty/i.test(h.description||''));
+const mask=engine.hardwareList().find(h=>/Iron Mask - Standard/i.test(h.description||''));
+const slabOf=sku=>{const p=catalog.woodProducts.find(x=>x.sku===sku); return p&&p.prices.unfinished.slab;};
+ok('and the sheet agrees: SE door = plain door + kit',
+   slabOf('KA2PSQSE--3068')-slabOf('KA2PSQ3068')===kit.priceCents,
+   (slabOf('KA2PSQSE--3068')-slabOf('KA2PSQ3068'))+' vs '+kit.priceCents);
+ok('and SE + mask = SE door + mask',
+   slabOf('KA2PSQSEM--3068')-slabOf('KA2PSQSE--3068')===mask.priceCents,
+   (slabOf('KA2PSQSEM--3068')-slabOf('KA2PSQSE--3068'))+' vs '+mask.priceCents);
+
+/* --- sidelites are add-ons, so they sort below the doors ---------------- */
+await page.click('#clearFilters').catch(()=>{});
+await page.fill('#q','3/4'); await page.waitForTimeout(600);
+const order=await page.$$eval('#catalog article h3',ns=>ns.map(n=>n.textContent.trim()));
+const lastDoor=order.map(t=>/Sidelite/i.test(t)).lastIndexOf(false);
+const firstSide=order.map(t=>/Sidelite/i.test(t)).indexOf(true);
+ok('sidelites sort below every door in the catalogue',
+   firstSide===-1 || lastDoor===-1 || firstSide>lastDoor, order.join(' | '));
+await page.click('#clearFilters').catch(()=>{});
+await page.waitForTimeout(300);
+
+/* --- every add-on the vendor photographs has its picture ---------------- */
+const accArt=designs.accessories||{};
+ok('the catalogue photographs all three iron masks',
+   ['Standard','Balfour','Windsor'].every(n=>accArt[n]), Object.keys(accArt).join(' | '));
+ok('and the clavos, straps and speakeasy inserts',
+   ['Round Clavos','Square Clavos','Straps','Wood Insert','Glass Insert'].every(n=>accArt[n]),
+   Object.keys(accArt).join(' | '));
+ok('every add-on picture file is on disk',
+   Object.values(accArt).every(v=>fs.existsSync(ROOT+'/quoter/assets/designs/'+v.file)),
+   String(Object.keys(accArt).length)+' files');
+
+/* --- models the door pages never photograph, but the catalog does --------- */
+const artOf=async model=>{
+  await page.click('#clearFilters').catch(()=>{});
+  await page.fill('#q',model); await page.waitForTimeout(500);
+  return page.$$eval('#catalog article',(ns,n)=>{
+    const h=ns.find(a=>a.querySelector('h3').textContent.trim()===n);
+    if(!h) return 'no card';
+    const img=h.querySelector('img');
+    return img?img.getAttribute('src'):'silhouette';},model);
+};
+const grilleArt=await artOf('KA 3/4 Lite Iron Grille');
+ok('the iron grille door shows a grille photograph, not a silhouette',
+   /assets\/designs\/grille-/.test(grilleArt), grilleArt);
+const decArt=await artOf('KA 3/4 Lite RM - Decorative Glass');
+ok('the decorative-glass door shows the door glazed with one of its glasses',
+   /assets\/designs\/glass-/.test(decArt), decArt);
+const flatArt=await artOf('KA 3/4 Lite RM - Flat Glass');
+ok('a door with neither keeps its drawn silhouette rather than borrowing one',
+   flatArt==='silhouette', flatArt);
+await page.click('#clearFilters').catch(()=>{});
+await page.waitForTimeout(300);
+
+/* --- the (--) in a part number is filled from the glass code legend ------ */
+ok('the catalogue carries the glass code legend',
+   (catalog.glassCodes||[]).length===12, String((catalog.glassCodes||[]).length));
+await page.click('#clearFilters').catch(()=>{});
+await openModel('KA 3/4 Lite RM - Flat Glass');
+const glassOffered=await optionsOf('Glass');
+ok('a row whose glass column is a page reference still asks which glass',
+   glassOffered.length===10, glassOffered.join(' | '));
+await driveModel({Glass:'Clear Low E', ...UNFIN_SLAB});
+const skuLine=await page.$$eval('#detail p',ns=>{
+  const n=ns.find(p=>/KA34/.test(p.textContent)); return n?n.textContent.trim():'';});
+ok('a quote names the part the customer orders, not the (--) template',
+   /KA34LE\d{4}/.test(skuLine) && !skuLine.includes('--'), skuLine);
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
 ok('no console or page errors', errs.length===0, errs.slice(0,2).join(' | '));
 console.log(T.join('\n'));
 console.log('\n'+T.filter(t=>t.startsWith('PASS')).length+' passed, '+T.filter(t=>t.startsWith('FAIL')).length+' failed');

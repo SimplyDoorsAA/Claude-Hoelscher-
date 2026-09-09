@@ -465,8 +465,21 @@ def extract_accessories(reader, pdf, found):
         # The masks are the row of three, the inserts the row of two.
         masks = sorted(next((r for r in rows.values() if len(r) == 3), []), key=lambda p: p[1])
         inserts = sorted(next((r for r in rows.values() if len(r) == 2), []), key=lambda p: p[1])
+        # The clavos and straps sit in their own column and the PDF gives them no
+        # scale at all, so they are found by position rather than by size, and
+        # named in the printed left-to-right order. Their shapes bear it out:
+        # a round dome, a square pyramid, and a strap hinge.
+        header = next((x for x, y, t in text_runs(page)
+                       if t.strip().startswith('Clavos and Straps')), None)
+        claimed = {p[0] for p in masks} | {p[0] for p in inserts}
+        studs = sorted([p for p in placements(page)
+                        if p[0] not in claimed and not p[0].startswith('/Fm')
+                        and p[4] < 100          # not one of the door photographs
+                        and header is not None and p[1] > header - 60],
+                       key=lambda p: p[1])
         for names, row, kind in ((['Standard', 'Balfour', 'Windsor'], masks, 'ironMask'),
-                                 (['Wood Insert', 'Glass Insert'], inserts, 'speakeasyInsert')):
+                                 (['Wood Insert', 'Glass Insert'], inserts, 'speakeasyInsert'),
+                                 (['Round Clavos', 'Square Clavos', 'Straps'], studs, 'clavosStrap')):
             if len(row) != len(names):
                 print(f'  skipped {kind} on p{pno}: found {len(row)} images for {len(names)} names')
                 continue

@@ -137,6 +137,7 @@ you commit anything.
 | `quoter/assets/glass/` | Glass swatches with Hoelscher's privacy ratings |
 | `quoter/assets/designs/` | Iron grille designs, decorative glass and mask photography |
 | `docs/knotty-alder-deep-dive-2026-09-09.md` | Catalog pages 42-57 read in full: what was added, what is still open |
+| `docs/knotty-alder-price-verification-2026-09-09.md` | Every knotty alder price line checked against the sheet; the page 50-53 add-on rules |
 | `tools/extract-door-images.py` | Pulls that photography out of the catalog PDFs |
 | `data/catalog.json` | Master catalog — `products[]`, `prehangAdders[]`, `components[]`, `hardware[]` |
 | `data/pricing-rules.json` | Net multiplier, currency, rounding, freight and defaults |
@@ -177,7 +178,8 @@ gets exercised.
 | `hardware` | 22 barn-hardware, iron-mask, speakeasy, clavos and strap SKUs — shared |
 | `ironGrilleDesigns` | 11 knotty alder grille designs, with the sizes each is made in |
 | `decorativeGlassDesigns` | 7 leaded glasses and the caming each is offered in |
-| `glassRules` | Where the catalog names glasses the price sheet does not |
+| `glassRules` | Glasses a row offers by name, by model, or by the page its glass column points at |
+| `glassCodes` | The 12 codes that replace the (--) in a part number |
 
 The split follows the vendor price sheets, not a guess: the fiberglass sheet
 carries its own Components, SDL Bars and Prehang Adders sections and no

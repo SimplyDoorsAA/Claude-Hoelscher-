@@ -20602,10 +20602,13 @@
       "requiresLine": null,
       "requiresModelPattern": null,
       "requiresOpening": null,
-      "notes": "Strap kits, bypass brackets and soft-close hang a sliding barn slab. They are not fitted to a hinged door."
+      "notes": "Strap kits, bypass brackets and soft-close hang a sliding barn slab. They are not fitted to a hinged door.",
+      "requiresCatalogPage": null,
+      "excludesLine": null,
+      "excludesModelPattern": null
     },
     {
-      "id": "7f3ad01e9b",
+      "id": "bccb3165e6",
       "kind": "hardware",
       "matchCategory": null,
       "matchDescription": "Iron Mask",
@@ -20614,7 +20617,10 @@
       "requiresLine": null,
       "requiresModelPattern": "^(KA )?(2 Panel (Square|Arch)|2P(SQ|A) )",
       "requiresOpening": null,
-      "notes": "Hoelscher fits an iron mask to the two-panel square and arch doors only. Widen requiresModelPattern if the vendor confirms others."
+      "notes": "Hoelscher fits an iron mask to the two-panel square and arch doors. Knotty alder is governed by the catalog-page rule instead.",
+      "excludesLine": "knotty_alder",
+      "requiresCatalogPage": null,
+      "excludesModelPattern": null
     },
     {
       "id": "c0631c0e0a",
@@ -20626,19 +20632,30 @@
       "requiresLine": "mahogany",
       "requiresModelPattern": "^(KA )?(2 Panel (Square|Arch)|2P(SQ|A) )",
       "requiresOpening": null,
-      "notes": "The mahogany speakeasy kit, on a mahogany two-panel door."
+      "notes": "The mahogany speakeasy kit, on a mahogany two-panel door.",
+      "requiresCatalogPage": null,
+      "excludesLine": null,
+      "excludesModelPattern": null
     },
     {
-      "id": "a9a13b3157",
+      "id": "93cae947f9",
       "kind": "hardware",
       "matchCategory": null,
       "matchDescription": "Speakeasy Kit.*Knotty Alder",
       "requiresType": null,
       "requiresCollection": "wood",
       "requiresLine": "knotty_alder",
-      "requiresModelPattern": "^(KA )?(2 Panel (Square|Arch)|2P(SQ|A) )",
+      "requiresModelPattern": null,
       "requiresOpening": null,
-      "notes": "The knotty alder speakeasy kit, on a knotty alder two-panel door."
+      "notes": "The add-ons on catalog page 50 belong to the doors printed on pages 50-53. Doors that already come with a speakeasy are excluded: their price is the plain door plus this kit, so adding it again would charge for it twice.",
+      "requiresCatalogPage": [
+        "50",
+        "51",
+        "52",
+        "53"
+      ],
+      "excludesModelPattern": "SE \\+|SE &|w/ ?Speakeasy|w/Speakeasy",
+      "excludesLine": null
     },
     {
       "id": "de648a4a20",
@@ -20650,7 +20667,10 @@
       "requiresLine": null,
       "requiresModelPattern": "Craftsman",
       "requiresOpening": null,
-      "notes": "The dentil shelf is cut for the Craftsman doors."
+      "notes": "The dentil shelf is cut for the Craftsman doors.",
+      "requiresCatalogPage": null,
+      "excludesLine": null,
+      "excludesModelPattern": null
     },
     {
       "id": "827ea7e620",
@@ -20662,7 +20682,10 @@
       "requiresLine": null,
       "requiresModelPattern": null,
       "requiresOpening": "double",
-      "notes": "A T-astragal closes the joint between two active leaves, so it belongs to a double opening."
+      "notes": "A T-astragal closes the joint between two active leaves, so it belongs to a double opening.",
+      "requiresCatalogPage": null,
+      "excludesLine": null,
+      "excludesModelPattern": null
     },
     {
       "id": "ccc206edf5",
@@ -20674,7 +20697,100 @@
       "requiresLine": null,
       "requiresModelPattern": null,
       "requiresOpening": "sidelites",
-      "notes": "Mull covers and the mullion trim the joint between a door and a sidelite."
+      "notes": "Mull covers and the mullion trim the joint between a door and a sidelite.",
+      "requiresCatalogPage": null,
+      "excludesLine": null,
+      "excludesModelPattern": null
+    },
+    {
+      "kind": "hardware",
+      "matchCategory": null,
+      "matchDescription": "Iron Mask",
+      "requiresType": null,
+      "requiresCollection": null,
+      "requiresLine": "knotty_alder",
+      "requiresModelPattern": null,
+      "requiresOpening": null,
+      "requiresCatalogPage": [
+        "50",
+        "51",
+        "52",
+        "53"
+      ],
+      "excludesLine": null,
+      "excludesModelPattern": "SE \\+|SE &|w/ ?Speakeasy|w/Speakeasy",
+      "notes": "The iron masks on catalog page 50 belong to the doors printed on pages 50-53. Doors that already carry a mask are excluded: their price is the plain door plus the kit plus the mask.",
+      "id": "d41ebf0d19"
+    },
+    {
+      "kind": "hardware",
+      "matchCategory": null,
+      "matchDescription": "Clavos",
+      "requiresType": null,
+      "requiresCollection": null,
+      "requiresLine": "knotty_alder",
+      "requiresModelPattern": null,
+      "requiresOpening": null,
+      "requiresCatalogPage": [
+        "50",
+        "51",
+        "52",
+        "53"
+      ],
+      "excludesLine": null,
+      "excludesModelPattern": null,
+      "notes": "Clavos are an add-on on catalog page 50, for the doors printed on pages 50-53.",
+      "id": "f7cd537191"
+    },
+    {
+      "kind": "hardware",
+      "matchCategory": null,
+      "matchDescription": "Clavos",
+      "requiresType": null,
+      "requiresCollection": null,
+      "requiresLine": null,
+      "requiresModelPattern": null,
+      "requiresOpening": null,
+      "requiresCatalogPage": null,
+      "excludesLine": "knotty_alder",
+      "excludesModelPattern": null,
+      "notes": "Outside knotty alder, clavos are offered as they were before.",
+      "id": "5566ec63f5"
+    },
+    {
+      "kind": "hardware",
+      "matchCategory": null,
+      "matchDescription": "Straps",
+      "requiresType": null,
+      "requiresCollection": null,
+      "requiresLine": "knotty_alder",
+      "requiresModelPattern": null,
+      "requiresOpening": null,
+      "requiresCatalogPage": [
+        "50",
+        "51",
+        "52",
+        "53"
+      ],
+      "excludesLine": null,
+      "excludesModelPattern": null,
+      "notes": "Straps are an add-on on catalog page 50, for the doors printed on pages 50-53.",
+      "id": "24e368271c"
+    },
+    {
+      "kind": "hardware",
+      "matchCategory": null,
+      "matchDescription": "Straps",
+      "requiresType": null,
+      "requiresCollection": null,
+      "requiresLine": null,
+      "requiresModelPattern": null,
+      "requiresOpening": null,
+      "requiresCatalogPage": null,
+      "excludesLine": "knotty_alder",
+      "excludesModelPattern": null,
+      "notes": "Outside knotty alder, straps are offered as they were before.",
+      "id": "aca9491931"
     }
   ],
   "ironGrilleDesigns": [
@@ -20988,7 +21104,7 @@
       "appliesToCollection": "wood",
       "appliesToModelPattern": "Iron Grille",
       "options": [
-        "Clear Low-E",
+        "Clear Low E",
         "Flemish",
         "Stippolyte",
         "Rain",
@@ -20996,7 +21112,136 @@
       ],
       "sourcePage": "54",
       "notes": "The iron-grille page lists these five glasses and no others. The wider Legacy & Panel list (Baroque, Water, Small Reeded, Satin, Clear Bevel Low-E) is not offered behind a grille.",
-      "id": "1c3747d23d"
+      "id": "7ddb1de0f6",
+      "appliesToPriceSheetPage": null
+    },
+    {
+      "kind": "glass",
+      "appliesToCollection": "wood",
+      "appliesToModelPattern": null,
+      "appliesToPriceSheetPage": "P.42",
+      "options": [
+        "Clear Low E",
+        "Clear Bevel Low E",
+        "Baroque",
+        "Flemish",
+        "Water",
+        "Stippolyte",
+        "Rain",
+        "Reeded",
+        "Small Reeded",
+        "Satin"
+      ],
+      "sourcePage": "42",
+      "notes": "The price sheet writes P.42 in the glass column, meaning the glasses printed on that catalog page. The row is priced the same whichever is chosen; the code for it completes the part number.",
+      "id": "88079080d7"
+    },
+    {
+      "kind": "glass",
+      "appliesToCollection": "wood",
+      "appliesToModelPattern": null,
+      "appliesToPriceSheetPage": "P.46",
+      "options": [
+        "Clear Low E",
+        "Clear Bevel Low E",
+        "Baroque",
+        "Flemish",
+        "Water",
+        "Stippolyte",
+        "Rain",
+        "Reeded",
+        "Small Reeded",
+        "Satin"
+      ],
+      "sourcePage": "46",
+      "notes": "The price sheet writes P.46 in the glass column, meaning the glasses printed on that catalog page. The row is priced the same whichever is chosen; the code for it completes the part number.",
+      "id": "7dc2c1e20b"
+    }
+  ],
+  "glassCodes": [
+    {
+      "name": "Clear Low E",
+      "code": "LE",
+      "sourcePage": "price list p.4-6",
+      "notes": "Replaces the (--) in a part number to make it orderable.",
+      "id": "36a91cb3f4"
+    },
+    {
+      "name": "Clear Bevel Low E",
+      "code": "CBLE",
+      "sourcePage": "price list p.4-6",
+      "notes": "Replaces the (--) in a part number to make it orderable.",
+      "id": "9683643e2d"
+    },
+    {
+      "name": "Baroque",
+      "code": "BQ",
+      "sourcePage": "price list p.4-6",
+      "notes": "Replaces the (--) in a part number to make it orderable.",
+      "id": "b74c41aa28"
+    },
+    {
+      "name": "Digital",
+      "code": "D",
+      "sourcePage": "price list p.4-6",
+      "notes": "Replaces the (--) in a part number to make it orderable.",
+      "id": "1df88760bb"
+    },
+    {
+      "name": "Flemish",
+      "code": "F",
+      "sourcePage": "price list p.4-6",
+      "notes": "Replaces the (--) in a part number to make it orderable.",
+      "id": "3b2f3b7da9"
+    },
+    {
+      "name": "Water",
+      "code": "W",
+      "sourcePage": "price list p.4-6",
+      "notes": "Replaces the (--) in a part number to make it orderable.",
+      "id": "6a9ae5fc89"
+    },
+    {
+      "name": "Stippolyte",
+      "code": "ST",
+      "sourcePage": "price list p.4-6",
+      "notes": "Replaces the (--) in a part number to make it orderable.",
+      "id": "bad0ace556"
+    },
+    {
+      "name": "Rain",
+      "code": "RN",
+      "sourcePage": "price list p.4-6",
+      "notes": "Replaces the (--) in a part number to make it orderable.",
+      "id": "3c863dcd0a"
+    },
+    {
+      "name": "Reeded",
+      "code": "RD",
+      "sourcePage": "price list p.4-6",
+      "notes": "Replaces the (--) in a part number to make it orderable.",
+      "id": "8228e314b8"
+    },
+    {
+      "name": "Small Reeded",
+      "code": "SR",
+      "sourcePage": "price list p.4-6",
+      "notes": "Replaces the (--) in a part number to make it orderable.",
+      "id": "8672d50cab"
+    },
+    {
+      "name": "Satin",
+      "code": "SN",
+      "sourcePage": "price list p.4-6",
+      "notes": "Replaces the (--) in a part number to make it orderable.",
+      "id": "99d1eedcb3"
+    },
+    {
+      "name": "Sandblast",
+      "code": "SB",
+      "sourcePage": "price list p.4-6",
+      "notes": "Replaces the (--) in a part number to make it orderable.",
+      "id": "1d200af0d1"
     }
   ]
 }

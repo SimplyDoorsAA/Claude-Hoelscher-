@@ -10,10 +10,25 @@
       "kind": "speakeasyInsert",
       "source": "f80a4145-HoelscherWood_Doors.pdf p7 /Im5"
     },
+    "Round Clavos": {
+      "file": "acc-clavosstrap-round-clavos.webp",
+      "kind": "clavosStrap",
+      "source": "f80a4145-HoelscherWood_Doors.pdf p7 /Im6"
+    },
+    "Square Clavos": {
+      "file": "acc-clavosstrap-square-clavos.webp",
+      "kind": "clavosStrap",
+      "source": "f80a4145-HoelscherWood_Doors.pdf p7 /Im7"
+    },
     "Standard": {
       "file": "acc-ironmask-standard.webp",
       "kind": "ironMask",
       "source": "f80a4145-HoelscherWood_Doors.pdf p7 /Im1"
+    },
+    "Straps": {
+      "file": "acc-clavosstrap-straps.webp",
+      "kind": "clavosStrap",
+      "source": "f80a4145-HoelscherWood_Doors.pdf p7 /Im8"
     },
     "Windsor": {
       "file": "acc-ironmask-windsor.webp",
