@@ -4,16 +4,21 @@ These rows have no page recorded. The Price Manager has a **⚑ Needs page**
 button that filters any grid to exactly this set, so they can be filled in
 against the vendor catalogs as time allows.
 
+A row counts as having a page if any of `catalogPage`, `sourcePage` or `page`
+is filled: products use the first, components and hardware the second. The
+button applies the same test, so what it shows and what this table counts
+cannot drift apart.
+
 | Section | Missing | Of |
 | --- | --- | --- |
 | `fiberglassProducts` | **53** | 222 |
-| `woodProducts` | **0** | 367 |
+| `woodProducts` | **0** | 365 |
 | `fiberglassPrehangAdders` | **24** | 24 |
 | `woodPrehangAdders` | **38** | 38 |
 | `fiberglassComponents` | **11** | 11 |
-| `woodComponents` | **1** | 15 |
+| `woodComponents` | **3** | 17 |
 | `hardware` | **0** | 22 |
-| | **127** | 699 |
+| | **129** | 699 |
 
 ## fiberglassProducts — 53
 
