@@ -64,7 +64,13 @@ oddIds.length && WARN('contract', 'ids that are not 10 hex characters', oddIds.s
 /* ---- duplicate part numbers ------------------------------------------ */
 const skus = allProducts.map(p => p.sku);
 const dupSku = [...new Set(skus.filter((v, i) => skus.indexOf(v) !== i))];
-dupSku.length && WARN('data', 'the same part number appears on more than one row', dupSku.slice(0, 8));
+if (dupSku.length) {
+  // Two rows sharing a (--) glass template is expected; two rows sharing a
+  // real number is the vendor's misprint, and speakeasyOptions says which.
+  const explained = new Set(((cat.speakeasyOptions || {}).skuCorrections || []).map(c => c.printed));
+  WARN('data', 'the same part number appears on more than one row',
+       dupSku.slice(0, 8).map(k => k + (explained.has(k) ? '  (misprint, explained in speakeasyOptions)' : '')));
+}
 
 /* ---- rows nothing is offered on --------------------------------------- */
 const dead = allProducts.filter(p => {
@@ -196,6 +202,77 @@ else {
       : ERR('functionality', 'accessory rule requires a model pattern that matches no model',
             r.id + ' -> ' + r.requiresModelPattern);
   });
+}
+
+/* ---- the speakeasy programme ------------------------------------------ */
+/* Nine doors are priced with a speakeasy kit and an iron mask as one part
+   number each. The app reads that from the part-number grammar published here,
+   so the grammar has to reach real rows, and every choice it offers has to
+   have a picture and a price or an explicit reason it has neither. */
+const se = cat.speakeasyOptions;
+if (!se) {
+  WARN('functionality', 'no speakeasyOptions: the kit and masks cannot be offered on any door');
+} else {
+  const corrOf = p => (se.skuCorrections || []).find(c => c.productId ? c.productId === p.id : c.printed === p.sku);
+  const res = p => { const c = corrOf(p); return (c && c.resolvesAs) || p.sku; };
+  const bySku = new Map(allProducts.map(p => [res(p), p]));
+  const bases = new Map(), variants = new Set(), gaps = [];
+  allProducts.forEach(base => {
+    const code = base.size && base.size.code, sku = res(base);
+    if (!code || !sku.endsWith(code)) return;
+    const stem = sku.slice(0, sku.length - code.length);
+    if (/SE[-MBW]*$/.test(stem)) return;
+    const combos = [];
+    se.masks.forEach(m => se.inserts.forEach(i => {
+      const v = bySku.get(stem + 'SE' + m.code + i.code + code) || null;
+      combos.push({ m, i, v });
+      if (v) variants.add(v.id);
+    }));
+    if (combos.some(c => c.v)) {
+      bases.set(base.id, base);
+      combos.filter(c => !c.v).forEach(c =>
+        gaps.push(base.sku + ' ' + (c.m.name || 'no mask') + ' + ' + c.i.name));
+    }
+  });
+  bases.size
+    ? NOTE('functionality', bases.size + ' door rows carry the speakeasy programme, ' +
+           variants.size + ' variant rows fold into them')
+    : ERR('functionality', 'the speakeasy grammar reaches no priced row');
+  gaps.length && NOTE('data', gaps.length +
+    ' speakeasy combinations the sheet never priced, shown disabled', gaps.slice(0, 8));
+
+  // every choice the configurator draws has to have its picture on disk
+  const dm = JSON.parse(fs.readFileSync(ROOT + '/quoter/assets/designs/manifest.json', 'utf8'));
+  const art = dm.accessories || {};
+  const wantArt = se.masks.map(m => m.name).concat(se.inserts.map(i => i.name))
+    .concat((se.extras || []).flatMap(e => e.shapes.length ? e.shapes : [e.name])).filter(Boolean);
+  const noArt = wantArt.filter(n => !art[n] ||
+    !fs.existsSync(ROOT + '/quoter/assets/designs/' + art[n].file));
+  noArt.length ? WARN('functionality', 'a speakeasy choice the app draws has no picture', noArt)
+               : NOTE('functionality', wantArt.length + ' speakeasy choices, every one photographed');
+
+  // the four the configurator owns must not also sit in the general picker
+  const owned = se.hideFromPicker || [];
+  const stillRuled = (cat.accessoryRules || []).filter(r =>
+    r.matchDescription && owned.some(o => new RegExp(o, 'i').test(r.matchDescription)));
+  stillRuled.length
+    ? WARN('functionality', 'an accessory rule still governs something the configurator owns',
+           stillRuled.map(r => r.id + ' ' + r.matchDescription))
+    : NOTE('functionality', 'the ' + owned.length + ' add-ons the configurator owns are out of the picker');
+
+  // a correction that points nowhere would silently drop a door
+  (se.skuCorrections || []).forEach(c => {
+    const row = c.productId ? allProducts.find(p => p.id === c.productId)
+                            : allProducts.find(p => p.sku === c.printed);
+    if (!row) ERR('data', 'a sku correction names a row that is not in the catalog',
+                  c.productId || c.printed);
+    else if (row.sku !== c.printed)
+      ERR('data', 'a sku correction disagrees with the row it names',
+          c.productId + ' prints ' + row.sku + ', correction says ' + c.printed);
+  });
+  (se.skuCorrections || []).length &&
+    NOTE('data', (se.skuCorrections || []).length +
+      ' misprinted part numbers, each placed by the description beside it');
 }
 
 /* ---- report ------------------------------------------------------------ */

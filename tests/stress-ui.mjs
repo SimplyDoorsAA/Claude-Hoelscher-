@@ -50,6 +50,28 @@ const keyOf=p=>{
     if(rx.test(d)) return d.replace(rx,'$1').replace(/\s+/g,' ').trim(); }
   return d.replace(SIZE_PREFIX,'').trim();
 };
+/* A speakeasy door, its kit and its mask are one part number, and those rows
+   are reached through the door's configurator rather than as cards, so they
+   are not counted here either. Read from the grammar the catalogue publishes. */
+const seVariantIds=(()=>{
+  const o=cat.speakeasyOptions, out=new Set();
+  if(!o) return out;
+  const all=[...(cat.woodProducts||[]),...(cat.fiberglassProducts||[])];
+  const corr=p=>(o.skuCorrections||[]).find(c=>c.productId?c.productId===p.id:c.printed===p.sku);
+  const res=p=>{const c=corr(p); return (c&&c.resolvesAs)||p.sku;};
+  const bySku=new Map(all.map(p=>[res(p),p]));
+  for(const base of all){
+    const code=base.size&&base.size.code, sku=res(base);
+    if(!code||!sku.endsWith(code)) continue;
+    const stem=sku.slice(0,sku.length-code.length);
+    if(/SE[-MBW]*$/.test(stem)) continue;
+    for(const m of o.masks) for(const i of o.inserts){
+      const v=bySku.get(stem+'SE'+m.code+i.code+code);
+      if(v) out.add(v.id);
+    }
+  }
+  return out;
+})();
 const stains=(cat.fiberglassStainColors||[]).map(x=>x.name);
 /* Answer whichever question the configurator is asking, until it prices. */
 async function answer(product,finish,config){
@@ -178,7 +200,8 @@ await page.waitForSelector('#catalog article',{timeout:30000});
 ok('now showing the wood line', /Wood/.test(await page.textContent('#lineChip')));
 ok('and the collection within it', /Mahogany/.test(await page.textContent('#groupChipLabel')));
 const woodCount=await page.textContent('#resultCount');
-const woodModels=new Set(cat.woodProducts.filter(p=>p.line==='mahogany').map(keyOf)).size;
+const woodModels=new Set(cat.woodProducts
+  .filter(p=>p.line==='mahogany'&&!seVariantIds.has(p.id)).map(keyOf)).size;
 ok('catalog switched to mahogany only, filters cleared',
    woodCount.startsWith(woodModels+' of '+woodModels), woodCount+' expected '+woodModels);
 ok('no knotty alder card is in the mahogany catalogue',

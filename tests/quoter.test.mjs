@@ -34,6 +34,30 @@ const keyOf=p=>{
 const grilleRows=catalog.fiberglassIronGrilles||[];
 const stainRows =catalog.fiberglassStainColors||[];
 const optionOnly=new Set(grilleRows.map(g=>g.productId));
+/* The speakeasy programme prices a door, its kit and its mask as one part
+   number. Those rows reach the customer through the door's configurator, not
+   as cards of their own, so they are option-only here too. Recomputed from the
+   published grammar rather than read back off the app. */
+const seOpt=catalog.speakeasyOptions||null;
+const seVariants=new Map();          // base product id -> its combinations
+if(seOpt){
+  const corr=p=>(seOpt.skuCorrections||[]).find(c=>c.productId?c.productId===p.id:c.printed===p.sku);
+  const resolved=p=>{const c=corr(p); return (c&&c.resolvesAs)||p.sku;};
+  const bySku=new Map(engine.products.map(p=>[resolved(p),p]));
+  for(const base of engine.products){
+    const code=base.size&&base.size.code, sku=resolved(base);
+    if(!code||!sku.endsWith(code)) continue;
+    const stem=sku.slice(0,sku.length-code.length);
+    if(/SE[-MBW]*$/.test(stem)) continue;
+    const combos=[];
+    for(const m of seOpt.masks) for(const i of seOpt.inserts){
+      const v=bySku.get(stem+'SE'+m.code+i.code+code)||null;
+      combos.push({mask:m,insert:i,product:v});
+      if(v) optionOnly.add(v.id);
+    }
+    if(combos.some(c=>c.product)) seVariants.set(base.id,combos);
+  }
+}
 const GROUP_FIELD={fiberglass:'skin',wood:'line'};
 function modelsOf(collection,group){
   const field=GROUP_FIELD[collection];
@@ -700,18 +724,31 @@ const SINGLE={Finish:'Unfinished',Opening:'Single door',Handing:'Left hand',Swin
 const DOUBLE=Object.assign({},SINGLE,{Opening:'Double door'});
 
 const twoPanel=await pickerFor('2 Panel Square VG',SINGLE);
-ok('a two-panel mahogany door is offered all three iron masks',
-   ['Standard','Balfour','Windsor'].every(m=>twoPanel.some(o=>o.includes('Iron Mask')&&o.includes(m))),
-   twoPanel.filter(o=>/Iron Mask/.test(o)).join(' | '));
-ok('and the mahogany speakeasy kit, not the knotty alder one',
-   twoPanel.some(o=>/Speakeasy Kit.*Mahogany/.test(o)) &&
-   !twoPanel.some(o=>/Speakeasy Kit.*Knotty/.test(o)),
-   twoPanel.filter(o=>/Speakeasy/.test(o)).join(' | '));
+ok('a two-panel mahogany door offers no iron mask in the picker',
+   twoPanel.every(o=>!/Iron Mask/i.test(o)), twoPanel.filter(o=>/Iron Mask/i.test(o)).join(' | '));
+ok('nor the speakeasy kit, which is asked for on the door itself',
+   twoPanel.every(o=>!/Speakeasy/i.test(o)), twoPanel.filter(o=>/Speakeasy/i.test(o)).join(' | '));
 ok('barn hardware is never offered on a hinged wood door',
    twoPanel.every(o=>!barnHw.some(b=>o.startsWith(b))));
 ok('a T-astragal is not offered on a single opening',
    twoPanel.every(o=>!/T-Astragal/i.test(o)), twoPanel.filter(o=>/Astragal/i.test(o)).join(' | '));
 await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+/* The programme is not a knotty alder one: mahogany carries it too, and the
+   catalog marks the same two-panel doors in both lines. */
+await page.click('#clearFilters').catch(()=>{});
+await page.fill('#q','2 Panel Square VG'); await page.waitForTimeout(500);
+await openModel('2 Panel Square VG');
+ok('the mahogany two-panel door asks about the speakeasy on the door',
+   (await steps()).includes('Speakeasy'), (await steps()).join(' | '));
+await pick('Speakeasy kit'); await pick('Wood panel');
+const mMasks=await optionsOf('Iron mask');
+ok('and offers the same three masks, priced into the part number',
+   mMasks.length===4 && ['Standard','Balfour','Windsor'].every(m=>mMasks.some(o=>o.startsWith(m))),
+   mMasks.join(' | '));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await page.click('#clearFilters').catch(()=>{});
+await page.waitForTimeout(300);
 
 const plain=await pickerFor('1 Lite Vertical',SINGLE);
 ok('a door outside the two-panel family gets no iron mask',
@@ -841,26 +878,27 @@ const pageOfModel=name=>{
   const p=catalog.woodProducts.find(x=>x.line==='knotty_alder'&&keyOf(x)===name);
   return p?String(p.catalogPage||''):'';
 };
+/* The kit, the masks, clavos and straps are asked for on the door itself now,
+   so the general "Add to this opening" picker offers none of them, on any
+   door — including the doors whose catalog page prints them. */
+ok('the catalogue names the four the configurator owns',
+   PAGE_ADDONS.every(a=>(seOpt.hideFromPicker||[]).includes(a)),
+   (seOpt.hideFromPicker||[]).join(' | '));
 const on5053=await addonsOffered('KA 2 Panel Square VG');
-ok('a door on catalog page 50 takes all four add-ons',
-   on5053 && PAGE_ADDONS.every(a=>on5053[a]), JSON.stringify(on5053)+' page '+pageOfModel('KA 2 Panel Square VG'));
+ok('the speakeasy door offers none of the four in the picker',
+   on5053 && PAGE_ADDONS.every(a=>!on5053[a]), JSON.stringify(on5053)+' page '+pageOfModel('KA 2 Panel Square VG'));
 const onPlank=await addonsOffered('KA Square Top Plank VG');
-ok('so does a door on page 53',
-   onPlank && PAGE_ADDONS.every(a=>onPlank[a]), JSON.stringify(onPlank)+' page '+pageOfModel('KA Square Top Plank VG'));
+ok('nor does another door on the same pages',
+   onPlank && PAGE_ADDONS.every(a=>!onPlank[a]), JSON.stringify(onPlank)+' page '+pageOfModel('KA Square Top Plank VG'));
 const on44=await addonsOffered('KA 6 Lite NRM');
-ok('a door on page 44 takes none of them',
+ok('nor a door on page 44',
    on44 && PAGE_ADDONS.every(a=>!on44[a]), JSON.stringify(on44)+' page '+pageOfModel('KA 6 Lite NRM'));
 const onGrille=await addonsOffered('KA 3/4 Lite Iron Grille');
-ok('nor does the iron grille door on page 55',
+ok('nor the iron grille door on page 55',
    onGrille && PAGE_ADDONS.every(a=>!onGrille[a]), JSON.stringify(onGrille)+' page '+pageOfModel('KA 3/4 Lite Iron Grille'));
-
-/* A speakeasy door's price is the plain door plus the kit plus the mask, so
-   offering either again would charge for it twice. */
-const onSE=await addonsOffered('KA 2PSQ VG, SE + Glass + IM');
-ok('a door that already has a speakeasy is not offered the kit again',
-   onSE && !onSE['Speakeasy Kit'] && !onSE['Iron Mask'], JSON.stringify(onSE));
-ok('but it still takes clavos and straps',
-   onSE && onSE['Clavos'] && onSE['Straps'], JSON.stringify(onSE));
+ok('and no variant of a speakeasy door is a card of its own',
+   (await page.$$eval('#catalog article h3',ns=>ns.map(n=>n.textContent)))
+     .every(t=>!/\bSE\s*[+&]/.test(t)));
 const kit=engine.hardwareList().find(h=>/Speakeasy Kit.*Knotty/i.test(h.description||''));
 const mask=engine.hardwareList().find(h=>/Iron Mask - Standard/i.test(h.description||''));
 const slabOf=sku=>{const p=catalog.woodProducts.find(x=>x.sku===sku); return p&&p.prices.unfinished.slab;};
@@ -870,6 +908,78 @@ ok('and the sheet agrees: SE door = plain door + kit',
 ok('and SE + mask = SE door + mask',
    slabOf('KA2PSQSEM--3068')-slabOf('KA2PSQSE--3068')===mask.priceCents,
    (slabOf('KA2PSQSEM--3068')-slabOf('KA2PSQSE--3068'))+' vs '+mask.priceCents);
+
+/* --- the speakeasy programme, asked on the door ------------------------- */
+const seBase=[...seVariants.keys()].map(id=>engine.productById(id));
+const seModels=new Set(seBase.map(keyOf));
+ok('nine doors carry the catalog\'s speakeasy note',
+   seModels.size===9, [...seModels].sort().join(' | '));
+ok('and between them the sheet prices 140 variant part numbers',
+   optionOnly.size-grilleRows.length===140, String(optionOnly.size-grilleRows.length));
+
+await page.click('#clearFilters').catch(()=>{});
+await page.fill('#q','2 Panel Square'); await page.waitForTimeout(600);
+await openModel('KA 2 Panel Square VG');
+await pick('3\'0" x 6\'8"');
+ok('the speakeasy door asks whether to fit the kit',
+   (await steps()).includes('Speakeasy'), (await steps()).join(' | '));
+await pick('Speakeasy kit');
+const inserts=await optionsOf('Insert');
+ok('then which insert goes behind the grille',
+   inserts.length===2 && inserts.some(o=>/Glass/.test(o)) && inserts.some(o=>/Wood/.test(o)),
+   inserts.join(' | '));
+await pick('Wood panel');
+const masks=await optionsOf('Iron mask');
+ok('then which iron mask, the catalog\'s three and none',
+   masks.length===4 && ['No iron mask','Standard','Balfour','Windsor']
+     .every(m=>masks.some(o=>o.startsWith(m))), masks.join(' | '));
+ok('and each mask shows its photograph',
+   (await page.$$eval('#detail .steprow img',ns=>ns.length))>=3);
+await pick('Balfour');
+await driveModel(UNFIN_SLAB);
+const seProd=catalog.woodProducts.find(x=>x.sku==='KA2PSQSEBW3068');
+const seLine=engine.priceLine({productId:seProd.id,finish:'unfinished',config:'slab',qty:1},
+                              engine.marginFor('retail'));
+const seText=await page.textContent('#detail');
+ok('the answers resolve to the part number Hoelscher prices',
+   seText.includes('KA2PSQSEBW3068'), 'KA2PSQSEBW3068');
+ok('and the door is priced at that part number\'s price',
+   (await page.$eval('#detail .font-display.text-3xl',n=>n.textContent))===formatCents(seLine.unitSellCents),
+   formatCents(seLine.unitSellCents));
+const plainProd=catalog.woodProducts.find(x=>x.sku==='KA2PSQ3068');
+ok('which is dearer than the plain door, by the kit and the mask',
+   seProd.prices.unfinished.slab>plainProd.prices.unfinished.slab,
+   formatCents(seProd.prices.unfinished.slab-plainProd.prices.unfinished.slab)+' list');
+
+/* Clavos and straps are per-piece extras on the same doors, asked here now. */
+const extraNames=(seOpt.extras||[]).map(e=>e.name);
+ok('the same door offers clavos and straps on the door itself',
+   extraNames.length===2 && seText.includes('Clavos & straps'), extraNames.join(' | '));
+const shapes=await page.$$eval('#detail .shapeopt',ns=>ns.map(n=>n.textContent.trim()));
+ok('and clavos are offered round or square, at one price',
+   shapes.includes('Round') && shapes.includes('Square'), shapes.join(' | '));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+/* A combination the vendor never priced is shown, disabled, with the reason —
+   Circle Top is printed without a Balfour row in any size. */
+await page.click('#clearFilters').catch(()=>{});
+await page.fill('#q','Circle Top 2 Panel'); await page.waitForTimeout(600);
+await openModel('KA Circle Top 2 Panel VG');
+await pick('3\'0" x 8\'0"');
+await pick('Speakeasy kit');
+await pick('Wood panel');
+const ctMasks=await page.$$eval('#detail .steprow',ns=>{
+  const row=ns.find(r=>{const h=r.parentElement.querySelector('p');
+    return h && h.textContent.trim()==='Iron mask';});
+  return row?[...row.querySelectorAll('.opt')].map(n=>({t:n.textContent.trim(),off:n.disabled})):[];});
+ok('the Balfour mask Hoelscher never priced is shown but cannot be chosen',
+   ctMasks.some(m=>m.t.startsWith('Balfour')&&m.off),
+   ctMasks.map(m=>m.t+(m.off?' (disabled)':'')).join(' | '));
+ok('while the masks it did price stay choosable',
+   ['Standard','Windsor'].every(n=>ctMasks.some(m=>m.t.startsWith(n)&&!m.off)));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await page.click('#clearFilters').catch(()=>{});
+await page.waitForTimeout(300);
 
 /* --- sidelites are add-ons, so they sort below the doors ---------------- */
 await page.click('#clearFilters').catch(()=>{});
