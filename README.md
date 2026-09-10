@@ -20,6 +20,26 @@ App A  Price Manager  ──PUT──▶  data/catalog.json          ──fetch
 Everything lives in `index.html` — HTML, CSS and vanilla JavaScript. No build step,
 no framework, no server. Drop it on GitHub Pages and it works.
 
+## How a change reaches the live site
+
+`main` is what GitHub Pages serves, so nothing is pushed to it directly. Work
+happens on a branch and reaches `main` by merging a pull request:
+
+1. Commits go to `claude/price-manager-app-aann3v`.
+2. Pushing it opens (or updates) a pull request against `main`.
+3. **Tests** runs the whole suite on the pull request — the engine, both apps in
+   real Chromium, and the catalog audit. The result shows on the PR.
+4. Merging it updates `main`, and Pages republishes within a minute or two.
+
+So the live site only ever moves when you merge, and you can see what changed
+and whether it passed before it does. To take a change back, revert the merge.
+
+After a merge, start the next round from the tip of `main`:
+
+```sh
+git fetch origin && git checkout -B claude/price-manager-app-aann3v origin/main
+```
+
 ## Deploy
 
 1. **Settings → Pages → Build and deployment → Deploy from a branch**, branch `main`, folder `/ (root)`.
@@ -147,15 +167,17 @@ you commit anything.
 ## Tests
 
 ```sh
-./tests/run.sh                       # all five suites, ~4 minutes
+npm install && npx playwright install chromium   # once
+npm test                             # the audit and all five suites, ~4 minutes
+npm run audit                        # data contracts and cross-references only
 TAILWIND_CSS=/path/to/tw.css ./tests/run.sh   # faithful screenshots
-node tools/audit-catalog.mjs         # data contracts and cross-references
 ```
 
-227 checks. The browser suites drive real Chromium through Playwright, resolved
-from `PLAYWRIGHT_MODULE` if the default install path does not exist. Each serves
-the repo on a port the OS picks, so a killed run cannot block the next one.
-Screenshots land in `.test-output/` (override with `SHOT_DIR`).
+293 checks, and the same set CI runs on every pull request. The browser suites
+drive real Chromium through Playwright, found in `node_modules`, image-wide, or
+wherever `PLAYWRIGHT_MODULE` points — whichever exists. Each serves the repo on
+a port the OS picks, so a killed run cannot block the next one. Screenshots land
+in `.test-output/` (override with `SHOT_DIR`), and CI keeps them as an artifact.
 
 Every expected figure is recomputed inside the test from `data/catalog.json`
 and the printed shipping schedule rather than asked of the engine, so a bug

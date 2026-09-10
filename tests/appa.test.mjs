@@ -1,9 +1,7 @@
 /* App A smoke test: the Price Manager must still load and edit the catalog and
    the rules file after openingSpec was added to pricing-rules.json. */
-// Playwright is resolved at run time so the suite is not tied to one machine's
-// install path: set PLAYWRIGHT_MODULE to override.
-const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ||
-  '/opt/node22/lib/node_modules/playwright/index.mjs');
+import { playwright } from './playwright.mjs';
+const { chromium } = await playwright();
 import http from 'node:http'; import fs from 'node:fs';
 import path from 'node:path'; import url from 'node:url';
 const ROOT=path.resolve(url.fileURLToPath(import.meta.url),'../..');
