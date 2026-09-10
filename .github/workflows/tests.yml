@@ -1,0 +1,52 @@
+# Runs the whole suite on every pull request, and on main after a merge, so a
+# change is known good before it reaches the published site.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Audit the catalog data
+        run: node tools/audit-catalog.mjs
+
+      - name: Pricing engine
+        run: |
+          node packages/pricing-engine/engine.test.mjs
+          node packages/pricing-engine/stress.test.mjs
+
+      - name: Price Manager
+        run: node tests/appa.test.mjs
+
+      - name: Quoter
+        run: node tests/quoter.test.mjs
+
+      - name: Quoter under load
+        run: node tests/stress-ui.mjs
+
+      - name: Keep the screenshots the run produced
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: .test-output/
+          if-no-files-found: ignore
