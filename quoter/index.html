@@ -104,6 +104,7 @@ tailwind.config = {
   .no-tw .grilleshot img { width:100%; height:100%; object-fit:cover; }
   .no-tw .optwords, .no-tw .optlabel { display:block; }
   .no-tw .optsub { display:block; font-size:10px; opacity:.7; }
+  .no-tw .borrowed { display:block; background:#1c1917; color:#fff; font-size:9px; padding:2px 4px; }
   .no-tw .accshot { display:block; width:40px; height:40px; flex:0 0 auto;
                     border:1px solid #e4e0d9; border-radius:6px; overflow:hidden; background:#20241f; }
   .no-tw .accshot img { width:100%; height:100%; object-fit:contain; }
@@ -632,15 +633,58 @@ function glassRuleFor(model, collection) {
 }
 
 /** Put the photo in, or the drawn silhouette when there is none. */
+/* The catalogs photograph a door once and then describe its variants in words:
+   an Impact door is the same door with different glass, a speakeasy door the
+   same door with a speakeasy cut into it, a flat-glass door the same door
+   glazed plainly. Where a variant has no photograph of its own, its base
+   door's picture is a truer thing to show than a drawn silhouette — labelled,
+   so nobody reads it as a photograph of the variant.
+
+   The comparison is on letters and digits alone because the price sheet
+   abbreviates what the catalog spells out: "2PSQ VG" for "2 Panel Square
+   V-Grooved". */
+const VARIANT_OF = [
+  /\s*[-,]?\s*w\/?\s*Speakeasy\b.*$/i,   // ... w/ Speakeasy & Standard Iron Mask
+  /\s*,?\s*\bSE\s*[+&].*$/i,              // 2PSQ VG, SE + Glass + IM
+  /\s*-\s*Impact$/i,                      // Full Lite - White Brushed Smooth - Impact
+  /\s*-\s*Flat Glass$/i
+];
+const MODEL_ABBREV = [
+  [/v-grooved/g, "vg"], [/2 panel square/g, "2psq"], [/2 panel arch/g, "2pa"],
+  [/arch top 2pa/g, "at2pa"], [/circle top 2 panel/g, "ct2p"],
+  [/circle panel 2 panel/g, "cp2p"],
+  // The sheet writes "Smooth Skin" in one place and "Smooth" in another for
+  // the same door, so the word carries no meaning for matching.
+  [/\bskin\b/g, ""]
+];
+function modelFingerprint(name) {
+  let n = String(name || "").toLowerCase();
+  MODEL_ABBREV.forEach(([rx, to]) => { n = n.replace(rx, to); });
+  return n.replace(/[^a-z0-9]/g, "");
+}
+function basePhoto(modelName) {
+  const bases = [];
+  VARIANT_OF.forEach(rx => {
+    const b = String(modelName || "").replace(rx, "").trim().replace(/[,\-]$/, "").trim();
+    if (b && b !== modelName) bases.push(b);
+  });
+  if (!bases.length) return null;
+  const want = new Set(bases.map(modelFingerprint));
+  for (const name of Object.keys(state.photos)) {
+    if (want.has(modelFingerprint(name)))
+      return { src: photoFor(name), of: name };
+  }
+  return null;
+}
+
 /* Some models the door pages never photograph on their own are photographed
    elsewhere in the catalog as exactly that door: an iron-grille door appears
    once per grille design, and a decorative-glass door appears glazed with each
    of its glasses. Either is a true picture of the model, so it stands in. */
 function standInPhoto(model) {
   if (!model) return null;
-  const g = (model.grilleDesigns || [])[0];
-  const rec = g && state.designs.grilles[g.name];
-  if (rec) return CONFIG.designBase + encodeURIComponent(rec.file);
+  const g = (model.grilleDesigns || []).find(x => x.photo);
+  if (g) return CONFIG.designBase + encodeURIComponent(g.photo);
   for (const name of model.glazings || []) {
     const dec = state.designs.decorativeGlass[name];
     if (dec) return CONFIG.designBase + encodeURIComponent(dec.file);
@@ -649,7 +693,9 @@ function standInPhoto(model) {
 }
 
 function fillArt(holder, product, modelName, cls, model) {
-  const src = photoFor(modelName || product) || standInPhoto(model);
+  const name = modelName || (product && modelKeyOf(product));
+  const borrowed = !photoFor(name) && !standInPhoto(model) ? basePhoto(name) : null;
+  const src = photoFor(name) || standInPhoto(model) || (borrowed && borrowed.src);
   if (!src) {
     const svg = doorSilhouette(product);
     if (cls) svg.classList.add(...cls.split(" "));
@@ -658,7 +704,16 @@ function fillArt(holder, product, modelName, cls, model) {
   }
   const img = document.createElement("img");
   img.src = src;
-  img.alt = modelName || product.description || product.sku;
+  img.alt = borrowed ? borrowed.of + " — this door before its variation"
+                     : (name || product.description || product.sku);
+  if (borrowed) {
+    // Say whose photograph this is. A speakeasy door shown without its
+    // speakeasy would otherwise read as a picture of the wrong door.
+    const tag = el("span",
+      "borrowed absolute bottom-0 left-0 right-0 bg-ink/70 px-1.5 py-0.5 text-[9px] leading-tight text-white");
+    tag.textContent = borrowed.of + " shown";
+    holder.appendChild(tag);
+  }
   img.loading = "lazy";
   img.decoding = "async";
   img.className = "h-full w-full object-contain" + (cls ? " " + cls : "");
@@ -745,8 +800,11 @@ function camingFor(glazing) {
 }
 function grilleDesignsFor(model) {
   if (!/Iron Grille/i.test(model.name)) return [];
-  return (state.engine.catalog.ironGrilleDesigns || [])
-    .filter(g => !g.line || g.line === model.line);
+  // A design is offered on one lite style as well as one line: the catalog
+  // prints separate 2/3, 3/4 and Full Lite grille pages.
+  return (state.engine.catalog.ironGrilleDesigns || []).filter(g =>
+    (!g.line || g.line === model.line) &&
+    (!g.style || model.name.indexOf(g.style) >= 0));
 }
 /** Stain colours apply to grained skins only, never the Smooth Collection. */
 function stainsApplyTo(modelName) {
@@ -1481,12 +1539,11 @@ function renderDetail() {
         : null);
     model.grilleDesigns.forEach(g => {
       const ok = fits(g);
-      const rec = state.designs.grilles[g.name];
       let art = null;
-      if (rec) {
+      if (g.photo) {
         art = el("span", "grilleshot block h-20 w-10 shrink-0 overflow-hidden rounded border border-paper-line bg-paper-rail");
         const im = document.createElement("img");
-        im.src = CONFIG.designBase + encodeURIComponent(rec.file);
+        im.src = CONFIG.designBase + encodeURIComponent(g.photo);
         im.alt = ""; im.loading = "lazy"; im.decoding = "async";
         im.className = "h-full w-full object-cover";
         im.addEventListener("error", function onE() {

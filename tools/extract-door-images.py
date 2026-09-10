@@ -26,6 +26,8 @@ OUT  = os.path.join(ROOT, 'quoter', 'assets', 'doors')
 # iron-grille style thumbnails are tall but half the height of a door photo.
 MIN_H_PT, MIN_W_PT, MIN_ASPECT = 180.0, 40.0, 1.8
 MAX_PX_H = 900           # nobody needs more on a card or a phone
+BELOW_REACH = 60.0       # how far under a photo its own part numbers may sit
+PANEL_PAD  = 14.0        # a centred caption may start this far left of its photo
 WEBP_QUALITY = 82
 
 SIZE_PREFIX = re.compile(r'^\d{4,5}[A-Z]?\s+')
@@ -122,10 +124,36 @@ def sku_resolver(products):
     # docs/audit-2026-09-09.md), so a number alone cannot always say which. The
     # catalog page prints the difference in words — "Decorative Glass" against
     # "Flat Glass" — so a tie is broken on the text beside the photo.
-    def pick(keys, context):
+    # The catalog tells a raised-moulding door from a no-raised-moulding one by
+    # the letters it prints after the size — M4L1P3068 against M4L1P3068NRM —
+    # and our own model names carry the same designation. The size-plus-prefix
+    # index throws those letters away, so they are put back here as a tie-break.
+    def moulding_of(text):
+        u = re.sub(r'[^A-Za-z]', ' ', str(text)).upper()
+        if re.search(r'\bNRM\b', u):
+            return 'NRM'
+        if re.search(r'\bRM\b', u):
+            return 'RM'
+        return None
+
+    def by_moulding(keys, token, size):
+        m = re.search(re.escape(size), token)
+        tail = token[m.end():] if m else ''
+        # The catalog spells out NRM and leaves the plain door unmarked.
+        want = 'NRM' if moulding_of(tail) == 'NRM' else 'RM'
+        marks = {k: moulding_of(k) for k in keys}
+        if len({v for v in marks.values() if v}) < 2:
+            return None                      # they do not differ on this
+        hit = [k for k, v in marks.items() if v == want]
+        return hit[0] if len(hit) == 1 else None
+
+    def pick(keys, context, token='', size=''):
         keys = sorted(keys)
         if len(keys) == 1:
             return keys[0]
+        settled = by_moulding(keys, token, size) if token and size else None
+        if settled:
+            return settled
         ctx = re.sub(r'[^a-z0-9]+', ' ', (context or '').lower())
         common = set()
         for k in keys:
@@ -160,7 +188,7 @@ def sku_resolver(products):
                 best = (h, best[1] | keys)
         if not best:
             return None
-        return pick(best[1], context)
+        return pick(best[1], context, token, size)
     return resolve
 
 # Skins that differ only in colour must not share one photo: a white door
@@ -291,7 +319,15 @@ def extract_glass(pdfs, dry):
     return files
 
 DESIGN_DIR = os.path.join(ROOT, 'quoter', 'assets', 'designs')
-GRILLE_PN = re.compile(r'\bKA34([A-Z]{3})C(\d{4})\b')
+# Every grille design Hoelscher makes, by the three letters its part number
+# uses. Naming them explicitly stops the pattern reading any three letters in a
+# part number as a design.
+GRILLE_CODES = ('AVI', 'BAL', 'BAR', 'BER', 'CRD', 'HMM', 'SLT', 'STG', 'SIE', 'SHN', 'WHI')
+# KA34AVIC3068 for knotty alder; M23ACRDC3068, M34AVIC3068 and MFULLAVIC3068 for
+# mahogany: line letters, then the lite style, then the design, then the size.
+GRILLE_PN = re.compile(r'\b(KA|M)([A-Z0-9]{2,4}?)(' + '|'.join(GRILLE_CODES) + r')C(\d{4})\b')
+GRILLE_LINE = {'KA': 'knotty_alder', 'M': 'mahogany'}
+GRILLE_STYLE = {'34': '3/4 Lite', '23A': '2/3 Lite', '23': '2/3 Lite', 'FULL': 'Full Lite'}
 
 def _cell(x, y, xs, ys):
     """Which half of the page a thing sits in. The catalog lays these pages out
@@ -318,15 +354,25 @@ def extract_grilles(reader, pdf, found):
         codes = {}
         for x, y, t in runs:
             for m in GRILLE_PN.finditer(t):
-                codes.setdefault(m.group(1), {'xs': [], 'ys': [], 'sizes': set()})
-                codes[m.group(1)]['xs'].append(x)
-                codes[m.group(1)]['ys'].append(y)
-                codes[m.group(1)]['sizes'].add(m.group(2))
+                line, style, code, size = m.groups()
+                d = codes.setdefault(code, {'xs': [], 'ys': [], 'sizes': set(),
+                                            'line': GRILLE_LINE.get(line),
+                                            'style': GRILLE_STYLE.get(style)})
+                d['xs'].append(x); d['ys'].append(y); d['sizes'].add(size)
         if not codes:
             continue
         photos = [(n, x, y, w, h) for n, x, y, w, h in placements(page)
                   if h >= 200 and w >= 80 and 1.8 <= h / max(w, 1) <= 3.4]
         if not photos:
+            continue
+        # The knotty alder grille pages are a clean 2x2 whose captions sit above
+        # each photo, and every assignment off them has been checked by eye. The
+        # mahogany grille pages lay their captions out differently and come out
+        # paired to the wrong design, so they are left alone rather than filed
+        # on a guess. Lifting this needs those pages read properly first.
+        if {d['line'] for d in codes.values()} != {'knotty_alder'}:
+            print(f'  skipped the grille page p{pno}: only the knotty alder '
+                  f'layout is understood')
             continue
         xs = (min(p[1] for p in photos) + max(p[1] for p in photos)) / 2 + 1
         ys = (min(p[2] for p in photos) + max(p[2] for p in photos)) / 2 + 1
@@ -357,9 +403,11 @@ def extract_grilles(reader, pdf, found):
                     if below:
                         stain = min(below, key=lambda r: ry - r[1])[2].strip()
             if label:
-                placed[label] = (page, n, code, sorted(d['sizes']), 'caption', pno, stain)
+                placed[label] = (page, n, code, sorted(d['sizes']), 'caption', pno,
+                                 stain, d['line'], d['style'])
             else:
-                unnamed.append((key, page, n, code, sorted(d['sizes']), pno, stain))
+                unnamed.append((key, page, n, code, sorted(d['sizes']), pno,
+                                stain, d['line'], d['style']))
 
         # Names whose transform the PDF dropped come through at the origin.
         lost = [t.strip() for x, y, t in runs if x == 0 and y == 0
@@ -367,16 +415,18 @@ def extract_grilles(reader, pdf, found):
         if unnamed and len(lost) == len(unnamed):
             order = {('L', 'T'): 0, ('R', 'T'): 1, ('L', 'B'): 2, ('R', 'B'): 3}
             unnamed.sort(key=lambda u: order.get(u[0], 9))
-            for name, (key, page, n, code, sizes, pn, stain) in zip(lost, unnamed):
-                placed[name] = (page, n, code, sizes, 'remainder', pn, stain)
+            for name, (key, page, n, code, sizes, pn, stain, ln, st) in zip(lost, unnamed):
+                placed[name] = (page, n, code, sizes, 'remainder', pn, stain, ln, st)
         elif unnamed:
-            for key, page, n, code, sizes, pn, stain in unnamed:
+            for key, page, n, code, sizes, pn, stain, ln, st in unnamed:
                 print(f'  skipped grille {code} on p{pn}: the page does not name it')
 
-        for name, (page, n, code, sizes, basis, pn, stain) in placed.items():
-            found['grilles'].setdefault(name, {
+        for name, (page, n, code, sizes, basis, pn, stain, ln, st) in placed.items():
+            # One design can be offered on more than one lite style and line, so
+            # a photo is filed under the three together, not the name alone.
+            found['grilles'].setdefault((ln, st, name), {
                 'page': page, 'xobj': n, 'code': code, 'sizes': sizes,
-                'basis': basis, 'stainShown': stain,
+                'basis': basis, 'stainShown': stain, 'line': ln, 'style': st,
                 'source': f'{os.path.basename(pdf)} p{pn} {n}'})
 
 def extract_decorative(reader, pdf, found, vocab):
@@ -518,10 +568,16 @@ def extract_designs(pdfs, dry):
     for group, prefix, dest in (('grilles', 'grille', 'grilles'),
                                 ('decorative', 'glass', 'decorativeGlass'),
                                 ('accessories', 'acc', 'accessories')):
-        for label, d in sorted(found[group].items()):
-            fn = f'{prefix}-{slug(label)}.webp'
-            rec = {'file': fn, 'source': d['source']}
-            for k in ('code', 'sizes', 'basis', 'stainShown', 'kind', 'label'):
+        for label, d in sorted(found[group].items(), key=lambda kv: str(kv[0])):
+            if group == 'grilles':
+                ln, st, name = label
+                label = '-'.join(str(x) for x in (ln, st, name))
+                rec = {'file': f'{prefix}-{slug(label)}.webp', 'source': d['source'],
+                       'name': name}
+            else:
+                rec = {'file': f'{prefix}-{slug(label)}.webp', 'source': d['source']}
+            fn = rec['file']
+            for k in ('code', 'sizes', 'basis', 'stainShown', 'line', 'style', 'kind', 'label'):
                 if k in d:
                     rec[k] = d[k]
             if not dry:
@@ -553,7 +609,7 @@ def extract_designs(pdfs, dry):
         for k, v in sorted(out[dest].items()):
             extra = v.get('code', '') and (f" {v['code']} {'/'.join(v.get('sizes', []))}"
                                            f"  {v.get('stainShown') or ''}")
-            print(f"   {k:<18} {v.get('basis','-'):<9}{extra}")
+            print(f"   {k:<42} {v.get('basis','-'):<9}{extra}")
     print(f'{total // 1024} KB total')
     return out
 
@@ -592,6 +648,14 @@ def main(argv):
                       if n in dims and h >= MIN_H_PT and w >= MIN_W_PT and h / max(w, 1) >= MIN_ASPECT]
             if not photos:
                 continue
+            # An iron-grille page photographs one door per grille design, not
+            # one per model, so its pictures belong to the --designs pass. Left
+            # here they file a grille door under whatever model the page's part
+            # numbers happen to resolve to. Such a page is known by carrying
+            # grille part numbers — not by the words "Iron Grilles", which also
+            # head the speakeasy page's list of add-ons.
+            if GRILLE_PN.search(page.extract_text() or ''):
+                continue
             runs = text_runs(page)
             placed = [(x, y, t) for x, y, t in runs if x or y]
             # A part number belongs to the photo it sits beside: the one whose
@@ -611,11 +675,26 @@ def main(argv):
                        for name, x, y, w, h in photos}
             poisoned = set()
             for tx, ty, t in placed:
-                near = [(abs(tx - (px + pw / 2)), pn)
-                        for pn, px, py, pw, ph in photos if py <= ty <= py + ph]
-                if not near:
+                # Most pages set the part numbers beside the photo, but the barn
+                # page prints them underneath it. Either way the run belongs to
+                # the photo whose panel it is printed in, and a panel runs from
+                # its own photo across to the next photo in that row.
+                #
+                # Nearest-centre is not good enough: a door listing its 6'8" and
+                # 8'0" sizes in two columns puts the second column closer to the
+                # middle of the photo beside it than to its own.
+                row = []
+                for pn, px, py, pw, ph in photos:
+                    if py <= ty <= py + ph or 0 < py - ty <= BELOW_REACH:
+                        row.append((px, pn))
+                if not row:
                     continue
-                owner = min(near)[1]
+                row.sort()
+                # A caption centred under its photo can start a little left of it.
+                owner = row[0][1]
+                for px, pn in row:
+                    if tx >= px - PANEL_PAD:
+                        owner = pn
                 for tok in TOKEN.findall(t):
                     k = resolve(tok, context.get(owner, ''))
                     # A number the sheet gives to more than one door, that the

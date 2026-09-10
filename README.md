@@ -134,6 +134,7 @@ you commit anything.
 | `tools/audit-catalog.mjs` | Structural audit of the published data |
 | `docs/audit-2026-09-09.md` | What the last full audit found, and what is still open |
 | `quoter/assets/doors/` | Door photography extracted from the catalogs, plus `manifest.json` |
+| `docs/photography.md` | Which models have a picture, which borrow one, and what is still missing |
 | `quoter/assets/glass/` | Glass swatches with Hoelscher's privacy ratings |
 | `quoter/assets/designs/` | Iron grille designs, decorative glass and mask photography |
 | `docs/knotty-alder-deep-dive-2026-09-09.md` | Catalog pages 42-57 read in full: what was added, what is still open |

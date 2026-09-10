@@ -218,14 +218,34 @@ ok('card "from" price is the cheapest variant, per the engine',
 for(let y=0;y<6;y++){ await page.mouse.wheel(0,1400); await page.waitForTimeout(200); }
 await page.evaluate(()=>window.scrollTo(0,0)); await page.waitForTimeout(600);
 const manifest=JSON.parse(fs.readFileSync(ROOT+'/quoter/assets/doors/manifest.json','utf8'));
-const withPhoto=FG.filter(m=>manifest.models[m.name]).length;
+/* A card shows its own photograph, or borrows the one of the door it is a
+   variation of — an Impact door is the same door with different glass — and
+   falls back to the drawn silhouette only when neither exists. */
+const VARIANT_OF=[/\s*[-,]?\s*w\/?\s*Speakeasy\b.*$/i, /\s*,?\s*\bSE\s*[+&].*$/i,
+                  /\s*-\s*Impact$/i, /\s*-\s*Flat Glass$/i];
+const ABBREV=[[/v-grooved/g,'vg'],[/2 panel square/g,'2psq'],[/2 panel arch/g,'2pa'],
+              [/arch top 2pa/g,'at2pa'],[/circle top 2 panel/g,'ct2p'],
+              [/circle panel 2 panel/g,'cp2p'],[/\bskin\b/g,'']];
+const fingerprint=n=>{let x=String(n||'').toLowerCase();
+  ABBREV.forEach(([r,t])=>{x=x.replace(r,t);}); return x.replace(/[^a-z0-9]/g,'');};
+const photoPrints=new Set(Object.keys(manifest.models).map(fingerprint));
+const hasArt=m=>{
+  if(manifest.models[m.name]) return true;
+  return VARIANT_OF.some(rx=>{const b=m.name.replace(rx,'').trim().replace(/[,\-]$/,'').trim();
+    return b && b!==m.name && photoPrints.has(fingerprint(b));});
+};
+const withPhoto=FG.filter(hasArt).length;
 const svgCount=await page.$$eval('#catalog article svg[role="img"]',n=>n.length);
 const imgCount=await page.$$eval('#catalog article img',n=>n.length);
 const broken=await page.$$eval('#catalog article img',ns=>ns.filter(i=>i.complete&&i.naturalWidth===0).length);
 ok('the catalogue shows the real door photography',
    withPhoto>0 && imgCount===withPhoto, imgCount+' photos for '+withPhoto+' models with one');
+ok('a borrowed photograph says whose it is',
+   (await page.$$eval('#catalog article .borrowed',ns=>ns.length))
+     === FG.filter(m=>!manifest.models[m.name]&&hasArt(m)).length,
+   String(FG.filter(m=>!manifest.models[m.name]&&hasArt(m)).length)+' borrowed');
 ok('no photograph is broken', broken===0, String(broken));
-ok('a model with no photograph still draws a silhouette',
+ok('a model with no photograph and nothing to borrow draws a silhouette',
    svgCount===FG.length-withPhoto, 'svg='+svgCount+' of '+(FG.length-withPhoto)+' without a photo');
 ok('every photo the manifest names is actually on disk',
    Object.values(manifest.models).every(f=>fs.existsSync(ROOT+'/quoter/assets/doors/'+f)),
@@ -711,8 +731,8 @@ const designs=JSON.parse(fs.readFileSync(ROOT+'/quoter/assets/designs/manifest.j
 const grilleDesigns=catalog.ironGrilleDesigns||[];
 
 ok('every iron grille design in the catalogue has a photo',
-   grilleDesigns.every(g=>designs.grilles[g.name]),
-   grilleDesigns.filter(g=>!designs.grilles[g.name]).map(g=>g.name).join(' | ')||grilleDesigns.length+' designs');
+   grilleDesigns.every(g=>g.photo && fs.existsSync(ROOT+'/quoter/assets/designs/'+g.photo)),
+   grilleDesigns.filter(g=>!g.photo).map(g=>g.name).join(' | ')||grilleDesigns.length+' designs');
 ok('every decorative glass the catalogue names has a photo',
    [...new Set((catalog.decorativeGlassDesigns||[]).map(d=>d.name))]
      .every(n=>designs.decorativeGlass[n]),

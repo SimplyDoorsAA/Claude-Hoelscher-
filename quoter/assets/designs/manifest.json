@@ -79,10 +79,12 @@
     }
   },
   "grilles": {
-    "Avignon": {
+    "knotty_alder-3/4 Lite-Avignon": {
       "basis": "caption",
       "code": "AVI",
-      "file": "grille-avignon.webp",
+      "file": "grille-knotty-alder-3-4-lite-avignon.webp",
+      "line": "knotty_alder",
+      "name": "Avignon",
       "sizes": [
         "2880",
         "3068",
@@ -90,24 +92,30 @@
         "3680"
       ],
       "source": "f80a4145-HoelscherWood_Doors.pdf p12 /Im1",
-      "stainShown": "Special Walnut"
+      "stainShown": "Special Walnut",
+      "style": "3/4 Lite"
     },
-    "Balfour": {
+    "knotty_alder-3/4 Lite-Balfour": {
       "basis": "remainder",
       "code": "BAL",
-      "file": "grille-balfour.webp",
+      "file": "grille-knotty-alder-3-4-lite-balfour.webp",
+      "line": "knotty_alder",
+      "name": "Balfour",
       "sizes": [
         "2880",
         "3068",
         "3080"
       ],
       "source": "f80a4145-HoelscherWood_Doors.pdf p12 /Im2",
-      "stainShown": "Red Oak"
+      "stainShown": "Red Oak",
+      "style": "3/4 Lite"
     },
-    "Barcelona": {
+    "knotty_alder-3/4 Lite-Barcelona": {
       "basis": "caption",
       "code": "BAR",
-      "file": "grille-barcelona.webp",
+      "file": "grille-knotty-alder-3-4-lite-barcelona.webp",
+      "line": "knotty_alder",
+      "name": "Barcelona",
       "sizes": [
         "2880",
         "3068",
@@ -115,72 +123,90 @@
         "3680"
       ],
       "source": "f80a4145-HoelscherWood_Doors.pdf p12 /Im3",
-      "stainShown": "English Chestnut"
+      "stainShown": "English Chestnut",
+      "style": "3/4 Lite"
     },
-    "Berkley": {
+    "knotty_alder-3/4 Lite-Berkley": {
       "basis": "remainder",
       "code": "BER",
-      "file": "grille-berkley.webp",
+      "file": "grille-knotty-alder-3-4-lite-berkley.webp",
+      "line": "knotty_alder",
+      "name": "Berkley",
       "sizes": [
         "2880",
         "3068",
         "3080"
       ],
       "source": "f80a4145-HoelscherWood_Doors.pdf p12 /Im4",
-      "stainShown": "Aged Barrel"
+      "stainShown": "Aged Barrel",
+      "style": "3/4 Lite"
     },
-    "Cordoba": {
+    "knotty_alder-3/4 Lite-Cordoba": {
       "basis": "caption",
       "code": "CRD",
-      "file": "grille-cordoba.webp",
+      "file": "grille-knotty-alder-3-4-lite-cordoba.webp",
+      "line": "knotty_alder",
+      "name": "Cordoba",
       "sizes": [
         "2880",
         "3068",
         "3080"
       ],
       "source": "f80a4145-HoelscherWood_Doors.pdf p13 /Im0",
-      "stainShown": "Ebony"
+      "stainShown": "Ebony",
+      "style": "3/4 Lite"
     },
-    "Hammond": {
+    "knotty_alder-3/4 Lite-Hammond": {
       "basis": "caption",
       "code": "HMM",
-      "file": "grille-hammond.webp",
+      "file": "grille-knotty-alder-3-4-lite-hammond.webp",
+      "line": "knotty_alder",
+      "name": "Hammond",
       "sizes": [
         "2880",
         "3068",
         "3080"
       ],
       "source": "f80a4145-HoelscherWood_Doors.pdf p13 /Im1",
-      "stainShown": "Jacobean"
+      "stainShown": "Jacobean",
+      "style": "3/4 Lite"
     },
-    "Saltillo": {
+    "knotty_alder-3/4 Lite-Saltillo": {
       "basis": "caption",
       "code": "SLT",
-      "file": "grille-saltillo.webp",
+      "file": "grille-knotty-alder-3-4-lite-saltillo.webp",
+      "line": "knotty_alder",
+      "name": "Saltillo",
       "sizes": [
         "2880",
         "3080",
         "3680"
       ],
       "source": "f80a4145-HoelscherWood_Doors.pdf p13 /Im2",
-      "stainShown": "Special Walnut"
+      "stainShown": "Special Walnut",
+      "style": "3/4 Lite"
     },
-    "Santiago": {
+    "knotty_alder-3/4 Lite-Santiago": {
       "basis": "caption",
       "code": "STG",
-      "file": "grille-santiago.webp",
+      "file": "grille-knotty-alder-3-4-lite-santiago.webp",
+      "line": "knotty_alder",
+      "name": "Santiago",
       "sizes": [
         "2880",
         "3068",
         "3080"
       ],
       "source": "f80a4145-HoelscherWood_Doors.pdf p13 /Im3",
-      "stainShown": "Red Oak"
+      "stainShown": "Red Oak",
+      "style": "3/4 Lite"
     },
-    "Sienna": {
+    "knotty_alder-3/4 Lite-Sienna": {
       "basis": "caption",
       "code": "SIE",
-      "file": "grille-sienna.webp",
+      "file": "grille-knotty-alder-3-4-lite-sienna.webp",
+      "line": "knotty_alder",
+      "name": "Sienna",
       "sizes": [
         "2880",
         "3068",
@@ -188,24 +214,30 @@
         "3680"
       ],
       "source": "f80a4145-HoelscherWood_Doors.pdf p14 /Im1",
-      "stainShown": "English Chestnut"
+      "stainShown": "English Chestnut",
+      "style": "3/4 Lite"
     },
-    "Southampton": {
+    "knotty_alder-3/4 Lite-Southampton": {
       "basis": "remainder",
       "code": "SHN",
-      "file": "grille-southampton.webp",
+      "file": "grille-knotty-alder-3-4-lite-southampton.webp",
+      "line": "knotty_alder",
+      "name": "Southampton",
       "sizes": [
         "2880",
         "3080",
         "3680"
       ],
       "source": "f80a4145-HoelscherWood_Doors.pdf p14 /Im0",
-      "stainShown": "Aged Barrel"
+      "stainShown": "Aged Barrel",
+      "style": "3/4 Lite"
     },
-    "Whitney": {
+    "knotty_alder-3/4 Lite-Whitney": {
       "basis": "caption",
       "code": "WHI",
-      "file": "grille-whitney.webp",
+      "file": "grille-knotty-alder-3-4-lite-whitney.webp",
+      "line": "knotty_alder",
+      "name": "Whitney",
       "sizes": [
         "2880",
         "3068",
@@ -213,7 +245,8 @@
         "3680"
       ],
       "source": "f80a4145-HoelscherWood_Doors.pdf p14 /Im5",
-      "stainShown": "Ebony"
+      "stainShown": "Ebony",
+      "style": "3/4 Lite"
     }
   },
   "note": "Iron grille designs, decorative glass and speakeasy hardware from the Hoelscher catalogs, by the name the catalog prints. basis says how the name was tied to the photo: caption (printed above or beside it), column (aligned with its column of part numbers) or remainder (the only option the page had left)."
