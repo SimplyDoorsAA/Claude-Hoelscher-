@@ -35,8 +35,19 @@ const b=await chromium.launch();
 const page=await (await b.newContext({viewport:{width:1500,height:1000}})).newPage();
 const errs=[]; page.on('pageerror',e=>errs.push(e.message));
 page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource/.test(m.text()))errs.push(m.text());});
-await page.route('https://cdn.tailwindcss.com*',r=>r.fulfill({status:200,contentType:'text/javascript',
-  body:'window.tailwind={config:{}};document.addEventListener("DOMContentLoaded",()=>{const s=document.createElement("style");s.textContent=window.__TW__;document.head.appendChild(s);});'}));
+/* Two states are real: Tailwind loaded, and Tailwind unreachable — where the
+   .no-tw fallback stylesheet takes over. Serving an EMPTY sheet would be a
+   third that exists nowhere, styled by neither, and it is what this suite used
+   to do on any machine without a compiled sheet. So with a sheet, serve it;
+   without one, block the CDN outright and exercise the fallback the app was
+   designed for. Either way the state is one the app really has. */
+if (TW) {
+  await page.route('https://cdn.tailwindcss.com*',r=>r.fulfill({status:200,contentType:'text/javascript',
+    body:'window.tailwind={config:{}};document.addEventListener("DOMContentLoaded",()=>{const s=document.createElement("style");s.textContent=window.__TW__;document.head.appendChild(s);});'}));
+} else {
+  await page.route('https://cdn.tailwindcss.com*',r=>r.abort());
+}
+console.log('# tailwind: ' + (TW ? 'compiled sheet served' : 'CDN blocked, .no-tw fallback'));
 await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
 await page.addInitScript(css=>{window.__TW__=css;},TW);
 

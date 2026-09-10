@@ -223,6 +223,10 @@ tailwind.config = {
      the page sideways with it. */
   .jf label { display:flex; flex-direction:column; gap:2px; min-width:0; font-size:10px;
               letter-spacing:.1em; text-transform:uppercase; color:#78716c; }
+  /* box-sizing is Tailwind preflight's doing, and the app has to hold up when
+     the CDN never answers: without it a 100%-wide field adds its own padding
+     and border on top of the full width and pushes the page sideways. */
+  .jf, .jf * { box-sizing:border-box; }
   .jf input { width:100%; min-width:0; max-width:100%;
               border:1px solid #e4e0d9; border-radius:6px; padding:5px 7px;
               font-size:13px; background:#fff; color:#1c1917; }
