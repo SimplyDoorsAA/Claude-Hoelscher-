@@ -29,6 +29,9 @@ jobs:
       - name: Audit the catalog data
         run: node tools/audit-catalog.mjs
 
+      - name: Audit every price against the rules file
+        run: node tools/audit-prices.mjs
+
       - name: Pricing engine
         run: |
           node packages/pricing-engine/engine.test.mjs
@@ -39,6 +42,9 @@ jobs:
 
       - name: Quoter
         run: node tests/quoter.test.mjs
+
+      - name: Printed quote and order sheet
+        run: node tests/print.test.mjs
 
       - name: Quoter under load
         run: node tests/stress-ui.mjs

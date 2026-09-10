@@ -217,11 +217,17 @@ tailwind.config = {
              font-size:7.5pt; color:#444; display:flex; justify-content:space-between; gap:16px; }
   /* The job form in the drawer */
   .jf { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-  .jf label { display:flex; flex-direction:column; gap:2px; font-size:10px;
+  /* min-width:0 on the track and width:100% on the field: a grid item's
+     min-width is auto, and an input's intrinsic width is about twenty
+     characters, so without both the form runs past a phone screen and takes
+     the page sideways with it. */
+  .jf label { display:flex; flex-direction:column; gap:2px; min-width:0; font-size:10px;
               letter-spacing:.1em; text-transform:uppercase; color:#78716c; }
-  .jf input { border:1px solid #e4e0d9; border-radius:6px; padding:5px 7px;
+  .jf input { width:100%; min-width:0; max-width:100%;
+              border:1px solid #e4e0d9; border-radius:6px; padding:5px 7px;
               font-size:13px; background:#fff; color:#1c1917; }
   .jf .wide { grid-column:1 / -1; }
+  @media (max-width:420px){ .jf { grid-template-columns:1fr; } }
   .no-tw #jobPanel { display:block; border-top:1px solid #e4e0d9; padding:10px 16px; }
 </style>
 </head>
