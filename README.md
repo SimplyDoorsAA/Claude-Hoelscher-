@@ -152,7 +152,9 @@ you commit anything.
 | `tests/quoter.test.mjs` | App B end to end, incl. the whole configurator |
 | `tests/stress-ui.mjs` | Real quotes built through App B, checked against the sheets |
 | `tools/audit-catalog.mjs` | Structural audit of the published data |
-| `docs/audit-2026-09-09.md` | What the last full audit found, and what is still open |
+| `tools/audit-prices.mjs` | Recomputes every price from the rules file alone and compares it to the engine |
+| `docs/audit-2026-09-10.md` | The last full audit: pricing verified, and the three things blocking office use |
+| `docs/audit-2026-09-09.md` | The audit before it, and what it left open |
 | `quoter/assets/doors/` | Door photography extracted from the catalogs, plus `manifest.json` |
 | `docs/photography.md` | Which models have a picture, which borrow one, and what is still missing |
 | `quoter/assets/glass/` | Glass swatches with Hoelscher's privacy ratings |

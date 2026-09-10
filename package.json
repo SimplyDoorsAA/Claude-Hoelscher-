@@ -5,8 +5,9 @@
   "type": "module",
   "description": "Price Manager and front-facing Quoter for the SimplyDoors Hoelscher catalog. Both apps are static files with no build step; this manifest exists only so the test suites can find Playwright.",
   "scripts": {
-    "test": "node tools/audit-catalog.mjs && sh tests/run.sh",
-    "audit": "node tools/audit-catalog.mjs"
+    "test": "node tools/audit-catalog.mjs && node tools/audit-prices.mjs && sh tests/run.sh",
+    "audit": "node tools/audit-catalog.mjs && node tools/audit-prices.mjs",
+    "audit:prices": "node tools/audit-prices.mjs"
   },
   "devDependencies": {
     "playwright": "^1.47.0"
