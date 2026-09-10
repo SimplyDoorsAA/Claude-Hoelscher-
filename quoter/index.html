@@ -1041,6 +1041,11 @@ function productCard(model) {
 }
 
 function renderCatalog(reset = true) {
+  // Choosing a line sets the scope but the collection question is still to
+  // come, and the scroll observer fires in between — which drew the whole line
+  // behind the gate. Nobody could see it, but it is work for nothing and it
+  // makes "nothing is shown until the scope is chosen" untrue.
+  if (gateOpen()) return 0;
   const grid = $("#catalog");
   const list = filteredModels();
   if (reset) { grid.textContent = ""; state.rendered = 0; }
@@ -2135,6 +2140,11 @@ function showGate(title, blurb, foot, back) {
 function hideGate() {
   $("#lineGate").classList.add("hidden");
   document.body.style.overflow = "";
+}
+/** True while the line or collection question is still on screen. */
+function gateOpen() {
+  const g = $("#lineGate");
+  return !!g && !g.classList.contains("hidden");
 }
 
 function renderLineGate() {

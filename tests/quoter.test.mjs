@@ -82,6 +82,12 @@ const errs=[]; const req404=[];
 page.on('console',m=>{if(m.type()==='error'&&!/favicon|404|Failed to load resource/i.test(m.text()))errs.push(m.text());});
 page.on('pageerror',e=>errs.push('PAGEERROR: '+e.message));
 page.on('response',r=>{ if(r.status()===404) req404.push(r.url().split('/').pop()); });
+/* Block the Tailwind CDN outright rather than hoping it is unreachable. This
+   suite's layout assertions were all written against the fallback stylesheet,
+   and on a machine with internet the CDN would load and quietly test something
+   else — which is exactly what happened the first time CI ran. */
+await page.route('https://cdn.tailwindcss.com*', r=>r.abort());
+await page.route('https://fonts.googleapis.com/**', r=>r.fulfill({status:200,contentType:'text/css',body:''}));
 
 const openModel=async name=>{
   await page.click('#clearFilters'); await page.waitForTimeout(200);
@@ -141,8 +147,15 @@ ok('the gate counts what the catalogue will actually show',
    choices.join(' | ')+' expected '+fgAll.count+' '+fgAll.noun);
 
 /* ---------------- step two: the collection inside the line -------------- */
+/* Wait for the gate to actually re-ask rather than for a fixed moment: the
+   question it moves to is what the next assertions are about, and a fixed
+   sleep here failed once on a loaded machine. */
+const lineQuestion=(await page.textContent('#gateTitle')).trim();
 await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/Fiberglass/.test(n.textContent)).click();});
-await page.waitForTimeout(500);
+await page.waitForFunction(
+  was=>{const n=document.querySelector('#gateTitle');
+        return n && n.textContent.trim() && n.textContent.trim()!==was;},
+  lineQuestion, {timeout:15000});
 ok('choosing a line asks which collection before showing a door',
    await page.isVisible('#lineGate') &&
    (await page.$$eval('#catalog article',n=>n.length))===0,
@@ -175,9 +188,10 @@ ok('no smooth-skin door leaks into the woodgrain catalogue',
    leaked.every(h=>!/Smooth/i.test(h)), leaked.filter(h=>/Smooth/i.test(h)).join(' | '));
 ok('imports the pricing engine module', !req404.some(u=>u==='index.js'), req404.slice(0,3).join(','));
 
-/* This suite runs with cdn.tailwindcss.com unreachable, so it exercises the
-   built-in fallback stylesheet — the state a customer lands in when the CDN
-   is blocked or down. */
+/* The CDN is blocked above, so this suite exercises the built-in fallback
+   stylesheet throughout — the state a customer lands in when the CDN is
+   blocked or down. The styled path is covered separately by the screenshot
+   harness, which serves a locally compiled Tailwind. */
 ok('runs against the no-Tailwind fallback stylesheet',
    await page.evaluate(()=>document.documentElement.classList.contains('no-tw')));
 const fat=await page.$$eval('svg',ns=>ns.map(n=>{const r=n.getBoundingClientRect();
