@@ -156,6 +156,73 @@ tailwind.config = {
   input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
   input[type=number]{ -moz-appearance:textfield; }
   .safe-b { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+  /* ------------------------------ printing -------------------------------
+     The app is a browsing tool; a quote is a document. Rather than trying to
+     hide the catalogue, the drawer and sixty buttons one by one, the document
+     is built into #printDoc and is the only thing print media shows. Its
+     styles are plain CSS, never Tailwind utilities, so a quote prints the
+     same whether or not the CDN answered. */
+  #printDoc { display:none; }
+  @media print {
+    body > *:not(#printDoc) { display:none !important; }
+    #printDoc { display:block !important; }
+    @page { size: letter portrait; margin: 0.5in; }
+    html, body { background:#fff !important; margin:0; padding:0; }
+  }
+  #printDoc, #printDoc * { color:#000; box-sizing:border-box; }
+  #printDoc { font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+              font-size:10pt; line-height:1.42; }
+  .pd-page { page-break-after:always; }
+  .pd-page:last-child { page-break-after:auto; }
+  .pd-head { display:flex; align-items:flex-start; justify-content:space-between;
+             gap:24px; padding-bottom:10px; border-bottom:1px solid #dee2e5; }
+  .pd-mark { width:2.05in; height:auto; }
+  .pd-contact { text-align:right; font-size:8.5pt; line-height:1.6; letter-spacing:.01em; }
+  .pd-title { margin:14px 0 8px; font-size:15pt; font-weight:600; letter-spacing:-.01em; }
+  .pd-meta { display:grid; grid-template-columns:1fr 1fr; gap:2px 28px; font-size:9pt; }
+  .pd-meta div { display:flex; gap:6px; }
+  .pd-meta b { font-weight:600; min-width:104px; }
+  .pd-meta span { flex:1; }
+  .pd-sec { margin-top:16px; font-size:8pt; font-weight:700; letter-spacing:.1em;
+            text-transform:uppercase; padding-bottom:4px; border-bottom:1px solid #000; }
+  table.pd-t { width:100%; border-collapse:collapse; font-size:9pt; margin-top:6px; }
+  table.pd-t th { text-align:left; font-size:7.5pt; letter-spacing:.08em; text-transform:uppercase;
+                  font-weight:700; padding:5px 6px; border-bottom:1px solid #000; }
+  table.pd-t td { padding:6px; border-bottom:1px solid #e6e6e6; vertical-align:top; }
+  table.pd-t .r { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  table.pd-t .sub { display:block; font-size:8pt; color:#444; margin-top:2px; }
+  .pd-cols { display:flex; gap:26px; margin-top:16px; align-items:flex-start; }
+  .pd-cols > div { flex:1; }
+  .pd-box { border:1px solid #000; padding:9px 11px; }
+  .pd-line { display:flex; justify-content:space-between; gap:12px; padding:2.5px 0;
+             font-size:9pt; font-variant-numeric:tabular-nums; }
+  .pd-line.big { font-weight:700; font-size:10.5pt; border-top:1px solid #000;
+                 margin-top:5px; padding-top:6px; }
+  .pd-note { font-size:8pt; color:#333; margin-top:6px; }
+  .pd-approve { margin-top:18px; font-size:9pt; }
+  .pd-approve h4 { margin:12px 0 4px; font-size:9.5pt; font-weight:700; }
+  .pd-approve p { margin:0 0 7px; }
+  .pd-sign { display:flex; gap:26px; margin-top:18px; }
+  .pd-sign div { flex:1; }
+  .pd-sign .ln { border-bottom:1px solid #000; height:26px; }
+  .pd-sign span { font-size:8pt; }
+  .pd-terms h3 { font-size:12pt; margin:0 0 8px; font-weight:600; }
+  .pd-terms section { margin-bottom:7px; }
+  .pd-terms h5 { font-size:7.5pt; letter-spacing:.07em; text-transform:uppercase;
+                 font-weight:700; margin:0 0 2px; }
+  .pd-terms p { margin:0; font-size:7.2pt; line-height:1.44; text-align:justify; }
+  .pd-flag { font-size:8pt; font-weight:600; }
+  .pd-foot { margin-top:14px; padding-top:7px; border-top:1px solid #dee2e5;
+             font-size:7.5pt; color:#444; display:flex; justify-content:space-between; gap:16px; }
+  /* The job form in the drawer */
+  .jf { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .jf label { display:flex; flex-direction:column; gap:2px; font-size:10px;
+              letter-spacing:.1em; text-transform:uppercase; color:#78716c; }
+  .jf input { border:1px solid #e4e0d9; border-radius:6px; padding:5px 7px;
+              font-size:13px; background:#fff; color:#1c1917; }
+  .jf .wide { grid-column:1 / -1; }
+  .no-tw #jobPanel { display:block; border-top:1px solid #e4e0d9; padding:10px 16px; }
 </style>
 </head>
 <body class="font-sans text-ink antialiased">
@@ -300,6 +367,7 @@ tailwind.config = {
     </button>
   </div>
   <div id="quoteLines" class="flex-1 overflow-y-auto px-5 py-4 space-y-3"></div>
+  <div id="jobPanel" class="rule border-t border-paper-line px-5 py-3"></div>
   <div id="quoteTotals" class="rule border-t border-paper-line px-5 py-4 safe-b"></div>
 </aside>
 
@@ -308,6 +376,12 @@ tailwind.config = {
 <section id="detail" role="dialog" aria-modal="true" aria-labelledby="detailTitle"
   class="fixed z-[60] hidden inset-x-0 bottom-0 max-h-[92vh] overflow-y-auto rounded-t-2xl bg-paper-card shadow-lift
          md:inset-0 md:m-auto md:h-fit md:max-h-[90vh] md:w-[min(940px,94vw)] md:rounded-2xl"></section>
+
+<!-- =============================== PRINT ===============================
+     Built on demand by buildPrintDoc() and hidden on screen. In print media
+     it is the only thing on the page, so what comes out of the printer is a
+     document rather than a screenshot of the app. -->
+<div id="printDoc" aria-hidden="true"></div>
 
 <script type="module">
 /* ===========================================================================
@@ -325,7 +399,7 @@ tailwind.config = {
    =========================================================================== */
 
 import {
-  createEngine, formatCents, applyMargin,
+  createEngine, formatCents, applyMargin, roundCents,
   FINISHES, CONFIGS, CONFIG_LABELS, FINISH_LABELS
 } from "../packages/pricing-engine/index.js";
 
@@ -334,6 +408,8 @@ import {
 const CONFIG = {
   catalogUrl: "../data/catalog.json",
   rulesUrl:   "../data/pricing-rules.json",
+  estimateUrl:"../data/estimate.json",
+  brandBase:  "./assets/brand/",
   imageBase:    "./assets/doors/",
   manifestUrl:  "./assets/doors/manifest.json",
   glassBase:    "./assets/glass/",
@@ -373,6 +449,8 @@ const state = {
   photos: {},                             // model name -> file, from the manifest
   glass: { glass: {}, privacy: {} },      // glass name -> swatch and privacy rating
   designs: { decorativeGlass: {}, accessories: {} },
+  estimate: null,                         // company, document copy and terms
+  job: null,                              // who the quote is for; see JOB_FIELDS
   ready: false,
   mode: "customer",                       // "customer" | "cost"
   marginTier: null,                       // "builder" | "retail" — set from the rules file
@@ -522,6 +600,14 @@ async function loadData() {
     fetchJson(CONFIG.rulesUrl)
   ]);
   state.engine = createEngine(catalog, rules);
+  /* The letterhead, the tax rate and the terms are about SimplyDoors rather
+     than about Hoelscher, so they live in their own file. Without it the app
+     still quotes; it just cannot print a document, and says so. */
+  try {
+    state.estimate = await fetchJson(CONFIG.estimateUrl);
+  } catch (e) {
+    state.estimate = null;
+  }
   // Photography is optional: the drawn silhouette carries the catalogue on its
   // own, so a missing or unreadable manifest must not stop the app loading.
   try {
@@ -2281,7 +2367,428 @@ function accessoryBlock(product, draft) {
   return block;
 }
 
-/* --- 5f. quote drawer ---------------------------------------------------- */
+/* --- 5f. the job, and the two documents it prints -------------------------
+   A quote the office hands a customer is a document, not a screenshot of the
+   catalogue. Two come out of the same quote: the estimate the customer signs,
+   and the order sheet the office buys from. Both are built into #printDoc,
+   which is the only thing print media shows.
+
+   Everything about SimplyDoors rather than about Hoelscher — the letterhead,
+   the tax rate, the terms — comes from data/estimate.json, so none of it is
+   edited in here. */
+
+const JOB_FIELDS = [
+  { key: "customer",    label: "Customer",         wide: true,  ph: "Name on the quote" },
+  { key: "location",    label: "Service location", wide: true,  ph: "Street, city, ZIP" },
+  { key: "phone",       label: "Phone",            wide: false, ph: "" },
+  { key: "email",       label: "Email",            wide: false, ph: "" },
+  { key: "description", label: "Description",      wide: true,  ph: "What the job is" },
+  { key: "labor",       label: "Labor",            wide: false, ph: "0.00" }
+];
+const JOB_KEY = "simplydoors.job.v1";
+const QNO_KEY = "simplydoors.quoteno.v1";
+
+const estDoc   = () => state.estimate;
+const canPrint = () => !!(state.estimate && state.estimate.company && state.estimate.estimate);
+
+function blankJob() {
+  const o = { quoteNo: null, date: null };
+  JOB_FIELDS.forEach(f => { o[f.key] = ""; });
+  return o;
+}
+function saveJob() { try { localStorage.setItem(JOB_KEY, JSON.stringify(state.job)); } catch (e) {} }
+function restoreJob() {
+  let o = null;
+  try { o = JSON.parse(localStorage.getItem(JOB_KEY) || "null"); } catch (e) {}
+  state.job = Object.assign(blankJob(), o || {});
+}
+/* A number is spent when a quote is printed, not when one is started, so
+   browsing the catalogue never burns one. Counted on this device. */
+function nextQuoteNo() {
+  const e = estDoc().estimate;
+  const prefix = e.quoteNumberPrefix || "SD-";
+  let n = Number(e.quoteNumberStart) || 1001;
+  try {
+    const seen = parseInt(localStorage.getItem(QNO_KEY), 10);
+    if (isFinite(seen)) n = seen + 1;
+  } catch (err) {}
+  try { localStorage.setItem(QNO_KEY, String(n)); } catch (err) {}
+  return prefix + n;
+}
+const todayStamp = () => {
+  const d = new Date();
+  return String(d.getMonth() + 1).padStart(2, "0") + "/" +
+         String(d.getDate()).padStart(2, "0") + "/" + d.getFullYear();
+};
+/* Dollars in, integer cents out, by string arithmetic. 19.99 x 100 is
+   1998.9999999999998 in binary floating point, and this is a signed document. */
+function parseDollars(text) {
+  const t = String(text == null ? "" : text).replace(/[$,\s]/g, "");
+  if (!t) return 0;
+  const m = /^(-?)(\d*)(?:\.(\d{0,2}))?$/.exec(t);
+  if (!m) return 0;
+  const cents = (parseInt(m[2] || "0", 10) * 100) +
+                parseInt((m[3] || "").padEnd(2, "0") || "0", 10);
+  return m[1] === "-" ? -cents : cents;
+}
+
+/* The estimate is the quote's materials figure, then SimplyDoors' own tax and
+   labor. Hoelscher's warehouse charge is landed cost on the material, so it is
+   already inside the materials figure and never appears as a freight line. */
+function estimateTotals(q) {
+  const e = estDoc().estimate;
+  const rate = Number(e.salesTaxRate) || 0;
+  const materialsCents = q.grandTotalSellCents;
+  const taxCents  = roundCents(materialsCents * rate);
+  const laborCents = parseDollars(state.job.labor);
+  const depositCents = materialsCents + taxCents;      // labor is billed on completion
+  const jobTotalCents = depositCents + laborCents;
+  return { rate, materialsCents, taxCents, laborCents, depositCents, jobTotalCents };
+}
+
+/** One opening, described the way a customer reads it rather than a part number. */
+function openingWords(l, spec) {
+  const op = openingByKey(spec.opening);
+  const bits = [FINISH_LABELS[l.finish], op ? op.label : CONFIG_LABELS[l.config]];
+  if (spec.glazing)       bits.push(spec.glazing + " glass");
+  if (spec.caming)        bits.push(spec.caming + " caming");
+  if (spec.insert)        bits.push("speakeasy with " + spec.insert.toLowerCase());
+  if (spec.mask && spec.mask !== MASK_NONE) bits.push(spec.mask + " iron mask");
+  if (spec.sdlLites)      bits.push(spec.sdlLites + " simulated divided lites");
+  if (spec.grilleDesign)  bits.push(spec.grilleDesign + " grille");
+  if (spec.grilleStyle)   bits.push(spec.grilleStyle + " grille");
+  if (spec.stain)         bits.push(spec.stain + " stain");
+  if (spec.handing)       bits.push(HANDING_LABELS[spec.handing]);
+  if (spec.swing)         bits.push(SWING_LABELS[spec.swing]);
+  if (spec.jambDepth)     bits.push(spec.jambDepth + '" jamb');
+  return bits.filter(Boolean).join(" \u00b7 ");
+}
+
+/* ---- the printed pages ---- */
+
+function printHead() {
+  const c = estDoc().company;
+  const head = el("div", "pd-head");
+  const img = document.createElement("img");
+  img.className = "pd-mark";
+  img.src = CONFIG.brandBase + encodeURIComponent(c.markFile || "");
+  img.alt = c.name || "";
+  head.appendChild(img);
+  const box = el("div", "pd-contact");
+  [c.web, c.phone, [c.address, c.cityStateZip].filter(Boolean).join(", "), c.email]
+    .filter(Boolean).forEach(t => box.appendChild(el("div", null, t)));
+  head.appendChild(box);
+  return head;
+}
+function metaRow(label, value) {
+  const d = el("div", "");
+  d.appendChild(el("b", null, label));
+  d.appendChild(el("span", null, value || "\u2014"));
+  return d;
+}
+function money(cents) { return formatCents(cents); }
+
+/** The estimate the customer signs. */
+function buildQuoteDoc(q) {
+  const est = estDoc(), e = est.estimate, job = state.job;
+  const page = el("div", "pd-page");
+  page.appendChild(printHead());
+  page.appendChild(el("h2", "pd-title", e.title || "Estimate"));
+
+  const meta = el("div", "pd-meta");
+  meta.append(
+    metaRow("Name:", job.customer),
+    metaRow("Quote No.:", job.quoteNo),
+    metaRow("Service Location:", job.location),
+    metaRow("Quote Date:", job.date),
+    metaRow("Phone:", job.phone),
+    metaRow("Valid:", (e.validDays || 30) + " days from the date above"),
+    metaRow("Email:", job.email),
+    metaRow("Prepared by:", est.company.name)
+  );
+  page.appendChild(meta);
+  if (job.description) {
+    const d = el("div", "pd-meta");
+    d.appendChild(metaRow("Description:", job.description));
+    page.appendChild(d);
+  }
+
+  page.appendChild(el("div", "pd-sec", "Product and Services List"));
+  const t = el("table", "pd-t");
+  const thead = el("thead", "");
+  const hr = el("tr", "");
+  ["Description", "Qty", "Rate", "Total"].forEach((h, i) => {
+    const th = el("th", i ? "r" : null, h);
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr); t.appendChild(thead);
+  const tb = el("tbody", "");
+  q.lines.forEach((l, i) => {
+    if (l.notOffered) return;
+    const spec = state.quote.lines[i] || {};
+    const tr = el("tr", "");
+    const td = el("td", "");
+    td.appendChild(el("span", null, l.description));
+    td.appendChild(el("span", "sub", openingWords(l, spec)));
+    (l.accessories || []).forEach((a, j) => {
+      const sp = (spec.accessories || [])[j];
+      const shape = sp && sp.shape ? " \u2014 " + sp.shape.replace(/\s*Clavos$/i, "") : "";
+      td.appendChild(el("span", "sub",
+        "+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") + a.label + shape));
+    });
+    tr.appendChild(td);
+    tr.appendChild(el("td", "r", String(l.qty)));
+    tr.appendChild(el("td", "r", money(l.unitSellCents)));
+    tr.appendChild(el("td", "r", money(l.totalSellCents)));
+    tb.appendChild(tr);
+  });
+  /* Hoelscher bands the crate charge across the whole order, so it belongs to
+     no single line. Folding it silently into Materials would leave a customer
+     unable to add the column up, so it is a line of its own — named for what
+     it is, the manufacturer's crating, not a delivery to their house. */
+  if (q.crateShippingSellCents > 0) {
+    const tr = el("tr", "");
+    const td = el("td", "");
+    td.appendChild(el("span", null, estDoc().estimate.crateLabel || "Crating & freight from the manufacturer"));
+    td.appendChild(el("span", "sub", q.crateShippingTier + " \u00b7 " +
+      q.freightUnitsBilled + " freight unit" + (q.freightUnitsBilled === 1 ? "" : "s")));
+    tr.appendChild(td);
+    tr.appendChild(el("td", "r", "1"));
+    tr.appendChild(el("td", "r", money(q.crateShippingSellCents)));
+    tr.appendChild(el("td", "r", money(q.crateShippingSellCents)));
+    tb.appendChild(tr);
+  }
+  t.appendChild(tb);
+  page.appendChild(t);
+
+  const tot = estimateTotals(q);
+  const cols = el("div", "pd-cols");
+
+  const dep = el("div", "");
+  dep.appendChild(el("div", "pd-sec", "Deposit Requirement"));
+  const depBox = el("div", "pd-box");
+  const put = (host, label, value, big) => {
+    const r = el("div", "pd-line" + (big ? " big" : ""));
+    r.appendChild(el("span", null, label));
+    r.appendChild(el("span", null, value));
+    host.appendChild(r);
+  };
+  put(depBox, "Materials", money(tot.materialsCents));
+  put(depBox, "Tax rate", (tot.rate * 100).toFixed(2).replace(/\.00$/, "") + "%");
+  put(depBox, "Sales tax", money(tot.taxCents));
+  put(depBox, "Total deposit required", money(tot.depositCents), true);
+  dep.appendChild(depBox);
+  if (e.depositNote) dep.appendChild(el("p", "pd-note", e.depositNote));
+  cols.appendChild(dep);
+
+  const sums = el("div", "");
+  sums.appendChild(el("div", "pd-sec", "Totals"));
+  const sumBox = el("div", "pd-box");
+  put(sumBox, "Materials", money(tot.materialsCents));
+  put(sumBox, "Sales tax (" + (tot.rate * 100).toFixed(2).replace(/\.00$/, "") + "%)", money(tot.taxCents));
+  put(sumBox, "Labor", money(tot.laborCents));
+  put(sumBox, "Job total", money(tot.jobTotalCents), true);
+  put(sumBox, "Deposits", money(0));
+  put(sumBox, "Amount remaining", money(tot.jobTotalCents));
+  sums.appendChild(sumBox);
+  if (e.balanceNote) sums.appendChild(el("p", "pd-note", e.balanceNote));
+  cols.appendChild(sums);
+  page.appendChild(cols);
+
+  const ap = el("div", "pd-approve");
+  ap.appendChild(el("h4", null, "Customer Approval"));
+  ap.appendChild(el("p", null,
+    String(e.approvalText || "").replace("{customer}", job.customer || "the customer")));
+  if (e.preWorkHeading) ap.appendChild(el("h4", null, e.preWorkHeading));
+  String(e.preWorkText || "").split(/\n\n+/).forEach(para => {
+    if (para.trim()) ap.appendChild(el("p", null, para.trim()));
+  });
+  page.appendChild(ap);
+
+  const sign = el("div", "pd-sign");
+  ["Customer Name", "Customer Signature", "Date"].forEach(lab => {
+    const c = el("div", "");
+    c.appendChild(el("div", "ln"));
+    c.appendChild(el("span", null, lab));
+    sign.appendChild(c);
+  });
+  page.appendChild(sign);
+
+  const foot = el("div", "pd-foot");
+  foot.appendChild(el("span", null, est.company.legalName || est.company.name));
+  foot.appendChild(el("span", null,
+    "Excludes anything not listed above. Terms and Conditions overleaf."));
+  page.appendChild(foot);
+  return page;
+}
+
+/** The sheet the office orders from. Internal: costs, not customer pricing. */
+function buildOrderDoc(q) {
+  const est = estDoc(), o = est.orderSheet || {}, job = state.job;
+  const page = el("div", "pd-page");
+  page.appendChild(printHead());
+  page.appendChild(el("h2", "pd-title", o.title || "Order sheet"));
+
+  const meta = el("div", "pd-meta");
+  meta.append(
+    metaRow("Vendor:", o.vendor || ""),
+    metaRow("Quote No.:", job.quoteNo),
+    metaRow("Customer:", job.customer),
+    metaRow("Date:", job.date),
+    metaRow("Deliver to:", job.location),
+    metaRow("Freight units:", String(q.freightUnitsBilled) +
+      (q.crateShippingTier ? "  \u00b7  band " + q.crateShippingTier : ""))
+  );
+  page.appendChild(meta);
+
+  page.appendChild(el("div", "pd-sec", "Order"));
+  const t = el("table", "pd-t");
+  const thead = el("thead", ""); const hr = el("tr", "");
+  ["Part number & description", "Qty", "Finish / config", "Spec", "Cost"].forEach((h, i) => {
+    hr.appendChild(el("th", (i === 1 || i === 4) ? "r" : null, h));
+  });
+  thead.appendChild(hr); t.appendChild(thead);
+  const tb = el("tbody", "");
+  const flagged = [];
+  q.lines.forEach((l, i) => {
+    if (l.notOffered) return;
+    const spec = state.quote.lines[i] || {};
+    const prod = l.product;
+    const tr = el("tr", "");
+    const td = el("td", "");
+    // Hoelscher's desk cross-checks the number against the description, so the
+    // sheet carries both, and the number exactly as Hoelscher prints it.
+    td.appendChild(el("span", null, completeSku(prod, spec.glazing)));
+    td.appendChild(el("span", "sub", l.description));
+    const mis = skuCorrection(prod);
+    if (mis) {
+      td.appendChild(el("span", "sub pd-flag", "\u26a0 " + (o.misprintNote || "Confirm this part number.")));
+      flagged.push(prod.sku);
+    }
+    (l.accessories || []).forEach((a, j) => {
+      const sp = (spec.accessories || [])[j];
+      const shape = sp && sp.shape ? " \u2014 " + sp.shape.replace(/\s*Clavos$/i, "") : "";
+      td.appendChild(el("span", "sub", "+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") + a.label + shape));
+    });
+    tr.appendChild(td);
+    tr.appendChild(el("td", "r", String(l.qty)));
+    tr.appendChild(el("td", null,
+      FINISH_LABELS[l.finish] + " \u00b7 " + CONFIG_LABELS[l.config]));
+    tr.appendChild(el("td", null, [
+      spec.handing && HANDING_LABELS[spec.handing],
+      spec.swing && SWING_LABELS[spec.swing],
+      spec.jambDepth && spec.jambDepth + '" jamb',
+      prod && prod.size && prod.size.label
+    ].filter(Boolean).join(" \u00b7 ")));
+    tr.appendChild(el("td", "r", money(l.totalCostCents)));
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+  page.appendChild(t);
+
+  const box = el("div", "pd-box");
+  box.style.marginTop = "14px";
+  const put = (label, value, big) => {
+    const r = el("div", "pd-line" + (big ? " big" : ""));
+    r.appendChild(el("span", null, label));
+    r.appendChild(el("span", null, value));
+    box.appendChild(r);
+  };
+  /* The prehang charge is already inside each line's cost; the crate charge is
+     banded on the order and sits outside it. Listing both as if they were
+     additive would read as a double charge, so the lines say which is which. */
+  put("Doors & accessories" +
+      (q.totalPrehangCents ? "  (incl. " + money(q.totalPrehangCents) + " prehang)" : ""),
+      money(q.lineCostCents));
+  put("Crate & shipping", money(q.crateShippingCents));
+  put("Total net cost", money(q.totalCostCents), true);
+  page.appendChild(box);
+  if (o.note) page.appendChild(el("p", "pd-note", o.note));
+  if (flagged.length) page.appendChild(el("p", "pd-note pd-flag",
+    "\u26a0 Confirm these part numbers against their description before ordering: " +
+    flagged.join(", ") + "."));
+  return page;
+}
+
+/** The terms, as their own page behind the estimate. */
+function buildTermsPage() {
+  const terms = estDoc().terms;
+  if (!terms || !Array.isArray(terms.sections) || !terms.sections.length) return null;
+  const page = el("div", "pd-page pd-terms");
+  page.appendChild(el("h3", null, terms.title || "Terms and Conditions"));
+  terms.sections.forEach(sec => {
+    const s = el("section", "");
+    s.appendChild(el("h5", null, sec.heading));
+    s.appendChild(el("p", null, sec.body));
+    page.appendChild(s);
+  });
+  return page;
+}
+
+/** Build the chosen document and hand it to the browser's print dialog. */
+function printDocument(kind) {
+  if (!canPrint()) {
+    renderJobPanel();
+    return;
+  }
+  if (!state.job.quoteNo) {
+    state.job.quoteNo = nextQuoteNo();
+    state.job.date = todayStamp();
+    saveJob();
+    renderJobPanel();
+  }
+  const host = $("#printDoc");
+  host.textContent = "";
+  const q = pricedQuote();
+  if (kind === "order") {
+    host.appendChild(buildOrderDoc(q));
+  } else {
+    host.appendChild(buildQuoteDoc(q));
+    const t = buildTermsPage();
+    if (t) host.appendChild(t);
+  }
+  window.print();
+}
+
+/** Who the quote is for. Printed on both documents; kept on this device. */
+function renderJobPanel() {
+  const host = $("#jobPanel");
+  if (!host) return;
+  host.textContent = "";
+  if (!canPrint()) {
+    host.appendChild(el("p", "text-[11px] text-ink-faint",
+      "data/estimate.json could not be read, so no document can be printed. " +
+      "Quoting on screen is unaffected."));
+    return;
+  }
+  const head = el("div", "mb-2 flex items-baseline gap-2");
+  head.appendChild(el("p", "text-[11px] uppercase tracking-widest text-ink-mute", "Job details"));
+  head.appendChild(el("p", "text-[11px] text-ink-faint",
+    state.job.quoteNo ? state.job.quoteNo + " \u00b7 " + state.job.date : "printed on both documents"));
+  host.appendChild(head);
+  const form = el("div", "jf");
+  JOB_FIELDS.forEach(f => {
+    const lab = el("label", f.wide ? "wide" : "");
+    lab.appendChild(el("span", null, f.label));
+    const inp = document.createElement("input");
+    inp.type = "text";
+    inp.id = "job_" + f.key;
+    inp.value = state.job[f.key] || "";
+    inp.placeholder = f.ph || "";
+    if (f.key === "labor") inp.inputMode = "decimal";
+    inp.addEventListener("input", () => {
+      state.job[f.key] = inp.value;
+      saveJob();
+      // Labor moves the printed job total, which the drawer footer echoes.
+      if (f.key === "labor") renderTotals(pricedQuote());
+    });
+    lab.appendChild(inp);
+    form.appendChild(lab);
+  });
+  host.appendChild(form);
+}
+
+/* --- 5g. quote drawer ---------------------------------------------------- */
 
 function renderQuote() {
   const q = pricedQuote();
@@ -2414,7 +2921,25 @@ function renderTotals(q) {
     box.appendChild(el("p", "mt-1 text-[11px] text-ink-faint",
       q.unitCount + " unit" + (q.unitCount === 1 ? "" : "s") + " · " +
       titleize(q.marginTier || "") + " pricing at " + Math.round(q.marginPercent * 100) + "% margin" +
-      " · excludes tax and installation."));
+      " · materials only."));
+    /* What the customer will actually sign: materials, then SimplyDoors' own
+       tax and labor. Shown here so the office sees it before it prints. */
+    if (canPrint()) {
+      const t = estimateTotals(q);
+      const jt = el("div", "mt-2 rounded-lg bg-brass-pale px-3 py-2");
+      const jrow = (label, value, strong) => {
+        const r = el("div", "flex items-baseline justify-between gap-3 " +
+          (strong ? "mt-1 border-t border-brass/30 pt-1 font-medium" : ""));
+        r.appendChild(el("span", "text-[11px] text-brass-deep", label));
+        r.appendChild(el("span", "tnum text-[11px] text-brass-deep", value));
+        return r;
+      };
+      jt.appendChild(jrow("Sales tax " + (t.rate * 100).toFixed(2).replace(/\.00$/, "") + "%",
+                          formatCents(t.taxCents)));
+      jt.appendChild(jrow("Labor", formatCents(t.laborCents)));
+      jt.appendChild(jrow("Job total on the printed estimate", formatCents(t.jobTotalCents), true));
+      box.appendChild(jt);
+    }
     if (freightNote) box.appendChild(el("p", "mt-0.5 text-[11px] text-ink-faint",
       "Shipping band: " + freightNote +
       (q.crateShippingCents === 0 ? " — prepaid" : "")));
@@ -2426,22 +2951,37 @@ function renderTotals(q) {
       " not offered in the chosen configuration and are excluded from the total."));
   }
 
+  /* One quote, two documents: the estimate the customer signs and the sheet
+     the office orders from. */
   const actions = el("div", "mt-3 flex gap-2");
-  const print = el("button", "flex-1 rounded-xl border border-paper-line py-2.5 text-sm hover:bg-paper-rail", "Print");
-  print.type = "button";
-  print.addEventListener("click", () => window.print());
-  const clear = el("button", "rounded-xl border border-paper-line px-4 py-2.5 text-sm text-ink-mute hover:bg-paper-rail", "Clear");
+  const quoteBtn = el("button",
+    "flex-1 rounded-xl bg-forest px-3 py-2.5 text-sm font-medium text-white hover:bg-forest-deep",
+    "Print quote");
+  quoteBtn.type = "button";
+  quoteBtn.id = "printQuote";
+  quoteBtn.title = "The customer estimate, with terms and a signature block";
+  quoteBtn.addEventListener("click", () => printDocument("quote"));
+  const orderBtn = el("button",
+    "flex-1 rounded-xl border border-paper-line px-3 py-2.5 text-sm hover:bg-paper-rail",
+    "Order sheet");
+  orderBtn.type = "button";
+  orderBtn.id = "printOrder";
+  orderBtn.title = "Internal: part numbers and your cost, for ordering from Hoelscher";
+  orderBtn.addEventListener("click", () => printDocument("order"));
+  const clear = el("button", "rounded-xl border border-paper-line px-3 py-2.5 text-sm text-ink-mute hover:bg-paper-rail", "Clear");
   clear.type = "button";
   clear.addEventListener("click", () => {
     if (!state.quote.lines.length) return;
     state.quote.lines = [];
+    // A cleared quote is a new job: the next print takes the next number.
+    state.job = blankJob(); saveJob(); renderJobPanel();
     saveQuote(); renderQuote();
   });
-  actions.append(print, clear);
+  actions.append(quoteBtn, orderBtn, clear);
   box.appendChild(actions);
 }
 
-/* --- 5g. header mode ----------------------------------------------------- */
+/* --- 5h. header mode ----------------------------------------------------- */
 
 const LOCK_CLOSED = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
 const LOCK_OPEN   = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.5-2"/></svg>';
@@ -2735,19 +3275,23 @@ async function boot() {
   renderTier();
   restoreLine();
   restoreQuote();
+  restoreJob();
   $("#loading").classList.add("hidden");
   if (!state.collection) {
     // Nothing is shown until the line is chosen: the two price from separate
     // schedules and mixing them on screen is what causes mis-quotes.
     renderLineGate();
     renderLineChip();
+    renderJobPanel();
     return;
   }
   renderLineChip();
+  renderJobPanel();
   if (!state.group && renderGroupGate()) return;
   renderFilters();
   renderCatalog(true);
   renderQuote();
+  renderJobPanel();
 }
 
 boot();

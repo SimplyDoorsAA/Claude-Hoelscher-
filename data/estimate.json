@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-10",
+  "source": "SimplyDoors estimate letterhead and terms, taken from a job the dealer supplied.",
+  "notes": "Everything the printed estimate and order sheet say about SimplyDoors rather than about Hoelscher. Kept out of pricing-rules.json because none of it is a Hoelscher price: the engine and its audit are untouched by edits here.",
+  "company": {
+    "name": "SimplyDoors",
+    "legalName": "SimplyDoors LLC",
+    "address": "17750 Lookout Rd, Suite 150",
+    "cityStateZip": "Schertz, TX 78154",
+    "phone": "210-903-8450",
+    "email": "Sales@SimplyDoors.com",
+    "web": "SimplyDoors.com",
+    "markFile": "simplydoors-mark.png",
+    "brandColor": "#7ED957"
+  },
+  "estimate": {
+    "title": "Estimate",
+    "salesTaxRate": 0.0825,
+    "salesTaxNote": "Fixed rate, confirmed by the dealer 2026-09-10. Every job is taxed at the Schertz rate.",
+    "depositBasis": "materials+tax",
+    "depositNote": "The deposit covers materials and tax. Labor is billed on completion.",
+    "validDays": 30,
+    "quoteNumberPrefix": "SD-",
+    "quoteNumberStart": 1001,
+    "balanceNote": "Remaining balance due upon completion of work.",
+    "approvalText": "I, {customer}, have thoroughly reviewed the quote above and confirm my approval. I understand that any subsequent changes may lead to adjustments in cost and lead time.",
+    "preWorkHeading": "Pre-Work Authorization Clause",
+    "preWorkText": "By signing below, the customer acknowledges and agrees to the SimplyDoors Terms and Conditions provided by SimplyDoors LLC. This pre-work authorization serves as the customer's acceptance of the proposed scope of work, pricing, and any other specified terms and conditions.\n\nI further acknowledge that any changes or additions to the scope of work may result in adjustments to the project timeline and cost, and such changes will be communicated and agreed upon in writing between both parties.",
+    "crateLabel": "Crating & freight from the manufacturer",
+    "crateNote": "Hoelscher bands this charge across the whole order, so it is a line of its own rather than folded into a door. It is not SimplyDoors delivering to the job site."
+  },
+  "orderSheet": {
+    "title": "Order sheet",
+    "vendor": "Hoelscher Weatherstrip",
+    "note": "Internal. Costs shown are SimplyDoors net, not customer pricing.",
+    "misprintNote": "Hoelscher prints this part number on more than one row. Confirm it against the description when ordering."
+  },
+  "terms": {
+    "title": "SimplyDoors Terms and Conditions",
+    "sections": [
+      {
+        "heading": "ACCEPTANCE OF TERMS",
+        "body": "1.1 By making an initial payment or deposit to SimplyDoors (\"Company\"), the customer (\"Customer\") agrees to be bound by all terms and conditions outlined in this Agreement. 1.2 These terms apply to all products and services provided by the Company, including but not limited to doors, windows, millwork, locksets, consultation, and installation services."
+      },
+      {
+        "heading": "PRODUCT AND SERVICE DESCRIPTION",
+        "body": "2.1 The Company provides premium doors, windows, millwork, and locksets, along with related services such as consultation, custom orders, and installation. 2.2 Specific products and services for each job will be detailed in a separate quote or invoice provided to the Customer."
+      },
+      {
+        "heading": "PRICING AND PAYMENT TERMS",
+        "body": "3.1 Initial Payment/Deposit: (a) A deposit of the total product amount is required to initiate the order. (b) The deposit becomes non-refundable 72 hours after payment or once the order has been placed with the manufacturer, whichever occurs first. 3.2 Final Payment: (a) The remaining balance is due upon completion of delivery or installation. (b) The Company accepts payment by credit card, bank transfer, or certified check. (c) By providing credit card information, the Customer authorizes SimplyDoors to charge the final payment to the credit card on file upon completion of delivery or installation, even if the Customer is not present on-site. The Company will provide photographic evidence of completion if requested. 3.3 Late Fee Terms: (a) A late fee of 1.5% per month will be applied to any unpaid balance. (b) Late fees will be assessed every 30 days after the due date. 3.4 Dispute Period: The Customer has 3 business days from the date of the final charge to dispute any issues with the delivery or installation. Failure to raise concerns within this period will be considered acceptance of the completed work."
+      },
+      {
+        "heading": "REFUND POLICY",
+        "body": "4.1 Refunds may be issued at the Company's discretion for non-custom, non-installed products returned in original condition within 30 days of delivery. 4.2 Custom orders are non-refundable under any circumstances. 4.3 Refund requests must be submitted in writing within 7 days of product receipt. 4.4 A restocking fee may be charged at the discretion of the Company."
+      },
+      {
+        "heading": "DELIVERY TERMS AND CONDITIONS",
+        "body": "5.1 Delivery Location Accessibility: (a) The construction site must have a clear, unobstructed access route for delivery trucks. (b) The access route should be a minimum of 10 feet wide to accommodate standard delivery vehicles. (c) The route must be able to support the weight of a fully loaded delivery truck. (d) Any gates or entrances must be unlocked and open upon arrival. 5.2 Offloading Area: (a) A designated offloading area must be provided within 50 feet of the delivery vehicle's parking spot. (b) The offloading area should be level, dry, and clear of debris, equipment, or other obstructions. (c) The area must be large enough to safely accommodate the ordered products. 5.3 Site Preparation: (a) The delivery location must be clearly marked and easily identifiable. (b) Any necessary permits for parking or unloading must be obtained by the Customer prior to delivery. (c) A representative from the building site must be present to receive and sign for the delivery. 5.4 Product Placement: (a) Standard delivery includes placement of products in one central location at the job site. (b) If multiple drop-off points are required, this must be arranged in advance and may incur additional fees. 5.5 Site Conditions: (a) The site must be in a condition that allows for safe delivery without risk of damage to Company vehicles or products. (b) In inclement weather, adequate protection from the elements must be provided for the products upon delivery. 5.6 Delivery Scheduling: (a) Deliveries must be scheduled at least 48 hours in advance. (b) Any changes to the delivery schedule must be communicated at least one full business day before the scheduled delivery time. 5.7 Additional Fees: The Company reserves the right to charge additional fees in the following circumstances: (a) If the site does not meet the above standards and requires additional time, labor, or equipment for delivery. (b) If the delivery team is required to wait more than 30 minutes for site access or a site representative. (c) If special equipment (such as a forklift or crane) is required for offloading due to site conditions. (d) If the delivery needs to be rescheduled due to site unpreparedness or lack of access. 5.8 Fee Structure: (a) Additional Labor: $100 per hour, per person (b) Equipment Rental: Cost plus 15% (c) Redelivery Fee: $150 per occurrence minimum. Additional mileage fee for locations exceeding 30 miles from the Company's address. (d) Extended Wait Time: $50 per hour after the first 30 minutes 5.9 Estimated Time of Arrival (ETA) Disclaimer: (a) ETAs are estimates only and subject to change without notice. (b) The Company is not responsible for delays caused by manufacturers or shipping companies. 5.10 The Customer must inspect all items upon delivery and report any damage or errors within 24 hours."
+      },
+      {
+        "heading": "INSTALLATION WARRANTY (IF APPLICABLE)",
+        "body": "6.1 Installation Warranty: (a) The Company warrants installation workmanship for a period of one year from the date of installation. (b) This warranty does not cover damage due to normal wear and tear, misuse, or acts of nature. 6.3 The Customer is responsible for preparing the site according to the Company's specifications prior to installation."
+      },
+      {
+        "heading": "PRODUCT WARRANTY",
+        "body": "7.1 Product warranties are provided by the manufacturers, not the Company. 7.2 The Company will assist Customers in facilitating warranty claims with manufacturers."
+      },
+      {
+        "heading": "CANCELLATION POLICY",
+        "body": "8.1 Product orders may be cancelled within 24 hours of placement without penalty. 8.2 Product orders cannot be cancelled once manufacturing has begun. 8.3 Services may be cancelled one business day in advance without penalty."
+      },
+      {
+        "heading": "CUSTOMER RESPONSIBILITIES",
+        "body": "9.1 The Customer is responsible for providing accurate measurements and information for all orders. 9.2 The Customer must prepare the site for delivery and installation as per Company guidelines. 9.3 The Customer agrees to communicate promptly regarding any issues or changes related to the order."
+      },
+      {
+        "heading": "LIMITATION OF LIABILITY",
+        "body": "10.1 The Company's maximum liability is limited to the cost of products and services provided. 10.2 The Company is not liable for any indirect, consequential, or incidental damages."
+      },
+      {
+        "heading": "DISPUTE RESOLUTION",
+        "body": "11.1 Any disputes shall first be addressed through good-faith negotiation between the parties. 11.2 If negotiation fails, the dispute shall be submitted to mediation under the rules of the American Arbitration Association. 11.3 If mediation is unsuccessful, the dispute shall be resolved through binding arbitration in San Antonio, Texas."
+      },
+      {
+        "heading": "PRIVACY POLICY",
+        "body": "12.1 The Company collects and uses customer data as outlined in its Privacy Policy, available at SimplyDoors.com/Privacy."
+      },
+      {
+        "heading": "MODIFICATIONS TO TERMS",
+        "body": "13.1 The Company reserves the right to modify these terms with 30 days' notice to Customers."
+      },
+      {
+        "heading": "GOVERNING LAW",
+        "body": "14.1 This Agreement shall be governed by and construed in accordance with the laws of the State of Texas."
+      },
+      {
+        "heading": "PRODUCT VARIATIONS",
+        "body": "15.1 Natural products may have variations in color and grain. Samples may not exactly match final products."
+      },
+      {
+        "heading": "FORCE MAJEURE",
+        "body": "16.1 The Company is not liable for failure to perform due to circumstances beyond its reasonable control."
+      },
+      {
+        "heading": "MEASUREMENT RESPONSIBILITY",
+        "body": "17.1 The Customer is responsible for providing accurate measurements unless the Company has explicitly agreed to perform measuring services. 17.2 Costs associated with measurement errors are the responsibility of the party that provided the measurements."
+      },
+      {
+        "heading": "CUSTOM ORDERS",
+        "body": "18.1 All custom orders are final, non-refundable, and non-returnable."
+      },
+      {
+        "heading": "SUBCONTRACTOR USAGE",
+        "body": "19.1 The Company reserves the right to use subcontractors for certain services."
+      }
+    ]
+  }
+}

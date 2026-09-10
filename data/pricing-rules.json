@@ -11,7 +11,8 @@
     "decidedOn": "2026-09-07",
     "decidedBy": "dealer",
     "vendorConfirmed": false,
-    "note": "Every catalogued item carries priceBasis \"list\", so NET = list x netMultiplier for all four sections. Freight is quoted already net by the shipping schedule and is never multiplied. Still unconfirmed by Hoelscher: if they state that components, prehang adders or hardware are already net, remove those sections from appliesTo \u2014 leaving them here would understate those costs by 52%."
+    "note": "Every catalogued item carries priceBasis \"list\", so NET = list x netMultiplier for all four sections. Freight is quoted already net by the shipping schedule and is never multiplied. The dealer confirmed on 2026-09-10, from ordering, that the 48% applies to components, prehang adders and hardware as well as to doors. Hoelscher has still not put it in writing, so vendorConfirmed stays false.",
+    "dealerConfirmed": "2026-09-10"
   },
   "currency": "USD",
   "roundingMode": "half-up-to-cent",
@@ -90,7 +91,8 @@
       "includedDepth": "4-9/16",
       "chargeUpgrade": false,
       "vendorConfirmed": false,
-      "note": "Both lines catalogue a jamb at each depth (fiberglass PVC Jamb, wood Exterior Jamb Leg), but neither price sheet states whether a prehung price already includes a jamb, nor at which depth. Until Hoelscher confirms, the depth is recorded on the quote and no charge is applied. Setting chargeUpgrade true without also deciding how many pieces an opening takes would be a guess, so it stays false."
+      "note": "Both lines catalogue a jamb at each depth (fiberglass PVC Jamb, wood Exterior Jamb Leg). The dealer confirmed on 2026-09-10 that a Hoelscher prehung price includes the jamb at either depth, so the depth is recorded on the quote and no charge is applied. Hoelscher has not put it in writing, so vendorConfirmed stays false.",
+      "dealerConfirmed": "2026-09-10"
     }
   }
 }
