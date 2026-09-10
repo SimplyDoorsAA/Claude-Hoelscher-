@@ -795,10 +795,115 @@ function modelKeyOf(p) {
   return d.replace(SIZE_PREFIX, "").trim();
 }
 
+/* ---------------------- the speakeasy programme ---------------------------
+   Nine doors carry the catalog's note "*Speakeasy kits & iron mask options
+   available", and the price sheet then prices every combination of insert and
+   iron mask as its own part number: the plain door's number with SE, a mask
+   code and an insert code spliced in front of the size code. Read as a
+   grammar, seventy variant rows fold back into the nine doors a customer
+   actually shops, and the choices become questions in the configurator.
+
+   The grammar lives in the catalogue, so a door Hoelscher adds to the
+   programme appears here on its own. A door is in the programme when at
+   least one of its combinations is priced — nothing is listed by name. */
+const speakeasyOptions = () => state.engine.catalog.speakeasyOptions || null;
+
+/* A row the sheet misprints, and what to say about it. Keyed by the product's
+   content hash where two rows share one printed number, by the number itself
+   where it is unique. */
+function skuCorrection(product) {
+  const opt = speakeasyOptions();
+  if (!product || !opt || !opt.skuCorrections) return null;
+  return opt.skuCorrections.find(c => c.productId
+    ? c.productId === product.id
+    : c.printed === product.sku) || null;
+}
+/** Where a row belongs in the part-number grammar, misprints corrected. */
+function resolvedSku(product) {
+  const c = skuCorrection(product);
+  return (c && c.resolvesAs) || product.sku;
+}
+
+let seIndex = null, seIndexOf = null;
+function speakeasyIndex() {
+  if (seIndexOf === state.engine.catalog) return seIndex;
+  const idx = { byBase: new Map(), variantIds: new Set() };
+  const opt = speakeasyOptions();
+  if (opt && opt.masks && opt.inserts) {
+    // Four rows carry a misprinted part number. Placing them by the number the
+    // vendor's own description implies keeps their doors whole; the number the
+    // quote carries stays the number as printed, with the doubt said out loud.
+    const bySku = new Map();
+    state.engine.products.forEach(p => bySku.set(resolvedSku(p), p));
+    state.engine.products.forEach(base => {
+      const code = base.size && base.size.code;
+      const sku = resolvedSku(base);
+      if (!code || !sku.endsWith(code)) return;
+      const stem = sku.slice(0, sku.length - code.length);
+      if (/SE[-MBW]*$/.test(stem)) return;          // itself a variant
+      const combos = [];
+      opt.masks.forEach(m => opt.inserts.forEach(i => {
+        const v = bySku.get(stem + "SE" + m.code + i.code + code) || null;
+        combos.push({ mask: m, insert: i, product: v });
+        if (v) idx.variantIds.add(v.id);
+      }));
+      if (combos.some(c => c.product)) idx.byBase.set(base.id, combos);
+    });
+  }
+  seIndex = idx; seIndexOf = state.engine.catalog;
+  return idx;
+}
+/** Size code -> the combinations priced for that size, or null. */
+function speakeasyFor(model) {
+  const idx = speakeasyIndex();
+  const per = new Map();
+  (model.products || []).forEach(p => {
+    const combos = idx.byBase.get(p.id);
+    if (combos && p.size && p.size.code) per.set(p.size.code, combos);
+  });
+  return per.size ? per : null;
+}
+const MASK_NONE = "None";
+const maskName = m => m.name || MASK_NONE;
+/* The manifest keys the pictures by the catalog's caption ("Wood Insert");
+   the configurator says it the way a customer would ("Wood panel"). */
+function insertLabel(name) {
+  const hit = ((speakeasyOptions() || {}).inserts || []).find(i => i.name === name);
+  return (hit && (hit.label || hit.name)) || name;
+}
+/** The combinations offered in the size the draft has settled on. */
+function seCombos(d) {
+  return (d && d.model.speakeasy && d.sizeCode && d.model.speakeasy.get(d.sizeCode)) || null;
+}
+function seCombo(d) {
+  const combos = seCombos(d);
+  if (!combos || !d.insert || !d.mask) return null;
+  return combos.find(c => c.insert.name === d.insert && maskName(c.mask) === d.mask) || null;
+}
+
+/* The four add-ons the configurator now asks for on the door itself. They no
+   longer appear in the generic "Add to this opening" picker on any door. */
+let ownedRx = null, ownedRxOf = null;
+function configuratorOwns(acc) {
+  if (ownedRxOf !== state.engine.catalog) {
+    const list = (speakeasyOptions() && speakeasyOptions().hideFromPicker) || [];
+    ownedRx = list.length ? new RegExp(list.join("|"), "i") : null;
+    ownedRxOf = state.engine.catalog;
+  }
+  return !!ownedRx && ownedRx.test((acc && acc.description) || "");
+}
+const hardwareById = id => state.engine.hardwareList().find(h => h.id === id) || null;
+/** The hardware rows behind one of the programme's per-piece extras. */
+function extraRows(extra) {
+  return state.engine.hardwareList()
+    .filter(h => rxTest(extra.matchDescription, h.description));
+}
+
 /** Products reachable only as an option on another model, e.g. iron grille. */
 function optionOnlyIds() {
   const set = new Set();
   (state.engine.catalog.fiberglassIronGrilles || []).forEach(g => set.add(g.productId));
+  speakeasyIndex().variantIds.forEach(id => set.add(id));
   return set;
 }
 function grillesForModel(name) {
@@ -856,6 +961,7 @@ function buildModels() {
       : Array.from(new Set(m.products.flatMap(p => glazingOptions(p.glazing))));
     m.grilles = grillesForModel(m.name);
     m.grilleDesigns = grilleDesignsFor(m);
+    m.speakeasy = speakeasyFor(m);
     m.sample = m.products[0];
   });
   modelCache = models;
@@ -1022,6 +1128,7 @@ function productCard(model) {
   if (model.glazings.length > 1) bits.push(model.glazings.length + " glass options");
   else if (model.glazings.length === 1) bits.push(model.glazings[0]);
   if (model.grilles.length) bits.push("iron grille available");
+  if (model.speakeasy) bits.push("speakeasy & iron mask");
   body.appendChild(el("p", "text-xs text-ink-mute", bits.join(" · ")));
 
   const foot = el("div", "mt-auto flex items-end justify-between gap-2 pt-2");
@@ -1167,6 +1274,24 @@ function optionButton(label, pressed, disabled, onClick, title, sub, art) {
   return b;
 }
 
+/* A picture of the part beside its name. The manifest is keyed by the
+   catalog's own captions, so a part with no photograph simply shows words. */
+function designThumb(name, cls) {
+  const rec = name && state.designs.accessories[name];
+  if (!rec) return null;
+  const box = el("span", (cls || "h-12 w-12") +
+    " block shrink-0 overflow-hidden rounded border border-paper-line bg-ink");
+  const im = document.createElement("img");
+  im.src = CONFIG.designBase + encodeURIComponent(rec.file);
+  im.alt = ""; im.loading = "lazy"; im.decoding = "async";
+  im.className = "h-full w-full object-contain";
+  im.addEventListener("error", function onE() {
+    im.removeEventListener("error", onE); box.remove();
+  }, { once: true });
+  box.appendChild(im);
+  return box;
+}
+
 /* ------------------------- the configurator ------------------------------
    One question at a time, in the order a customer thinks: glass, then size,
    then iron grille, then finish, then stain, then how it is hung. Later steps
@@ -1175,6 +1300,7 @@ function optionButton(label, pressed, disabled, onClick, title, sub, art) {
 function openConfigurator(model) {
   state.draft = {
     model, glazing: null, caming: null, sizeCode: null,
+    speakeasy: null, insert: null, mask: null,
     grilleChoice: null, grille: null, grilleDesign: null,
     finish: null, stain: null,
     opening: null, config: null, sidelite: null,
@@ -1186,6 +1312,7 @@ function openConfigurator(model) {
   if (model.glazings.length <= 1) d.glazing = model.glazings[0] || null;
   if (model.sizes.length === 1) d.sizeCode = model.sizes[0];
   if (!model.grilles.length) d.grilleChoice = "none";
+  if (!model.speakeasy) d.speakeasy = "no";
   renderDetail();
   $("#detail").classList.remove("hidden");
   requestAnimationFrame(() => {
@@ -1208,6 +1335,13 @@ function draftProduct() {
   if (!d) return null;
   if (d.grilleChoice === "yes" && d.grille) return state.engine.productById(d.grille.productId);
   if (!d.sizeCode) return null;
+  // A speakeasy is not an add-on to the door: Hoelscher prices the whole door
+  // with its kit and mask as one part number, so the answers resolve to that
+  // part rather than to the plain door plus a charge.
+  if (d.speakeasy === "yes") {
+    const combo = seCombo(d);
+    return combo && combo.product ? combo.product : null;
+  }
   const match = p => (p.size && p.size.code) === d.sizeCode;
   const exact = d.model.products.find(p => match(p) &&
     (d.model.glassRule ? true : glazingOffers(p, d.glazing)));
@@ -1215,6 +1349,26 @@ function draftProduct() {
   // Falling back across glass would price a different part than the one on
   // screen, so only a model that carries no glass at all may fall back.
   return d.model.glazings.length ? null : (d.model.products.find(match) || null);
+}
+/** Cheapest priced combination in one size, for the "Speakeasy" delta. */
+function seFromPrice(d, filter) {
+  const combos = seCombos(d) || [];
+  let best = null;
+  combos.forEach(c => {
+    if (!c.product || (filter && !filter(c))) return;
+    const v = fromPrice(c.product);
+    if (v !== null && (best === null || v < best)) best = v;
+  });
+  return best;
+}
+/* A size carries its own set of priced combinations, so an answer that is not
+   made in the size just chosen has to be given up rather than left standing. */
+function reconcileSpeakeasy(d) {
+  const combos = seCombos(d);
+  if (!combos) { d.speakeasy = d.model.speakeasy ? null : "no"; d.insert = null; d.mask = null; return; }
+  if (d.insert && !combos.some(c => c.product && c.insert.name === d.insert)) d.insert = null;
+  if (d.mask && !combos.some(c => c.product && maskName(c.mask) === d.mask &&
+                                  (!d.insert || c.insert.name === d.insert))) d.mask = null;
 }
 /** Cheapest offered unit price for one glazing, for the delta shown per option. */
 function glazingFrom(model, glazing, sizeCode) {
@@ -1360,6 +1514,15 @@ function stepPlan(d) {
   if (m.glazings.length > 1) plan.push({ key: "glazing", title: "Glass", value: d.glazing });
   if (camingFor(d.glazing).length > 1) plan.push({ key: "caming", title: "Caming", value: d.caming });
   if (m.sizes.length > 1) plan.push({ key: "size", title: "Size", value: d.sizeCode && sizeLabel(d.sizeCode) });
+  if (m.speakeasy) {
+    plan.push({ key: "speakeasy", title: "Speakeasy",
+      value: d.speakeasy === "no" ? "No speakeasy" : d.speakeasy === "yes" ? "Speakeasy kit" : null });
+    if (d.speakeasy === "yes") {
+      plan.push({ key: "insert", title: "Insert", value: d.insert && insertLabel(d.insert) });
+      plan.push({ key: "mask", title: "Iron mask",
+        value: d.mask === MASK_NONE ? "No iron mask" : d.mask });
+    }
+  }
   if (m.grilleDesigns.length) plan.push({ key: "grilleDesign", title: "Grille design", value: d.grilleDesign });
   if (m.grilles.length) plan.push({ key: "grille", title: "Iron grille",
     value: d.grilleChoice === "none" ? "No grille" : (d.grille && d.grille.style) || null });
@@ -1382,13 +1545,17 @@ function stepPlan(d) {
 /** Take back one answer, and every answer that depended on it. */
 function unanswerFrom(key) {
   const d = state.draft;
-  const order = ["glazing", "caming", "size", "grilleDesign", "grille", "finish", "stain",
+  const order = ["glazing", "caming", "size", "speakeasy", "insert", "mask",
+                 "grilleDesign", "grille", "finish", "stain",
                  "opening", "sidelite", "handing", "swing", "jamb"];
   const from = order.indexOf(key);
   const clear = {
     glazing:  () => { d.glazing = null; },
     caming:   () => { d.caming = null; },
     size:     () => { d.sizeCode = null; },
+    speakeasy: () => { d.speakeasy = d.model.speakeasy ? null : "no"; },
+    insert:   () => { d.insert = null; },
+    mask:     () => { d.mask = null; },
     grilleDesign: () => { d.grilleDesign = null; },
     grille:   () => { d.grilleChoice = d.model.grilles.length ? null : "none"; d.grille = null; },
     finish:   () => { d.finish = null; },
@@ -1520,6 +1687,7 @@ function renderDetail() {
                                       glazingOffers(p, g))) {
           d.sizeCode = null; d.grille = null;
           if (model.grilles.length) d.grilleChoice = null;
+          reconcileSpeakeasy(d);
         }
         renderDetail();
       }, sw ? "Printed in the catalog as " + sw.printedAs : null, delta, art));
@@ -1553,11 +1721,72 @@ function renderDetail() {
       blk.row.appendChild(optionButton((p && p.size.label) || code, d.sizeCode === code, !p, () => {
         d.sizeCode = code;
         if (d.grille && d.grille.sizeCode !== code) { d.grille = null; d.grilleChoice = null; }
+        reconcileSpeakeasy(d);
         renderDetail();
       }, p ? null : "Not offered in this glass"));
     });
     body.appendChild(blk);
     gate(d.sizeCode);
+  }
+
+  /* 2c. the speakeasy programme. Hoelscher prices the door, its kit and its
+     mask as one part number, so these are questions about which door, not
+     add-ons with charges of their own. A combination the sheet never priced
+     is shown disabled with the reason rather than hidden or guessed at. */
+  if (!blocked && model.speakeasy) {
+    const opt = speakeasyOptions() || {};
+    const combos = seCombos(d);
+    const plain = model.products.find(x => (x.size && x.size.code) === d.sizeCode);
+    const plainCents = plain ? fromPrice(plain) : null;
+    const seCents = seFromPrice(d);
+
+    const blk = stepBlock("Speakeasy", "this door is offered with a speakeasy kit");
+    blk.row.appendChild(optionButton("No speakeasy", d.speakeasy === "no", false, () => {
+      d.speakeasy = "no"; d.insert = null; d.mask = null; renderDetail();
+    }));
+    blk.row.appendChild(optionButton("Speakeasy kit", d.speakeasy === "yes", !combos, () => {
+      d.speakeasy = "yes"; renderDetail();
+    }, null, (seCents !== null && plainCents !== null)
+        ? "from +" + formatCents(seCents - plainCents) : null));
+    body.appendChild(blk);
+    gate(d.speakeasy);
+
+    // 2d. wood or glass behind the grille. One kit price covers either.
+    if (!blocked && d.speakeasy === "yes" && combos) {
+      const ib = stepBlock("Insert", opt.insertNote || null);
+      (opt.inserts || []).forEach(ins => {
+        const ok = combos.some(c => c.product && c.insert.name === ins.name);
+        ib.row.appendChild(optionButton(ins.label || ins.name, d.insert === ins.name, !ok, () => {
+          d.insert = ins.name;
+          if (d.mask && !combos.some(c => c.product && c.insert.name === ins.name &&
+                                          maskName(c.mask) === d.mask)) d.mask = null;
+          renderDetail();
+        }, ok ? null : opt.unpricedNote, ok ? null : "not priced",
+           designThumb(ins.name, "h-12 w-12")));
+      });
+      body.appendChild(ib);
+      gate(d.insert);
+    }
+
+    // 2e. the iron mask over the speakeasy, priced into the part number.
+    if (!blocked && d.speakeasy === "yes" && combos) {
+      const bare = combos.find(c => c.product && !c.mask.name && c.insert.name === d.insert);
+      const bareCents = bare ? fromPrice(bare.product) : null;
+      const mb = stepBlock("Iron mask", "priced into the door");
+      (opt.masks || []).forEach(m => {
+        const c = combos.find(x => x.insert.name === d.insert && maskName(x.mask) === maskName(m));
+        const ok = !!(c && c.product);
+        const v = ok ? fromPrice(c.product) : null;
+        const delta = (ok && bareCents !== null && v !== null && v !== bareCents)
+          ? "+" + formatCents(v - bareCents) : null;
+        mb.row.appendChild(optionButton(m.label || maskName(m), d.mask === maskName(m), !ok, () => {
+          d.mask = maskName(m); renderDetail();
+        }, ok ? null : opt.unpricedNote, ok ? delta : "not priced",
+           designThumb(m.name, "h-12 w-12")));
+      });
+      body.appendChild(mb);
+      gate(d.mask);
+    }
   }
 
   // 2b. which iron grille design, where the model is a grille door
@@ -1729,6 +1958,7 @@ function renderDetail() {
 
   // 11. accessories and the price, once everything is answered
   if (!blocked && product && d.finish && d.config) {
+    if (model.speakeasy) body.appendChild(speakeasyExtrasBlock(product, d));
     body.appendChild(accessoryBlock(product, d));
 
     const line = state.engine.priceLine({
@@ -1741,6 +1971,10 @@ function renderDetail() {
     const configured = /^CFG-/.test(product.sku);
     const slProduct = d.sidelite && state.engine.productById(d.sidelite);
     const chosen = [d.glazing, d.caming && d.caming + " caming",
+                    d.speakeasy === "yes" ? "speakeasy kit" : null,
+                    d.speakeasy === "yes" && d.insert ? d.insert.toLowerCase() : null,
+                    d.speakeasy === "yes" && d.mask && d.mask !== MASK_NONE
+                      ? d.mask + " iron mask" : null,
                     d.grilleDesign && d.grilleDesign + " grille",
                     d.stain, d.grille && d.grille.style + " grille",
                     product.size && product.size.label,
@@ -1753,6 +1987,9 @@ function renderDetail() {
                     configured ? "configured item — Hoelscher prints no part number"
                                : completeSku(product, d.glazing)].filter(Boolean).join(" · ");
     if (chosen) foot.appendChild(el("p", "mb-3 text-xs text-ink-mute", chosen));
+    const misprint = skuCorrection(product);
+    if (misprint) foot.appendChild(el("p", "mb-3 rounded-lg bg-brass-pale px-3 py-2 text-[11px] text-brass-deep",
+      "Part number as printed: " + product.sku + ". " + misprint.note));
 
     const qtyRow = el("div", "flex items-center gap-3");
     qtyRow.appendChild(el("span", "text-[11px] uppercase tracking-widest text-ink-mute", "Quantity"));
@@ -1789,6 +2026,8 @@ function renderDetail() {
         qty: d.qty, accessories: allAccessories(d),
         stain: d.stain || null, grilleStyle: d.grille ? d.grille.style : null,
         glazing: d.glazing || null, caming: d.caming || null,
+        insert: d.speakeasy === "yes" ? d.insert : null,
+        mask: d.speakeasy === "yes" ? d.mask : null,
         grilleDesign: d.grilleDesign || null,
         opening: d.opening || null, handing: d.handing || null,
         swing: d.swing || null, jambDepth: d.jambDepth || null
@@ -1838,6 +2077,91 @@ function accessoryPhoto(label) {
   return { src: CONFIG.designBase + encodeURIComponent(rec.file), note: rule.note };
 }
 
+/* Clavos and straps are priced per piece and installed, on the same doors the
+   speakeasy programme covers. They are a look chosen with the door, so they
+   are asked here rather than in the general add-on picker — where they no
+   longer appear at all. The sheet prices clavos once for both shapes, so the
+   shape is recorded on the quote and costs nothing. */
+function speakeasyExtrasBlock(product, draft) {
+  const opt = speakeasyOptions() || {};
+  const block = el("div", "");
+  block.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-mute",
+    "Clavos & straps"));
+  const list = el("div", "flex flex-col gap-2");
+  (opt.extras || []).forEach(extra => {
+    extraRows(extra).forEach(h => {
+      const at = draft.accessories.findIndex(a => a.kind === "hardware" && a.id === h.id);
+      const acc = at >= 0 ? draft.accessories[at] : null;
+      const shapes = extra.shapes || [];
+      const shown = (acc && acc.shape) || shapes[0] || extra.name;
+      const qty = acc ? acc.qty : 0;
+
+      const row = el("div", "flex items-center gap-3 rounded-lg border border-paper-line bg-paper-card p-2");
+      const art = designThumb(shown, "h-10 w-10");
+      if (art) row.appendChild(art);
+
+      const words = el("div", "min-w-0 flex-1");
+      words.appendChild(el("p", "truncate text-sm", h.description || h.sku));
+      const priced = state.engine.priceLine({
+        productId: product.id, finish: draft.finish, config: draft.config, qty: 1,
+        accessories: [{ kind: "hardware", id: h.id, qty: 1 }]
+      }).accessories[0];
+      const each = priced.costCents === null ? null
+        : (isCost() ? priced.costCents : applyMargin(priced.costCents, curMargin()));
+      const sub = [each === null ? "not priced" : formatCents(each) + " " + (extra.unit || "each"),
+                   shapes.length > 1 ? extra.note : null].filter(Boolean).join(" · ");
+      words.appendChild(el("p", "tnum text-[11px] text-ink-faint", sub));
+      row.appendChild(words);
+
+      const setQty = n => {
+        if (n <= 0) { if (at >= 0) draft.accessories.splice(at, 1); }
+        else if (at >= 0) draft.accessories[at].qty = n;
+        else draft.accessories.push({ kind: "hardware", id: h.id, qty: n,
+                                      shape: shapes.length ? shown : null });
+        renderDetail();
+      };
+
+      if (shapes.length > 1) {
+        const pick = el("div", "flex shrink-0 gap-1");
+        shapes.forEach(name => {
+          const b = el("button",
+            "shapeopt rounded-md border px-2 py-1 text-[11px] " + (shown === name
+              ? "border-brass bg-brass-pale text-brass-deep" : "border-paper-line text-ink-mute"),
+            name.replace(/\s*Clavos$/i, ""));
+          b.type = "button";
+          b.setAttribute("aria-pressed", String(shown === name));
+          b.addEventListener("click", () => {
+            if (at >= 0) draft.accessories[at].shape = name;
+            else draft.accessories.push({ kind: "hardware", id: h.id, qty: 1, shape: name });
+            renderDetail();
+          });
+          pick.appendChild(b);
+        });
+        row.appendChild(pick);
+      }
+
+      const step = el("div", "flex shrink-0 items-center gap-1");
+      const dec = el("button", "h-7 w-7 rounded border border-paper-line text-sm disabled:opacity-30", "\u2212");
+      dec.type = "button"; dec.disabled = qty === 0;
+      dec.setAttribute("aria-label", "One fewer " + (h.description || h.sku));
+      dec.addEventListener("click", () => setQty(qty - 1));
+      const n = el("span", "tnum w-6 text-center text-sm", String(qty));
+      const inc = el("button", "h-7 w-7 rounded border border-paper-line text-sm disabled:opacity-30", "+");
+      inc.type = "button"; inc.disabled = each === null;
+      inc.setAttribute("aria-label", "One more " + (h.description || h.sku));
+      inc.addEventListener("click", () => setQty(qty + 1));
+      step.append(dec, n, inc);
+      row.appendChild(step);
+      list.appendChild(row);
+    });
+  });
+  block.appendChild(list);
+  if (!list.childNodes.length)
+    block.appendChild(el("p", "text-[11px] text-ink-faint",
+      "The price sheet prices no clavos or straps for this line."));
+  return block;
+}
+
 function accessoryBlock(product, draft) {
   const block = el("div", "");
   block.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-mute",
@@ -1845,6 +2169,9 @@ function accessoryBlock(product, draft) {
 
   const chosen = el("div", "mb-2 flex flex-col gap-1.5");
   draft.accessories.forEach((acc, i) => {
+    // Clavos and straps have their own block above; showing them twice would
+    // read as two charges for one line.
+    if (acc.kind === "hardware" && configuratorOwns(hardwareById(acc.id))) return;
     const priced = state.engine.priceLine({
       productId: product.id, finish: draft.finish, config: draft.config, qty: 1, accessories: [acc]
     }).accessories[0];
@@ -1887,6 +2214,9 @@ function accessoryBlock(product, draft) {
   // asks for them, so offering them again would double the count and the price.
   let offered = 0, hidden = 0;
   const hw = state.engine.hardwareList().filter(h => {
+    // The speakeasy kit, the iron masks, clavos and straps are asked for on
+    // the door itself now, so they are not add-ons to an opening any more.
+    if (configuratorOwns(h)) return false;
     const fit = accessoryFits("hardware", h, draft);
     if (!fit.ok) hidden++;
     return fit.ok;
@@ -2003,9 +2333,14 @@ function renderQuote() {
       info.appendChild(el("p", "mt-1 text-xs font-medium text-red-700",
         "No longer offered in this combination — remove or reconfigure."));
     }
-    l.accessories.forEach(a => {
+    l.accessories.forEach((a, j) => {
+      // The sheet prices clavos once for both shapes, so which shape was
+      // chosen lives on the quote line rather than in the priced label.
+      const sp = (spec.accessories || [])[j];
+      const shape = sp && sp.shape ? " \u2014 " + sp.shape.replace(/\s*Clavos$/i, "") : "";
       info.appendChild(el("p", "mt-0.5 text-xs text-ink-faint",
-        "+ " + (a.qty > 1 ? a.qty + " × " : "") + a.label + (a.notOffered ? " (unavailable)" : "")));
+        "+ " + (a.qty > 1 ? a.qty + " × " : "") + a.label + shape +
+        (a.notOffered ? " (unavailable)" : "")));
     });
     top.appendChild(info);
 

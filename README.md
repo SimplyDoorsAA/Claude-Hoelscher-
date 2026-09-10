@@ -159,6 +159,7 @@ you commit anything.
 | `quoter/assets/designs/` | Iron grille designs, decorative glass and mask photography |
 | `docs/knotty-alder-deep-dive-2026-09-09.md` | Catalog pages 42-57 read in full: what was added, what is still open |
 | `docs/knotty-alder-price-verification-2026-09-09.md` | Every knotty alder price line checked against the sheet; the page 50-53 add-on rules |
+| `docs/speakeasy-programme-2026-09-10.md` | The nine doors offered with a speakeasy kit, every combination priced or not, and the misprinted part numbers |
 | `tools/extract-door-images.py` | Pulls that photography out of the catalog PDFs |
 | `data/catalog.json` | Master catalog — `products[]`, `prehangAdders[]`, `components[]`, `hardware[]` |
 | `data/pricing-rules.json` | Net multiplier, currency, rounding, freight and defaults |
@@ -203,6 +204,7 @@ gets exercised.
 | `decorativeGlassDesigns` | 7 leaded glasses and the caming each is offered in |
 | `glassRules` | Glasses a row offers by name, by model, or by the page its glass column points at |
 | `glassCodes` | The 12 codes that replace the (--) in a part number |
+| `speakeasyOptions` | The part-number grammar behind the speakeasy programme, and the four add-ons the configurator owns |
 
 The split follows the vendor price sheets, not a guess: the fiberglass sheet
 carries its own Components, SDL Bars and Prehang Adders sections and no
@@ -471,8 +473,6 @@ change.
 | Accessory | Offered on |
 | --- | --- |
 | Barn Door Hardware | barn slabs |
-| Iron Mask — Standard, Balfour, Windsor | wood two-panel square and arch doors |
-| Speakeasy Kit — Mahogany / Knotty Alder | two-panel doors of that wood |
 | Dentil Shelf | Craftsman models |
 | T-Astragal | a double opening |
 | Mull Cover, Fat Boy Mullion | an opening with sidelites |
@@ -481,6 +481,57 @@ Sidelites are deliberately **not** in the picker: they belong to the opening,
 and the Opening step asks for them, so offering them twice would put a second
 sidelite on the line at full price. The picker says how many items it hid, so a
 missing accessory reads as a rule rather than a bug.
+
+The speakeasy kit, the three iron masks, clavos and straps are not in the
+picker either, on any door — they are asked for on the door itself. See below.
+
+**The speakeasy programme.** The catalog prints *"Speakeasy kits & iron mask
+options available"* beside nine doors, five knotty alder and four mahogany, and
+the price sheet then prices every combination of insert and mask as its own
+part number: the plain door's number with `SE`, a mask code and an insert code
+spliced in front of the size code.
+
+```
+KA2PSQ  SE   B       W       3068
+└door   └kit └mask   └insert └size      (mask: — M B W · insert: -- W)
+```
+
+`speakeasyOptions` in `data/catalog.json` publishes that grammar, so the app
+reads it rather than carrying a list of doors: a door Hoelscher adds to the
+programme appears on its own. A door is in the programme when at least one of
+its combinations is priced. Read this way, **140 variant rows fold back into
+the 18 door rows a customer actually shops** — nine models — and the choices
+become three questions in the configurator, each option pictured:
+
+| Question | Answers |
+| --- | --- |
+| Speakeasy | No speakeasy · Speakeasy kit |
+| Insert | Glass · Wood panel — one kit price covers either |
+| Iron mask | None · Standard · Balfour · Windsor — priced into the part number |
+
+Clavos and straps sit below, per piece and installed, on the same nine doors.
+Clavos are one price round or square, so the shape is recorded on the quote and
+costs nothing.
+
+Nothing here is an adder: the answers resolve to a part number Hoelscher
+prices, so a speakeasy door is never quoted as a plain door plus a charge —
+which is what would double-charge, since the SE price already contains the kit
+and the mask.
+
+Two kinds of gap in the vendor's sheet are shown rather than hidden:
+
+- **Never priced.** All four Balfour combinations of the Circle Top 2 Panel are
+  missing from the sheet. Those options appear disabled, with the reason.
+- **Misprinted.** Four rows carry a part number that is wrong — three of them
+  repeat another row's number. The description beside each names the mask the
+  vendor meant, so `skuCorrections` places the row by that and the quote still
+  carries **the number as printed**, with a note to confirm it with Hoelscher.
+
+One door outside the programme still shows its variants as separate cards: the
+fiberglass 2 Panel Arch V-Grooved, Mahogany Grain Skin. The fiberglass sheet
+names its speakeasy variants in words instead of in the part number, and prices
+the masked ones as CONFIGURED ITEMs with no part number at all, so the grammar
+above cannot reach them.
 
 **Cost vs customer pricing.** A lock control in the header, mirrored inside the
 quote drawer, switches the whole app between `grandTotalSellCents` /
