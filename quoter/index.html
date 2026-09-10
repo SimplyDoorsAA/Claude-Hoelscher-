@@ -372,7 +372,7 @@ const state = {
   engine: null,
   photos: {},                             // model name -> file, from the manifest
   glass: { glass: {}, privacy: {} },      // glass name -> swatch and privacy rating
-  designs: { grilles: {}, decorativeGlass: {}, accessories: {} },
+  designs: { decorativeGlass: {}, accessories: {} },
   ready: false,
   mode: "customer",                       // "customer" | "cost"
   marginTier: null,                       // "builder" | "retail" — set from the rules file
@@ -441,11 +441,6 @@ const GROUPING = {
   }
 };
 const groupingFor = c => GROUPING[c] || null;
-/** The value of a row's grouping field, or null when the line is not grouped. */
-function groupOf(product) {
-  const g = groupingFor(state.engine.collectionOf(product));
-  return g ? (product[g.field] || null) : null;
-}
 /* What a card counts, and what to call it. The gate and the catalogue read
    this same function, so the two numbers can never disagree. */
 function tally(rows) {
@@ -542,12 +537,13 @@ async function loadData() {
     state.glass = { glass: {}, privacy: {} };
   }
   try {
+    // The grille photos are named by their catalog entry, so only the two
+    // sections the app looks up by name are kept.
     const dz = await fetchJson(CONFIG.designManifest);
-    state.designs = { grilles: (dz && dz.grilles) || {},
-                      decorativeGlass: (dz && dz.decorativeGlass) || {},
+    state.designs = { decorativeGlass: (dz && dz.decorativeGlass) || {},
                       accessories: (dz && dz.accessories) || {} };
   } catch (e) {
-    state.designs = { grilles: {}, decorativeGlass: {}, accessories: {} };
+    state.designs = { decorativeGlass: {}, accessories: {} };
   }
   state.ready = true;
   return state.engine;
@@ -662,17 +658,25 @@ function modelFingerprint(name) {
   MODEL_ABBREV.forEach(([rx, to]) => { n = n.replace(rx, to); });
   return n.replace(/[^a-z0-9]/g, "");
 }
+/* Fingerprint every photographed model once, not once per card that has to go
+   looking. Rebuilt when the manifest changes, which is only at load. */
+let photoIndex = null, photoIndexOf = null;
+function photoByFingerprint(print) {
+  if (photoIndexOf !== state.photos) {
+    photoIndex = new Map();
+    for (const name of Object.keys(state.photos))
+      photoIndex.set(modelFingerprint(name), name);
+    photoIndexOf = state.photos;
+  }
+  return photoIndex.get(print) || null;
+}
 function basePhoto(modelName) {
-  const bases = [];
-  VARIANT_OF.forEach(rx => {
-    const b = String(modelName || "").replace(rx, "").trim().replace(/[,\-]$/, "").trim();
-    if (b && b !== modelName) bases.push(b);
-  });
-  if (!bases.length) return null;
-  const want = new Set(bases.map(modelFingerprint));
-  for (const name of Object.keys(state.photos)) {
-    if (want.has(modelFingerprint(name)))
-      return { src: photoFor(name), of: name };
+  const name = String(modelName || "");
+  for (const rx of VARIANT_OF) {
+    const base = name.replace(rx, "").trim().replace(/[,\-]$/, "").trim();
+    if (!base || base === name) continue;
+    const hit = photoByFingerprint(modelFingerprint(base));
+    if (hit) return { src: photoFor(hit), of: hit };
   }
   return null;
 }
@@ -692,10 +696,20 @@ function standInPhoto(model) {
   return null;
 }
 
+/* What to show for a door, in order of how true it is: the model's own
+   photograph, another catalog picture of the same door, the photograph of the
+   door it is a variation of, and failing all three a drawn silhouette. */
+function artFor(name, model) {
+  const own = photoFor(name);
+  if (own) return { src: own };
+  const stand = standInPhoto(model);
+  if (stand) return { src: stand };
+  return basePhoto(name) || {};
+}
+
 function fillArt(holder, product, modelName, cls, model) {
   const name = modelName || (product && modelKeyOf(product));
-  const borrowed = !photoFor(name) && !standInPhoto(model) ? basePhoto(name) : null;
-  const src = photoFor(name) || standInPhoto(model) || (borrowed && borrowed.src);
+  const { src, of: borrowedFrom } = artFor(name, model);
   if (!src) {
     const svg = doorSilhouette(product);
     if (cls) svg.classList.add(...cls.split(" "));
@@ -704,26 +718,30 @@ function fillArt(holder, product, modelName, cls, model) {
   }
   const img = document.createElement("img");
   img.src = src;
-  img.alt = borrowed ? borrowed.of + " — this door before its variation"
-                     : (name || product.description || product.sku);
-  if (borrowed) {
-    // Say whose photograph this is. A speakeasy door shown without its
-    // speakeasy would otherwise read as a picture of the wrong door.
-    const tag = el("span",
-      "borrowed absolute bottom-0 left-0 right-0 bg-ink/70 px-1.5 py-0.5 text-[9px] leading-tight text-white");
-    tag.textContent = borrowed.of + " shown";
-    holder.appendChild(tag);
-  }
+  img.alt = borrowedFrom ? borrowedFrom + " — this door before its variation"
+                         : (name || product.description || product.sku);
   img.loading = "lazy";
   img.decoding = "async";
   img.className = "h-full w-full object-contain" + (cls ? " " + cls : "");
+  let tag = null;
   img.addEventListener("error", function onErr() {
     img.removeEventListener("error", onErr);
     const svg = doorSilhouette(product);
     if (cls) svg.classList.add(...cls.split(" "));
     img.replaceWith(svg);
+    // The caption belongs to the photograph. Left behind on the silhouette it
+    // would claim to show a door that is no longer on screen.
+    if (tag) tag.remove();
   }, { once: true });
   holder.appendChild(img);
+  if (borrowedFrom) {
+    // Say whose photograph this is. A speakeasy door shown without its
+    // speakeasy would otherwise read as a picture of the wrong door.
+    tag = el("span",
+      "borrowed absolute bottom-0 left-0 right-0 bg-ink/70 px-1.5 py-0.5 text-[9px] leading-tight text-white");
+    tag.textContent = borrowedFrom + " shown";
+    holder.appendChild(tag);
+  }
 }
 
 /* ------------------------------ 4. SELECTORS ----------------------------- */
@@ -812,7 +830,13 @@ function stainsApplyTo(modelName) {
          (state.engine.catalog.fiberglassStainColors || []).length > 0;
 }
 
+/* Grouping products into models depends only on which line and collection is
+   being shown, never on the filters, so it survives every keystroke in the
+   search box. Rebuilt when the scope changes, or when the catalog loads. */
+let modelCache = null, modelCacheKey = null;
 function buildModels() {
+  const cacheKey = state.collection + "|" + state.group + "|" + state.ready;
+  if (modelCacheKey === cacheKey) return modelCache;
   const hidden = optionOnlyIds();
   const g = groupingFor(state.collection);
   const map = new Map();
@@ -834,6 +858,8 @@ function buildModels() {
     m.grilleDesigns = grilleDesignsFor(m);
     m.sample = m.products[0];
   });
+  modelCache = models;
+  modelCacheKey = cacheKey;
   return models;
 }
 
@@ -2341,8 +2367,8 @@ function wire() {
   const io = new IntersectionObserver(entries => {
     if (!state.ready) return;
     if (entries.some(e => e.isIntersecting)) {
-      const total = filteredModels().length;
-      if (state.rendered < total) renderCatalog(false);
+      // renderCatalog works out for itself whether anything is left to draw.
+      if (state.rendered < filteredModels().length) renderCatalog(false);
     }
   }, { rootMargin: "600px" });
   io.observe($("#sentinel"));

@@ -325,9 +325,13 @@ DESIGN_DIR = os.path.join(ROOT, 'quoter', 'assets', 'designs')
 GRILLE_CODES = ('AVI', 'BAL', 'BAR', 'BER', 'CRD', 'HMM', 'SLT', 'STG', 'SIE', 'SHN', 'WHI')
 # KA34AVIC3068 for knotty alder; M23ACRDC3068, M34AVIC3068 and MFULLAVIC3068 for
 # mahogany: line letters, then the lite style, then the design, then the size.
-GRILLE_PN = re.compile(r'\b(KA|M)([A-Z0-9]{2,4}?)(' + '|'.join(GRILLE_CODES) + r')C(\d{4})\b')
 GRILLE_LINE = {'KA': 'knotty_alder', 'M': 'mahogany'}
 GRILLE_STYLE = {'34': '3/4 Lite', '23A': '2/3 Lite', '23': '2/3 Lite', 'FULL': 'Full Lite'}
+# The style is spelled out rather than left as "any letters", so a sidelite's
+# number (KA34SLAVIC1268) cannot be read as a door's with a style we don't know.
+GRILLE_PN = re.compile(r'\b(' + '|'.join(GRILLE_LINE) + r')('
+                       + '|'.join(sorted(GRILLE_STYLE, key=len, reverse=True)) + r')('
+                       + '|'.join(GRILLE_CODES) + r')C(\d{4})\b')
 
 def _cell(x, y, xs, ys):
     """Which half of the page a thing sits in. The catalog lays these pages out
@@ -683,10 +687,15 @@ def main(argv):
                 # Nearest-centre is not good enough: a door listing its 6'8" and
                 # 8'0" sizes in two columns puts the second column closer to the
                 # middle of the photo beside it than to its own.
-                row = []
+                inside, under = [], []
                 for pn, px, py, pw, ph in photos:
-                    if py <= ty <= py + ph or 0 < py - ty <= BELOW_REACH:
-                        row.append((px, pn))
+                    if py <= ty <= py + ph:
+                        inside.append((px, pn))
+                    elif 0 < py - ty <= BELOW_REACH:
+                        under.append((px, pn))
+                # Beside beats beneath: a run in the gap between two rows
+                # belongs to a photo it sits level with, not one it sits under.
+                row = inside or under
                 if not row:
                     continue
                 row.sort()

@@ -245,6 +245,9 @@ ok('a borrowed photograph says whose it is',
      === FG.filter(m=>!manifest.models[m.name]&&hasArt(m)).length,
    String(FG.filter(m=>!manifest.models[m.name]&&hasArt(m)).length)+' borrowed');
 ok('no photograph is broken', broken===0, String(broken));
+ok('no drawn silhouette carries a borrowed caption',
+   (await page.$$eval('#catalog article',
+      ns => ns.filter(a => a.querySelector('.borrowed') && !a.querySelector('img')).length)) === 0);
 ok('a model with no photograph and nothing to borrow draws a silhouette',
    svgCount===FG.length-withPhoto, 'svg='+svgCount+' of '+(FG.length-withPhoto)+' without a photo');
 ok('every photo the manifest names is actually on disk',

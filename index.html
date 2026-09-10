@@ -474,7 +474,6 @@ const S = {
 };
 function sec(k){ return S.sec[k]; }
 function isGridPane(){ return !!S.sec[S.pane]; }
-function gridKinds(){ return S.secOrder; }
 const LS_COLS = "sd.pricemgr.cols.v1";
 
 /* ------------------------------ dom helpers ----------------------------- */
@@ -487,7 +486,6 @@ function el(tag, attrs){
     if(v===null||v===undefined||v===false) continue;
     if(k==="class") n.className = v;
     else if(k==="text") n.textContent = v;
-    else if(k==="html") n.innerHTML = v;
     else if(k.slice(0,2)==="on") n.addEventListener(k.slice(2), v);
     else if(k==="dataset") for(const d in v) n.dataset[d]=v[d];
     else if(v===true) n.setAttribute(k,"");
