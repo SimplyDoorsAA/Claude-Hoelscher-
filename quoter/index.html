@@ -733,12 +733,28 @@ function glassSwatch(name) {
 /* The price sheet prints a part number with (--) standing in for the glass and
    a legend of codes to fill it with, so a quote can name the part the customer
    actually orders rather than the template. */
-function completeSku(product, glazing) {
-  const sku = String((product && product.sku) || "");
-  if (!sku.includes("--")) return sku;
-  const want = glassKey(glazing);
-  const hit = (state.engine.catalog.glassCodes || []).find(c => glassKey(c.name) === want);
-  return hit ? sku.replace("--", hit.code) : sku;
+function completeSku(product, glazing, handing) {
+  let sku = String((product && product.sku) || "");
+  if (!sku.includes("-")) return sku;
+  // The first placeholder is the glass code, always.
+  if (sku.includes("--")) {
+    const want = glassKey(glazing);
+    const hit = (state.engine.catalog.glassCodes || []).find(c => glassKey(c.name) === want);
+    if (hit) sku = sku.replace("--", hit.code);
+  }
+  // A trailing placeholder is filled from something the configurator already
+  // knows. Only patterns confirmed against a real catalog page are listed in
+  // skuPlaceholders, so an unconfirmed one stays a placeholder and is flagged
+  // rather than guessed at.
+  const rules = ((state.engine.catalog.skuPlaceholders || {}).handing) || [];
+  if (handing) {
+    const raw = String((product && product.sku) || "");
+    const r = rules.find(x => { try { return new RegExp(x.appliesToSkuPattern).test(raw); }
+                               catch (e) { return false; } });
+    const code = r && r.codes && r.codes[handing];
+    if (code) sku = sku.replace(/-+$/, code);
+  }
+  return sku;
 }
 /* Eight rows carry a second placeholder the glass code does not fill — the
    six mahogany "Lite Narrow LH/RH" and the two knotty alder Craftsman. Nobody
@@ -2161,7 +2177,7 @@ function renderDetail() {
                     d.swing && SWING_LABELS[d.swing],
                     d.jambDepth && d.jambDepth + '" jamb',
                     configured ? "configured item — Hoelscher prints no part number"
-                               : completeSku(product, d.glazing)].filter(Boolean).join(" · ");
+                               : completeSku(product, d.glazing, d.handing)].filter(Boolean).join(" · ");
     if (chosen) foot.appendChild(el("p", "mb-3 text-xs text-ink-mute", chosen));
     const misprint = skuCorrection(product);
     if (misprint) foot.appendChild(el("p", "mb-3 rounded-lg bg-brass-pale px-3 py-2 text-[11px] text-brass-deep",
@@ -2935,17 +2951,17 @@ function buildOrderDoc(q) {
     const td = el("td", "");
     // Hoelscher's desk cross-checks the number against the description, so the
     // sheet carries both, and the number exactly as Hoelscher prints it.
-    td.appendChild(el("span", null, completeSku(prod, spec.glazing)));
+    td.appendChild(el("span", null, completeSku(prod, spec.glazing, spec.handing)));
     td.appendChild(el("span", "sub", l.description));
     const mis = skuCorrection(prod);
     if (mis) {
       td.appendChild(el("span", "sub pd-flag", "\u26a0 " + (o.misprintNote || "Confirm this part number.")));
       flagged.push(prod.sku);
     }
-    if (skuIsIncomplete(completeSku(prod, spec.glazing))) {
+    if (skuIsIncomplete(completeSku(prod, spec.glazing, spec.handing))) {
       td.appendChild(el("span", "sub pd-flag", "\u26a0 " +
         (o.placeholderNote || "This part number still holds a placeholder. Confirm it with Hoelscher before ordering.")));
-      incomplete.push(completeSku(prod, spec.glazing));
+      incomplete.push(completeSku(prod, spec.glazing, spec.handing));
     }
     (l.accessories || []).forEach((a, j) => {
       const sp = (spec.accessories || [])[j];

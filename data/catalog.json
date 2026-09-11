@@ -21300,5 +21300,21 @@
     "label": "Simulated divided lites",
     "unit": "per lite",
     "maxLites": 48
+  },
+  "skuPlaceholders": {
+    "notes": "A part number on the price sheet can carry more than one placeholder. The first is always the glass code (see glassCodes). A trailing one is filled at order time from something the configurator already knows. Only patterns confirmed against a real catalog page are listed here — anything else is flagged on the order sheet rather than guessed at.",
+    "handing": [
+      {
+        "id": "mahogany-narrow-lite",
+        "appliesToSkuPattern": "^M[345]GPWN--\\d{4}--$",
+        "codes": {
+          "left": "L",
+          "right": "R"
+        },
+        "confirmedBy": "dealer, 2026-09-11",
+        "evidence": "Catalog page 10-11 lists the numbers in full: M3GPWNSR2880L and M3GPWNSR2880R for the two handings of the 2'8\" x 8'0\", and likewise for 3'0\" x 8'0\". The glass code sits in the first placeholder, the handing letter in the trailing one.",
+        "example": "M3GPWNSR2880L"
+      }
+    ]
   }
 }
