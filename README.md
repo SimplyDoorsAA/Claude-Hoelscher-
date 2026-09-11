@@ -152,7 +152,10 @@ you commit anything.
 | `tests/quoter.test.mjs` | App B end to end, incl. the whole configurator |
 | `tests/stress-ui.mjs` | Real quotes built through App B, checked against the sheets |
 | `tools/audit-catalog.mjs` | Structural audit of the published data |
-| `docs/audit-2026-09-09.md` | What the last full audit found, and what is still open |
+| `tools/audit-prices.mjs` | Recomputes every price from the rules file alone and compares it to the engine |
+| `quoter/assets/brand/` | The SimplyDoors letterhead mark, taken from the dealer's own estimate |
+| `docs/audit-2026-09-10.md` | The last full audit: pricing verified, and the three things blocking office use |
+| `docs/audit-2026-09-09.md` | The audit before it, and what it left open |
 | `quoter/assets/doors/` | Door photography extracted from the catalogs, plus `manifest.json` |
 | `docs/photography.md` | Which models have a picture, which borrow one, and what is still missing |
 | `quoter/assets/glass/` | Glass swatches with Hoelscher's privacy ratings |
@@ -160,6 +163,7 @@ you commit anything.
 | `docs/knotty-alder-deep-dive-2026-09-09.md` | Catalog pages 42-57 read in full: what was added, what is still open |
 | `docs/knotty-alder-price-verification-2026-09-09.md` | Every knotty alder price line checked against the sheet; the page 50-53 add-on rules |
 | `docs/speakeasy-programme-2026-09-10.md` | The nine doors offered with a speakeasy kit, every combination priced or not, and the misprinted part numbers |
+| `data/estimate.json` | The letterhead, tax rate, deposit rule and terms the printed documents use |
 | `tools/extract-door-images.py` | Pulls that photography out of the catalog PDFs |
 | `data/catalog.json` | Master catalog — `products[]`, `prehangAdders[]`, `components[]`, `hardware[]` |
 | `data/pricing-rules.json` | Net multiplier, currency, rounding, freight and defaults |
@@ -205,6 +209,8 @@ gets exercised.
 | `glassRules` | Glasses a row offers by name, by model, or by the page its glass column points at |
 | `glassCodes` | The 12 codes that replace the (--) in a part number |
 | `speakeasyOptions` | The part-number grammar behind the speakeasy programme, and the four add-ons the configurator owns |
+| `prehangAdderRules` | How an opening resolves to the casing and 1×4 rows the sheet keys to it |
+| `sdlRule` | The per-lite simulated divided lite charge, applied at the factory |
 
 The split follows the vendor price sheets, not a guess: the fiberglass sheet
 carries its own Components, SDL Bars and Prehang Adders sections and no

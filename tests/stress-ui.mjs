@@ -35,8 +35,19 @@ const b=await chromium.launch();
 const page=await (await b.newContext({viewport:{width:1500,height:1000}})).newPage();
 const errs=[]; page.on('pageerror',e=>errs.push(e.message));
 page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource/.test(m.text()))errs.push(m.text());});
-await page.route('https://cdn.tailwindcss.com*',r=>r.fulfill({status:200,contentType:'text/javascript',
-  body:'window.tailwind={config:{}};document.addEventListener("DOMContentLoaded",()=>{const s=document.createElement("style");s.textContent=window.__TW__;document.head.appendChild(s);});'}));
+/* Two states are real: Tailwind loaded, and Tailwind unreachable — where the
+   .no-tw fallback stylesheet takes over. Serving an EMPTY sheet would be a
+   third that exists nowhere, styled by neither, and it is what this suite used
+   to do on any machine without a compiled sheet. So with a sheet, serve it;
+   without one, block the CDN outright and exercise the fallback the app was
+   designed for. Either way the state is one the app really has. */
+if (TW) {
+  await page.route('https://cdn.tailwindcss.com*',r=>r.fulfill({status:200,contentType:'text/javascript',
+    body:'window.tailwind={config:{}};document.addEventListener("DOMContentLoaded",()=>{const s=document.createElement("style");s.textContent=window.__TW__;document.head.appendChild(s);});'}));
+} else {
+  await page.route('https://cdn.tailwindcss.com*',r=>r.abort());
+}
+console.log('# tailwind: ' + (TW ? 'compiled sheet served' : 'CDN blocked, .no-tw fallback'));
 await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
 await page.addInitScript(css=>{window.__TW__=css;},TW);
 
@@ -50,6 +61,18 @@ const keyOf=p=>{
     if(rx.test(d)) return d.replace(rx,'$1').replace(/\s+/g,' ').trim(); }
   return d.replace(SIZE_PREFIX,'').trim();
 };
+/* Rows the dealer does not sell are in the catalogue but are not cards anybody
+   can quote from, so they do not count towards what the browser shows. */
+function hiddenVariantIdsOf(cat){
+  const h=(cat.speakeasyOptions||{}).hiddenVariants, out=new Set();
+  if(!h) return out;
+  const of={fiberglass:cat.fiberglassProducts||[],wood:cat.woodProducts||[]};
+  const rows=h.matchCollection?(of[h.matchCollection]||[]):[...(cat.fiberglassProducts||[]),...(cat.woodProducts||[])];
+  const rx=new RegExp(h.matchDescription,'i');
+  rows.forEach(p=>{ if(rx.test(p.description||'')) out.add(p.id); });
+  return out;
+}
+const hiddenIds=hiddenVariantIdsOf(cat);
 /* A speakeasy door, its kit and its mask are one part number, and those rows
    are reached through the door's configurator rather than as cards, so they
    are not counted here either. Read from the grammar the catalogue publishes. */
@@ -70,6 +93,7 @@ const seVariantIds=(()=>{
       if(v) out.add(v.id);
     }
   }
+  hiddenIds.forEach(id=>out.add(id));
   return out;
 })();
 const stains=(cat.fiberglassStainColors||[]).map(x=>x.name);
