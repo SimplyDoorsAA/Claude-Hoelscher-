@@ -229,6 +229,32 @@ ok('the fiberglass speakeasy cards the dealer does not sell are gone',
 ok('but the rows stay in the catalogue for reference',
    catalog.fiberglassProducts.some(p=>/w\/ ?Speakeasy/i.test(p.description||'')));
 
+/* ---- a part number with a placeholder nobody can fill ---- */
+/* The dealer's own print showed KACMCBLE3080- going onto an order sheet with a
+   trailing placeholder still in it. That number reaches Hoelscher, so the sheet
+   has to say it is incomplete rather than print it as though it were not. */
+await page.evaluate(()=>{try{localStorage.clear();}catch(e){}});
+await page.goto(BASE+'/quoter/');
+await page.waitForSelector('#lineGate:not(.hidden)',{timeout:30000});
+await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/^Wood/.test(n.textContent.trim())).click();});
+await page.waitForTimeout(700);
+await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/^Knotty Alder/.test(n.textContent.trim())).click();});
+await page.waitForSelector('#catalog article',{timeout:30000});
+const craft=catalog.woodProducts.find(p=>/-$/.test(p.sku||'')&&/Craftsman/.test(p.description||''));
+ok('the catalogue still prints a Craftsman number with a trailing placeholder',
+   !!craft, craft?craft.sku:'none');
+await open('KA Craftsman',{Size:"3'0\" x 8'0\"",Finish:'Unfinished',Opening:'Single door',
+  Handing:'Left hand',Swing:'Inswing','Jamb depth':'4-9/16'});
+await page.$$eval('#detail button',ns=>{const b=ns.find(x=>x.textContent.trim()==='Add to quote');if(b)b.click();});
+await page.waitForTimeout(600);
+await page.fill('#job_customer','Placeholder Test'); await page.waitForTimeout(150);
+await page.click('#printOrder'); await page.waitForTimeout(500);
+const order=await page.evaluate(()=>document.querySelector('#printDoc').textContent);
+ok('the order sheet warns that the number holds a placeholder',
+   /placeholder/i.test(order), (order.match(/[^.]*placeholder[^.]*\./i)||['not warned'])[0].trim().slice(0,110));
+ok('and names the number it applies to',
+   /KACM\w*-/.test(order), (order.match(/KACM\S*/)||['none'])[0]);
+
 ok('no console or page errors', !errs.length, errs.slice(0,3).join(' | '));
 report();
 await b.close(); srv.close();

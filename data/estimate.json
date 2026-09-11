@@ -34,7 +34,8 @@
     "title": "Order sheet",
     "vendor": "Hoelscher Weatherstrip",
     "note": "Internal. Costs shown are SimplyDoors net, not customer pricing.",
-    "misprintNote": "Hoelscher prints this part number on more than one row. Confirm it against the description when ordering."
+    "misprintNote": "Hoelscher prints this part number on more than one row. Confirm it against the description when ordering.",
+    "placeholderNote": "This part number still holds a placeholder Hoelscher prints but this app cannot fill. Confirm what belongs in it before ordering."
   },
   "terms": {
     "title": "SimplyDoors Terms and Conditions",

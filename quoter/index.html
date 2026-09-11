@@ -207,6 +207,12 @@ tailwind.config = {
   .pd-line.big { font-weight:700; font-size:10.5pt; border-top:1px solid #000;
                  margin-top:5px; padding-top:6px; }
   .pd-note { font-size:8pt; color:#333; margin-top:6px; }
+  /* A contract paragraph split across a page break reads as a mistake, and the
+     signature block belongs with the clause it signs. */
+  .pd-approve p, .pd-approve h4 { break-inside:avoid; page-break-inside:avoid; }
+  .pd-approve p { orphans:3; widows:3; }
+  .pd-sign { break-inside:avoid; page-break-inside:avoid; }
+  .pd-approve h4 { break-after:avoid; page-break-after:avoid; }
   .pd-approve { margin-top:18px; font-size:9pt; }
   .pd-approve h4 { margin:12px 0 4px; font-size:9.5pt; font-weight:700; }
   .pd-approve p { margin:0 0 7px; }
@@ -734,6 +740,12 @@ function completeSku(product, glazing) {
   const hit = (state.engine.catalog.glassCodes || []).find(c => glassKey(c.name) === want);
   return hit ? sku.replace("--", hit.code) : sku;
 }
+/* Eight rows carry a second placeholder the glass code does not fill — the
+   six mahogany "Lite Narrow LH/RH" and the two knotty alder Craftsman. Nobody
+   knows yet what Hoelscher expects in it, so a part number that still holds one
+   is never printed as though it were complete: the order sheet says so where
+   the order is actually placed. */
+const skuIsIncomplete = sku => /-/.test(String(sku || ""));
 function glazingOptions(value) {
   if (!value) return [];
   return String(value).split(/\s*,\s*|\s+or\s+/i).map(t => t.trim()).filter(Boolean);
@@ -2914,7 +2926,7 @@ function buildOrderDoc(q) {
   });
   thead.appendChild(hr); t.appendChild(thead);
   const tb = el("tbody", "");
-  const flagged = [];
+  const flagged = [], incomplete = [];
   q.lines.forEach((l, i) => {
     if (l.notOffered) return;
     const spec = state.quote.lines[i] || {};
@@ -2929,6 +2941,11 @@ function buildOrderDoc(q) {
     if (mis) {
       td.appendChild(el("span", "sub pd-flag", "\u26a0 " + (o.misprintNote || "Confirm this part number.")));
       flagged.push(prod.sku);
+    }
+    if (skuIsIncomplete(completeSku(prod, spec.glazing))) {
+      td.appendChild(el("span", "sub pd-flag", "\u26a0 " +
+        (o.placeholderNote || "This part number still holds a placeholder. Confirm it with Hoelscher before ordering.")));
+      incomplete.push(completeSku(prod, spec.glazing));
     }
     (l.accessories || []).forEach((a, j) => {
       const sp = (spec.accessories || [])[j];
@@ -2972,6 +2989,9 @@ function buildOrderDoc(q) {
   if (flagged.length) page.appendChild(el("p", "pd-note pd-flag",
     "\u26a0 Confirm these part numbers against their description before ordering: " +
     flagged.join(", ") + "."));
+  if (incomplete.length) page.appendChild(el("p", "pd-note pd-flag",
+    "\u26a0 These part numbers are printed by Hoelscher with a placeholder this app cannot fill: " +
+    incomplete.join(", ") + ". Confirm what belongs in it before the order goes out."));
   return page;
 }
 
