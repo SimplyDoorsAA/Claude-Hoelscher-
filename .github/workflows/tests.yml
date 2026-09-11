@@ -49,6 +49,9 @@ jobs:
       - name: Adders, divided lites and custom margin
         run: node tests/opening-extras.test.mjs
 
+      - name: Mahogany Contemporary, against the dealer sheet
+        run: node tests/contemporary.test.mjs
+
       - name: Quoter under load
         run: node tests/stress-ui.mjs
 

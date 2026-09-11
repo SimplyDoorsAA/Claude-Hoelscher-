@@ -288,8 +288,12 @@ await page.click('#printOrder'); await page.waitForTimeout(500);
 const handDoc=await page.evaluate(()=>document.querySelector('#printDoc').textContent);
 ok('a left-hand door carries the L the dealer\'s catalog page prints',
    /M3GPWN\S*2880L/.test(handDoc), (handDoc.match(/M3GPWN\S*/)||['none'])[0]);
-ok('and the glass placeholder it still cannot fill is flagged, not printed as final',
-   /placeholder/i.test(handDoc));
+/* Until the page-6 glass rule existed this number went out as M3GPWN--2880L
+   and the sheet flagged it. Both halves are now fillable, so the assertion is
+   the other way round: complete, and no warning. */
+ok('and the page-6 rule fills the glass half, so nothing is flagged',
+   /M3GPWNLE2880L/.test(handDoc) && !/placeholder/i.test(handDoc),
+   (handDoc.match(/M3GPWN\S*/)||['none'])[0]);
 
 ok('no console or page errors', !errs.length, errs.slice(0,3).join(' | '));
 report();
