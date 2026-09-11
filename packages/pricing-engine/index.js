@@ -312,6 +312,35 @@ export function createEngine(catalog, rules, overrides = {}) {
                costCents: unit === null ? null : unit * qty, notOffered: unit === null,
                freightUnits: isFinite(per) ? per * qty : 0 };
     }
+    /* An upgrade is priced as the DIFFERENCE between two catalogue rows, not as
+       a row of its own. The vendor's prehang adder sheet charges one price to
+       case an opening whatever profile it is cased in; where a wider profile
+       costs more, what it costs is the gap between the two component rows. A
+       row priced this way must never be added as an ordinary accessory as well
+       — that would charge for the trim twice. */
+    if (acc.kind === "componentUpgrade") {
+      const to = componentById.get(acc.id), from = componentById.get(acc.fromId);
+      const nope = { id: acc.id, kind: "componentUpgrade", label: "(unknown upgrade)", qty,
+                     unitCostCents: null, costCents: null, notOffered: true, freightUnits: 0 };
+      if (!to || !from) return nope;
+      const listOf = c => {
+        if (c.priceCents !== null && c.priceCents !== undefined) return c.priceCents;
+        const v = c.priceVariantsCents || {};
+        const k = acc.variant !== undefined && v[acc.variant] !== undefined
+          ? acc.variant : Object.keys(v)[0];
+        return k === undefined ? null : v[k];
+      };
+      const a = listOf(to), b = listOf(from);
+      if (a === null || a === undefined || b === null || b === undefined) return nope;
+      const unit = toCost(a - b, to.priceBasis, "components");
+      return { id: to.id, kind: "componentUpgrade", label: to.description || to.id,
+               upgradeFrom: from.description || from.id, qty,
+               unitCostCents: unit, costCents: unit === null ? null : unit * qty,
+               notOffered: unit === null,
+               // The trim rides on an opening that is already being cased, so
+               // it brings no freight of its own.
+               freightUnits: 0 };
+    }
     if (acc.kind === "adder") {
       const a = adderById.get(acc.id);
       if (!a) return { id: acc.id, label: "(unknown adder)", qty, unitCostCents: null, costCents: null, notOffered: true };

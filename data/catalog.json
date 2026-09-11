@@ -20737,6 +20737,47 @@
       "excludesModelPattern": null
     }
   ],
+  "openingExtrasRules": [
+    {
+      "id": "c2904a7834",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": "P.6",
+      "componentPicker": false,
+      "allowComponentDescriptions": [
+        "Construction Door adder"
+      ],
+      "simulatedDividedLites": false,
+      "notes": "The dealer confirmed on 2026-09-11 that a Mahogany Contemporary unit ships prehung with its jamb, so the jamb legs are not sold beside it, and neither are the glass bead, the subsills, the loose casings and brick mould, the mull covers, the astragals or the mullion. The collection is not offered with simulated divided lites at all. The construction-door adder is the one component that remains. Jamb DEPTH is still asked: the unit is built to a wall thickness and the order sheet has to carry it."
+    }
+  ],
+  "trimProfileRules": [
+    {
+      "id": "91b169b6d0",
+      "adderType": "intCasing",
+      "label": "Interior casing profile",
+      "note": "which casing goes on the inside face",
+      "baseline": "2-1/4\" Casing",
+      "options": [
+        "2-1/4\" Casing",
+        "3-1/2\" Casing"
+      ],
+      "upcharge": "difference-from-baseline",
+      "notes": "The prehang adder prices casing an opening once whatever the profile. The dealer confirmed on 2026-09-11 that the wider 3-1/2\" profile costs the difference between the two casing rows on top — $17.00 on both wood lines today. Derived from the rows rather than stored, so a vendor reprice carries through."
+    },
+    {
+      "id": "b0cbcdc764",
+      "adderType": "1x4",
+      "label": "Exterior trim profile",
+      "note": "which trim goes on the outside face",
+      "baseline": "1x4 S4S",
+      "options": [
+        "1x4 S4S",
+        "WM180 Brick Mould"
+      ],
+      "upcharge": "difference-from-baseline",
+      "notes": "Both profiles are priced identically on both wood lines ($45.00 mahogany, $52.00 knotty alder), so the choice is a specification and costs nothing today. The difference is still computed rather than assumed to be zero, so a reprice would be picked up."
+    }
+  ],
   "ironGrilleDesigns": [
     {
       "name": "Avignon",

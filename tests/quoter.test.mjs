@@ -767,12 +767,24 @@ ok('a door outside the two-panel family gets no iron mask',
    plain.every(o=>!/Iron Mask/i.test(o)), plain.filter(o=>/Iron Mask/i.test(o)).join(' | '));
 ok('and no speakeasy kit', plain.every(o=>!/Speakeasy/i.test(o)),
    plain.filter(o=>/Speakeasy/i.test(o)).join(' | '));
-ok('but still gets the trim any wood door takes',
-   plain.some(o=>/Jamb Leg/i.test(o)) && plain.some(o=>/Casing/i.test(o)),
-   plain.slice(1,4).join(' | '));
+/* A Contemporary unit ships prehung with its jamb, so the dealer closed its
+   picker to everything but the construction door on 2026-09-11. The rules the
+   next two checks are really about — trim on a wood door, and the astragal
+   that closes a pair — are read off a door the restriction does not cover. */
+ok('a Contemporary opening is sold no loose jamb, casing or bead',
+   plain.every(o=>!/Jamb Leg|Casing|Glass Bead|Subsill/i.test(o)),
+   plain.filter(o=>/Jamb Leg|Casing|Glass Bead|Subsill/i.test(o)).join(' | ')||'none offered');
+ok('but it is still sold the construction-door adder',
+   plain.some(o=>/Construction Door/i.test(o)), plain.slice(1,4).join(' | '));
 await page.keyboard.press('Escape'); await page.waitForTimeout(300);
 
-const dblPicker=await pickerFor('1 Lite Vertical',DOUBLE);
+const trimmed=await pickerFor('3 Lite 1 Panel RM',SINGLE);
+ok('a wood door outside that collection still gets the trim',
+   trimmed.some(o=>/Jamb Leg/i.test(o)) && trimmed.some(o=>/Casing/i.test(o)),
+   trimmed.slice(1,4).join(' | '));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+const dblPicker=await pickerFor('3 Lite 1 Panel RM',DOUBLE);
 ok('a double opening is offered the T-astragal that closes it',
    dblPicker.some(o=>/T-Astragal/i.test(o)), dblPicker.filter(o=>/Astragal/i.test(o)).join(' | '));
 await page.keyboard.press('Escape'); await page.waitForTimeout(300);

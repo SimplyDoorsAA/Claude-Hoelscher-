@@ -109,3 +109,45 @@ carries `vendorConfirmed: true` as of 2026-09-11.
 - **Catalog pages 8–11 print `CLE` where wood ordering wants `LE`**, on 14 of
   the 16 numbers, and `M5HGC3068` / `M6HGC3080` drop the glass code
   altogether. Worth telling Hoelscher.
+
+## What a Contemporary opening sells beside its door
+
+Agreed with the dealer on 2026-09-11, from a screenshot of the live app.
+`data/catalog.json` → `openingExtrasRules` and `trimProfileRules`.
+
+**Trim is one charge with a profile, not two charges.** The prehang adder sheet
+prices "case this opening" once — $83.00 list on a 3080 single — with no
+profile column. Ticking a trim adder now asks which profile it is made of:
+
+| Adder | Profiles | Price |
+|---|---|---|
+| Interior casing | 2-1/4" · 3-1/2" | 2-1/4" is inside the $83; 3-1/2" adds the gap between the two rows |
+| 1×4 exterior trim | 1x4 S4S · WM180 Brick Mould | identical on both lines, so the choice is a specification |
+
+The gap is **derived from the component rows, never stored** — $45.00 − $28.00
+on mahogany and $52.00 − $35.00 on knotty alder both come to $17.00 today, and
+a vendor reprice carries through on its own. The engine gained a
+`componentUpgrade` accessory for it, which prices as the difference between two
+rows rather than as a row of its own; a test asserts it never charges the whole
+casing.
+
+**The picker is closed.** A Contemporary unit ships prehung with its jamb, so
+the loose jamb legs are not sold beside it — nor the glass bead, the subsills,
+the loose casings and brick mould, the mull covers, the astragals or the
+mullion. 32 catalogue items are withheld. The **construction-door adder** is
+the one that remains.
+
+The allow-list is matched as a **prefix**, because the vendor writes a
+qualifier into the name ("Construction Door adder (by size)"). A test asserts
+every entry still resolves to exactly one row, so a rename fails there rather
+than quietly emptying the picker — which is exactly what happened the first
+time this was built.
+
+**No simulated divided lites.** The collection is not offered them at all.
+
+**Jamb depth is still asked.** That is a different thing from the jamb legs: the
+unit is built to a wall thickness and the order sheet is the only place that
+gets recorded. Still free at either depth.
+
+All of the above is scoped to `P.6`. The rest of the mahogany range keeps its
+component picker and its divided lites until each collection is walked through.
