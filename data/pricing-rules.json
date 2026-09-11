@@ -10,9 +10,11 @@
     "excludesFreight": true,
     "decidedOn": "2026-09-07",
     "decidedBy": "dealer",
-    "vendorConfirmed": false,
-    "note": "Every catalogued item carries priceBasis \"list\", so NET = list x netMultiplier for all four sections. Freight is quoted already net by the shipping schedule and is never multiplied. The dealer confirmed on 2026-09-10, from ordering, that the 48% applies to components, prehang adders and hardware as well as to doors. Hoelscher has still not put it in writing, so vendorConfirmed stays false.",
-    "dealerConfirmed": "2026-09-10"
+    "vendorConfirmed": true,
+    "note": "Every catalogued item carries priceBasis \"list\", so NET = list x netMultiplier for all four sections. Freight is quoted already net by the shipping schedule and is never multiplied. The dealer confirmed on 2026-09-10, from ordering, that the 48% applies to components, prehang adders and hardware as well as to doors. Hoelscher put it in writing on the price sheet itself, seen 2026-09-11, so vendorConfirmed is now true.",
+    "dealerConfirmed": "2026-09-10",
+    "vendorConfirmedSource": "Hoelscher Dealer Wood Pricing, page 1 of 7, effective 7-1-2026: \"Use a 0.48 multiplier for NET cost\" printed in the sheet header.",
+    "vendorConfirmedOn": "2026-09-11"
   },
   "currency": "USD",
   "roundingMode": "half-up-to-cent",

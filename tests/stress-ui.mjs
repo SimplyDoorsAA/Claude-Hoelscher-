@@ -96,17 +96,21 @@ const seVariantIds=(()=>{
   hiddenIds.forEach(id=>out.add(id));
   return out;
 })();
-const stains=(cat.fiberglassStainColors||[]).map(x=>x.name);
+/* Some questions have no one right answer for a load test — which stain, and
+   which glass on a row the sheet prices once for a whole catalog page. ANY
+   takes the first thing offered and moves on. */
+const ANY='\u0000any';
 /* Answer whichever question the configurator is asking, until it prices. */
 async function answer(product,finish,config){
   const want={
-    'Glass': product.glazing,
+    'Glass': product.glazing||ANY,
     'Size': product.size&&product.size.label,
     'Iron grille': 'No grille',
     'Finish': finish==='unfinished'?'Unfinished':'Prefinished',
-    'Stain colour': stains[0],
+    'Stain colour': ANY,
     'Opening': {slab:'Slab only',singlePH:'Single door',doublePH:'Double door'}[config],
     'Sidelite': null,
+    'Sidelite glass': ANY,
     'Handing': 'Left hand',
     'Swing': 'Inswing',
     'Jamb depth': '4-9/16'
@@ -118,9 +122,16 @@ async function answer(product,finish,config){
     const next=open.find(t=>want[t]!==undefined&&want[t]!==null);
     if(!next) throw new Error('configurator asks something unexpected: '+open.join(' > '));
     const label=want[next];
-    const hit=await page.$$eval('#detail .opt',(ns,l)=>{
-      const n=ns.find(x=>x.textContent.trim().startsWith(l)&&!x.disabled);
-      if(!n) return false; n.click(); return true;},label);
+    /* Scoped to the step being answered: "first option offered" has to mean
+       first within this question, not the first one anywhere on the pane. */
+    const hit=await page.$$eval('#detail .steprow',(ns,a)=>{
+      const row=[...ns].find(r=>{
+        const h=r.parentElement.querySelector('p');
+        return h&&h.textContent.trim()===a.step; });
+      if(!row) return false;
+      const live=[...row.querySelectorAll('.opt')].filter(x=>!x.disabled);
+      const n=a.label==='\u0000any'?live[0]:live.find(x=>x.textContent.trim().startsWith(a.label));
+      if(!n) return false; n.click(); return true;},{step:next,label});
     if(!hit) throw new Error('no enabled option "'+label+'" for step '+next);
     await page.waitForTimeout(250);
     delete want[next];
@@ -139,8 +150,14 @@ async function addDoor(sku,finish,config,qty=1,accSkus=[]){
     hit.querySelector('button').click();},model);
   await page.waitForSelector('#detail:not(.hidden)');
   await answer(product,finish,config);
+  /* The detail pane prints the part number as it will be ordered, so a row the
+     sheet writes with placeholders — M1LV--3080 — shows up with the glass code
+     filled in. Match the shape rather than the raw string. */
   const resolved=await page.textContent('#detail');
-  if(!resolved.includes(sku)) throw new Error('answers resolved to the wrong part, wanted '+sku);
+  const shape=new RegExp(sku.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')
+    .replace(/--/g,'\u0001').replace(/-/g,'\u0002')
+    .replace(/\u0001/g,'[A-Z]{0,4}').replace(/\u0002/g,'[A-Z]?'));
+  if(!shape.test(resolved)) throw new Error('answers resolved to the wrong part, wanted '+sku);
   for(const a of accSkus){
     await page.selectOption('#detail select',{label:(all.find(p=>p.sku===a)||{}).description});
     await page.click('#detail button:has-text("Add")'); await page.waitForTimeout(300);
@@ -254,10 +271,15 @@ await page.screenshot({path:OUT+'/s2-mixed.png'});
 await page.click('#quoteTotals button:has-text("Clear")'); await page.waitForTimeout(600);
 await page.click('#closeQuote').catch(()=>{}); await page.waitForTimeout(300);
 const m1080=bySku('M1LV--3080');
-const mSL=cat.woodProducts.find(p=>p.type==='sidelite'&&p.line==='mahogany'&&
+/* Height and line alone used to decide this. The catalogue now says which
+   sidelite belongs beside a door, so the expectation is recomputed the same
+   way: the rule for the door's price-sheet page picks, height breaks the tie. */
+const slRule=(cat.sideliteRules||[]).find(r=>r.appliesToPriceSheetPage===m1080.priceSheetPage);
+const slAllows=p=>!slRule||!slRule.allowSkuPattern||new RegExp(slRule.allowSkuPattern).test(p.sku||'');
+const mSL=cat.woodProducts.find(p=>p.type==='sidelite'&&p.line==='mahogany'&&slAllows(p)&&
   Math.abs(p.size.heightIn-m1080.size.heightIn)<=2&&p.prices.unfinished.singlePH!==null);
-ok('a mahogany door has a mahogany sidelite at its height', !!mSL,
-   m1080.size.heightIn+'in door');
+ok('a mahogany door has the sidelite its catalog page pairs with it', !!mSL,
+   m1080.size.heightIn+'in door -> '+(mSL?mSL.sku:'none'));
 await page.fill('#q',keyOf(m1080)); await page.waitForTimeout(600);
 await page.$$eval('#catalog article',(ns,m)=>{
   ns.find(a=>a.querySelector('h3').textContent.trim()===m).querySelector('button').click();},keyOf(m1080));
@@ -266,6 +288,11 @@ const pk2=async l=>{const h=await page.$$eval('#detail .steprow .opt',(ns,x)=>{
   const n=[...ns].reverse().find(m=>m.textContent.trim().startsWith(x)&&!m.disabled);
   if(!n)return false; n.click(); return true;},l);
   if(!h) throw new Error('cannot pick '+l); await page.waitForTimeout(250);};
+/* Page 6 doors are asked their glass first now — the sheet prices one row per
+   door and the code goes into the (--) at order time. */
+const asks=async t=>(await page.$$eval('#detail .steprow',ns=>ns.map(r=>{
+  const h=r.parentElement.querySelector('p'); return h?h.textContent.trim():'';}))).includes(t);
+if(await asks('Glass')) await pk2('Clear Low E');
 if(new Set(cat.woodProducts.filter(p=>keyOf(p)===keyOf(m1080)).map(p=>p.size.code)).size>1)
   await pk2(m1080.size.label);
 await pk2('Unfinished'); await pk2('Single + 2 sidelites');
@@ -276,6 +303,7 @@ const slPicked=await page.$$eval('#detail .steprow',ns=>{
 ok('only mahogany sidelites are offered beside a mahogany door',
    slPicked.length>0 && slPicked.every(o=>!/Knotty|KA /.test(o)), slPicked.slice(0,2).join(' | '));
 await pk2(keyOf(mSL));
+if(await asks('Sidelite glass')) await pk2('Clear Low E');
 await pk2('Left hand'); await pk2('Inswing'); await pk2('4-9/16');
 const withSL=cost(m1080.prices.unfinished.singlePH)+cost(mSL.prices.unfinished.singlePH)*2+PREHANG;
 ok('door + 2 sidelites is ONE prehang charge',

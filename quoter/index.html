@@ -199,6 +199,8 @@ tailwind.config = {
   table.pd-t td { padding:6px; border-bottom:1px solid #e6e6e6; vertical-align:top; }
   table.pd-t .r { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
   table.pd-t .sub { display:block; font-size:8pt; color:#444; margin-top:2px; }
+  /* a pair puts two part numbers in one cell; they need to read as two */
+  table.pd-t .pn { display:block; }
   .pd-cols { display:flex; gap:26px; margin-top:16px; align-items:flex-start; }
   .pd-cols > div { flex:1; }
   .pd-box { border:1px solid #000; padding:9px 11px; }
@@ -207,6 +209,12 @@ tailwind.config = {
   .pd-line.big { font-weight:700; font-size:10.5pt; border-top:1px solid #000;
                  margin-top:5px; padding-top:6px; }
   .pd-note { font-size:8pt; color:#333; margin-top:6px; }
+  /* A contract paragraph split across a page break reads as a mistake, and the
+     signature block belongs with the clause it signs. */
+  .pd-approve p, .pd-approve h4 { break-inside:avoid; page-break-inside:avoid; }
+  .pd-approve p { orphans:3; widows:3; }
+  .pd-sign { break-inside:avoid; page-break-inside:avoid; }
+  .pd-approve h4 { break-after:avoid; page-break-after:avoid; }
   .pd-approve { margin-top:18px; font-size:9pt; }
   .pd-approve h4 { margin:12px 0 4px; font-size:9.5pt; font-weight:700; }
   .pd-approve p { margin:0 0 7px; }
@@ -464,6 +472,12 @@ const OPENINGS = [
 ];
 const openingByKey = k => OPENINGS.find(o => o.key === k) || null;
 const HANDING_LABELS = { left: "Left hand", right: "Right hand" };
+/* On a pair the question is not which way the door is hung but which of the two
+   leaves operates, and Hoelscher's own order screen says so in those words. */
+const HANDING_LABELS_PAIR = { left: "Left hand active", right: "Right hand active" };
+const handingLabel = (h, opening) =>
+  (opening && opening.config === "doublePH" ? HANDING_LABELS_PAIR[h] : HANDING_LABELS[h])
+  || titleize(h);
 const SWING_LABELS   = { inswing: "Inswing", outswing: "Outswing" };
 const titleize = s => String(s == null ? "" : s).replace(/[_-]+/g, " ").replace(/\b\w/g, m => m.toUpperCase());
 
@@ -727,12 +741,43 @@ function glassSwatch(name) {
 /* The price sheet prints a part number with (--) standing in for the glass and
    a legend of codes to fill it with, so a quote can name the part the customer
    actually orders rather than the template. */
-function completeSku(product, glazing) {
-  const sku = String((product && product.sku) || "");
-  if (!sku.includes("--")) return sku;
-  const want = glassKey(glazing);
-  const hit = (state.engine.catalog.glassCodes || []).find(c => glassKey(c.name) === want);
-  return hit ? sku.replace("--", hit.code) : sku;
+function completeSku(product, glazing, handing) {
+  let sku = String((product && product.sku) || "");
+  if (!sku.includes("-")) return sku;
+  // The first placeholder is the glass code, always.
+  if (sku.includes("--")) {
+    const want = glassKey(glazing);
+    const hit = (state.engine.catalog.glassCodes || []).find(c => glassKey(c.name) === want);
+    if (hit) sku = sku.replace("--", hit.code);
+  }
+  // A trailing placeholder is filled from something the configurator already
+  // knows. Only patterns confirmed against a real catalog page are listed in
+  // skuPlaceholders, so an unconfirmed one stays a placeholder and is flagged
+  // rather than guessed at.
+  const rules = ((state.engine.catalog.skuPlaceholders || {}).handing) || [];
+  if (handing) {
+    const raw = String((product && product.sku) || "");
+    const r = rules.find(x => { try { return new RegExp(x.appliesToSkuPattern).test(raw); }
+                               catch (e) { return false; } });
+    const code = r && r.codes && r.codes[handing];
+    if (code) sku = sku.replace(/-+$/, code);
+  }
+  return sku;
+}
+/* Eight rows carry a second placeholder the glass code does not fill — the
+   six mahogany "Lite Narrow LH/RH" and the two knotty alder Craftsman. Nobody
+   knows yet what Hoelscher expects in it, so a part number that still holds one
+   is never printed as though it were complete: the order sheet says so where
+   the order is actually placed. */
+const skuIsIncomplete = sku => /-/.test(String(sku || ""));
+/* The part numbers one line actually puts on the order. A pair is two mirrored
+   leaves, so a handed door is ordered twice — once left, once right — and the
+   handing answer names which of the two operates rather than choosing between
+   them. Everything else orders as one number. */
+function orderSkus(product, glazing, handing, config) {
+  if (config === "doublePH" && skuNeedsHanding(product))
+    return [completeSku(product, glazing, "left"), completeSku(product, glazing, "right")];
+  return [completeSku(product, glazing, handing)];
 }
 function glazingOptions(value) {
   if (!value) return [];
@@ -747,6 +792,12 @@ function glazingOffers(product, glazing) {
    prices one generic row, so the choice is a specification, not a part. */
 function glassRuleFor(model, collection) {
   const rules = (state.engine.catalog.glassRules) || [];
+  /* A page rule says which glasses that page offers, not that every row on the
+     page is glazed. The solid 7 Panel sits on page 6 beside ten glazed doors,
+     and its part number — M7P3080, no (--) — has nowhere to put a code. Asking
+     it about glass would be a question with no effect on anything. */
+  const glazable = (model.products || []).some(p => /--/.test(String(p.sku || "")) || p.glazing);
+  if (!glazable) return null;
   const pages = new Set((model.products || []).map(p => p.priceSheetPage).filter(Boolean));
   return rules.find(r => {
     if (r.appliesToCollection && r.appliesToCollection !== collection) return false;
@@ -1085,11 +1136,21 @@ function grilleDesignsFor(model) {
     (!g.line || g.line === model.line) &&
     (!g.style || model.name.indexOf(g.style) >= 0));
 }
-/** Stain colours apply to grained skins only, never the Smooth Collection. */
-function stainsApplyTo(modelName) {
-  return /Mahogany Grain|Oak Grain/i.test(modelName) &&
-         (state.engine.catalog.fiberglassStainColors || []).length > 0;
+/* Stains come from two different sheets and mean two different things.
+   Fiberglass stains a grained skin, never the Smooth Collection, and the skin
+   is named in the model. Wood stains the timber itself, so it is the line that
+   decides: mahogany and knotty alder take the six-colour chart, barn slabs are
+   left out of it until the dealer says otherwise. Neither changes the part
+   number and neither changes the price; both are recorded for the order. */
+function stainPalette(model) {
+  const cat = state.engine.catalog;
+  if (/Mahogany Grain|Oak Grain/i.test(model.name || ""))
+    return cat.fiberglassStainColors || [];
+  if (model.line === "mahogany" || model.line === "knotty_alder")
+    return cat.woodStainColors || [];
+  return [];
 }
+const stainsApplyTo = model => stainPalette(model).length > 0;
 
 /* Grouping products into models depends only on which line and collection is
    being shown, never on the filters, so it survives every keystroke in the
@@ -1462,7 +1523,7 @@ function openConfigurator(model) {
     speakeasy: null, insert: null, mask: null,
     grilleChoice: null, grille: null, grilleDesign: null,
     finish: null, stain: null,
-    opening: null, config: null, sidelite: null,
+    opening: null, config: null, sidelite: null, sideliteGlazing: null,
     handing: null, swing: null, jambDepth: null,
     qty: 1, accessories: []
   };
@@ -1551,6 +1612,17 @@ function glazingFrom(model, glazing, sizeCode) {
    data/pricing-rules.json for what is still unconfirmed. */
 
 const openingSpec = () => (state.engine.rules && state.engine.rules.openingSpec) || {};
+/* Six narrow-profile doors carry the hand in the part number, because the lite
+   is offset to clear the handle. That is true of the bare slab as much as the
+   prehung unit, so the question follows the part number and not the frame. */
+function handingRuleFor(product) {
+  const raw = String((product && product.sku) || "");
+  const rules = ((state.engine.catalog.skuPlaceholders || {}).handing) || [];
+  return rules.find(x => {
+    try { return new RegExp(x.appliesToSkuPattern).test(raw); } catch (e) { return false; }
+  }) || null;
+}
+const skuNeedsHanding = product => !!handingRuleFor(product);
 const handingOptions = () => openingSpec().handing || ["left", "right"];
 const swingOptions   = () => openingSpec().swing   || ["inswing", "outswing"];
 const jambSpec       = () => openingSpec().jambDepths || {};
@@ -1558,15 +1630,40 @@ const jambSpec       = () => openingSpec().jambDepths || {};
 /** Sidelites that can go beside this door: one per model and width, at a
    height that matches the door (a 6'8" door takes a 6'9" sidelite), with the
    door's glass preferred where the sidelite is offered in it. */
+/* The glass a single row can be had in. Most rows name their own glazing; the
+   Contemporary and iron-grille rows are priced once per page and take the
+   page's menu instead, which is what glassRuleFor resolves. */
+function glazingsForProduct(p) {
+  if (!p) return [];
+  const rule = glassRuleFor({ name: modelKeyOf(p), products: [p] }, state.collection);
+  return rule ? rule.options.slice() : glazingOptions(p.glazing);
+}
+function sideliteRuleFor(doorProduct) {
+  if (!doorProduct) return null;
+  const rules = state.engine.catalog.sideliteRules || [];
+  return rules.find(r => {
+    if (r.appliesToCollection && r.appliesToCollection !== state.collection) return false;
+    if (r.appliesToPriceSheetPage) return doorProduct.priceSheetPage === r.appliesToPriceSheetPage;
+    if (r.appliesToModelPattern)
+      return new RegExp(r.appliesToModelPattern, "i").test(modelKeyOf(doorProduct));
+    return false;
+  }) || null;
+}
 function sideliteChoices(doorProduct, glazing) {
   const h = doorProduct && doorProduct.size && doorProduct.size.heightIn;
   const g = groupingFor(state.collection);
   // A woodgrain door takes a woodgrain sidelite, a mahogany door a mahogany
   // one. The skin or line has to match or the opening will not look right.
   const want = g && doorProduct ? doorProduct[g.field] : null;
+  /* Line and height alone were offering a Contemporary door eleven sidelites
+     where the catalog pairs it with exactly one. Where the catalog says which
+     sidelite belongs beside a door, that wins over the resemblance test. */
+  const rule = sideliteRuleFor(doorProduct);
+  const allowed = rule && rule.allowSkuPattern ? new RegExp(rule.allowSkuPattern) : null;
   const rows = state.engine.productsIn(state.collection).filter(p =>
     p.type === "sidelite" &&
     state.engine.availableOptions(p.id).configs.length &&
+    (!allowed || allowed.test(String(p.sku || ""))) &&
     (!want || p[g.field] === want) &&
     (!h || Math.abs(((p.size && p.size.heightIn) || 0) - h) <= 2));
   const best = new Map();
@@ -1588,13 +1685,18 @@ function sideliteFinish(sl, doorFinish) {
   return f || doorFinish;
 }
 /** The sidelites the chosen opening puts inside this one line item. */
+/* A sidelite is glazed like its door unless somebody says otherwise, and the
+   glass reaches the part number, so it travels on the accessory rather than
+   being re-derived when the order sheet is printed. */
+const sideliteGlazingOf = d => d.sideliteGlazing || d.glazing || null;
 function openingAccessories(d) {
   const o = openingByKey(d.opening);
   if (!o || !o.sidelites || !d.sidelite) return [];
   const sl = state.engine.productById(d.sidelite);
   if (!sl) return [];
   return [{ kind: "product", id: sl.id, qty: o.sidelites,
-            finish: sideliteFinish(sl, d.finish), config: "singlePH" }];
+            finish: sideliteFinish(sl, d.finish), config: "singlePH",
+            glazing: sideliteGlazingOf(d) }];
 }
 /** Everything priced on this line: the opening's sidelites, then extras. */
 const allAccessories = d => openingAccessories(d).concat(d.accessories);
@@ -1686,16 +1788,24 @@ function stepPlan(d) {
   if (m.grilles.length) plan.push({ key: "grille", title: "Iron grille",
     value: d.grilleChoice === "none" ? "No grille" : (d.grille && d.grille.style) || null });
   plan.push({ key: "finish", title: "Finish", value: d.finish && FINISH_LABELS[d.finish] });
-  if (d.finish === "prefinished" && stainsApplyTo(m.name))
+  if (d.finish === "prefinished" && stainsApplyTo(m))
     plan.push({ key: "stain", title: "Stain colour", value: d.stain });
   const opening = openingByKey(d.opening);
   plan.push({ key: "opening", title: "Opening", value: opening && opening.label });
   if (opening && opening.sidelites > 0) {
     const sl = d.sidelite && state.engine.productById(d.sidelite);
     plan.push({ key: "sidelite", title: "Sidelite", value: sl && modelKeyOf(sl) });
+    if (sl && glazingsForProduct(sl).length > 1)
+      plan.push({ key: "sideliteGlazing", title: "Sidelite glass",
+                  value: sl && sideliteGlazingOf(d) });
   }
+  /* Handing is a property of the part number as often as of the frame, so the
+     rail asks about the row this draft has actually landed on. */
+  const chosen = m.products.find(x => (x.size && x.size.code) === d.sizeCode) || m.sample;
+  if (opening && (opening.config !== "slab" || skuNeedsHanding(chosen)))
+    plan.push({ key: "handing", title: "Handing",
+                value: d.handing && handingLabel(d.handing, opening) });
   if (opening && opening.config !== "slab") {
-    plan.push({ key: "handing", title: "Handing", value: d.handing && HANDING_LABELS[d.handing] });
     plan.push({ key: "swing", title: "Swing", value: d.swing && SWING_LABELS[d.swing] });
     plan.push({ key: "jamb", title: "Jamb depth", value: d.jambDepth && d.jambDepth + '"' });
   }
@@ -1706,7 +1816,7 @@ function unanswerFrom(key) {
   const d = state.draft;
   const order = ["glazing", "caming", "size", "speakeasy", "insert", "mask",
                  "grilleDesign", "grille", "finish", "stain",
-                 "opening", "sidelite", "handing", "swing", "jamb"];
+                 "opening", "sidelite", "sideliteGlazing", "handing", "swing", "jamb"];
   const from = order.indexOf(key);
   const clear = {
     glazing:  () => { d.glazing = null; },
@@ -1720,7 +1830,8 @@ function unanswerFrom(key) {
     finish:   () => { d.finish = null; },
     stain:    () => { d.stain = null; },
     opening:  () => { d.opening = null; d.config = null; },
-    sidelite: () => { d.sidelite = null; },
+    sidelite: () => { d.sidelite = null; d.sideliteGlazing = null; },
+    sideliteGlazing: () => { d.sideliteGlazing = null; },
     handing:  () => { d.handing = null; },
     swing:    () => { d.swing = null; },
     jamb:     () => { d.jambDepth = null; }
@@ -2022,9 +2133,9 @@ function renderDetail() {
     gate(d.finish);
   }
 
-  // 5. stain, only for prefinished grained skins
-  const stains = state.engine.catalog.fiberglassStainColors || [];
-  if (!blocked && d.finish === "prefinished" && stainsApplyTo(model.name) && stains.length) {
+  // 5. stain, only on a prefinished door: an unfinished one is sold bare
+  const stains = stainPalette(model);
+  if (!blocked && d.finish === "prefinished" && stains.length) {
     const blk = stepBlock("Stain colour", "no price difference");
     stains.forEach(sc => {
       blk.row.appendChild(optionButton(sc.name, d.stain === sc.name, false, () => {
@@ -2043,7 +2154,10 @@ function renderDetail() {
     const only = OPENINGS.filter(openable);
     if (!d.opening && only.length === 1) {
       d.opening = only[0].key; d.config = only[0].config;
-      if (only[0].config === "slab") { d.handing = null; d.swing = null; d.jambDepth = null; }
+      if (only[0].config === "slab") {
+        if (!skuNeedsHanding(product)) d.handing = null;
+        d.swing = null; d.jambDepth = null;
+      }
     }
     const blk = stepBlock("Opening");
     OPENINGS.forEach(o => {
@@ -2056,7 +2170,10 @@ function renderDetail() {
         d.config = o.config;
         if (!o.sidelites) d.sidelite = null;
         else if (!d.sidelite && sidelites.length === 1) d.sidelite = sidelites[0].id;
-        if (o.config === "slab") { d.handing = null; d.swing = null; d.jambDepth = null; }
+        if (o.config === "slab") {
+          if (!skuNeedsHanding(product)) d.handing = null;
+          d.swing = null; d.jambDepth = null;
+        }
         renderDetail();
       }, why, o.sub));
     });
@@ -2083,12 +2200,38 @@ function renderDetail() {
     gate(d.sidelite);
   }
 
-  // 8-10. handing, swing and jamb depth. A slab has no frame, so it skips them.
+  /* 7b. the sidelite's glass. It follows the door — sideliteGlazing stays null
+     while it does, so changing the door's glass carries the sidelite with it —
+     and only pins itself when somebody deliberately picks something else. */
+  if (!blocked && opening && opening.sidelites > 0 && d.sidelite) {
+    const sl = state.engine.productById(d.sidelite);
+    const choices = glazingsForProduct(sl);
+    if (choices.length > 1) {
+      const now = sideliteGlazingOf(d);
+      const blk = stepBlock("Sidelite glass", d.sideliteGlazing
+        ? "differs from the door" : "matches the door");
+      choices.forEach(g => blk.row.appendChild(
+        optionButton(g, now === g, false, () => {
+          d.sideliteGlazing = (g === d.glazing) ? null : g;
+          renderDetail();
+        }, g === d.glazing ? "same as the door" : null)));
+      body.appendChild(blk);
+      gate(now);
+    }
+  }
+
+  /* 8-10. handing, swing and jamb depth. A slab has no frame, so it skips
+     swing and jamb depth — but not handing, when the part number carries it. */
   const framed = !!opening && opening.config !== "slab";
-  if (!blocked && framed) {
-    const blk = stepBlock("Handing", "viewed from outside");
+  const handed = !!opening && (framed || skuNeedsHanding(product));
+  if (!blocked && handed) {
+    const pair = !!opening && opening.config === "doublePH";
+    const sub = pair ? "viewed from outside — which leaf opens"
+              : !framed ? "viewed from outside — this door is handed in the part number"
+              : "viewed from outside";
+    const blk = stepBlock("Handing", sub);
     handingOptions().forEach(h => blk.row.appendChild(
-      optionButton(HANDING_LABELS[h] || titleize(h), d.handing === h, false,
+      optionButton(handingLabel(h, opening), d.handing === h, false,
                    () => { d.handing = h; renderDetail(); })));
     body.appendChild(blk);
     gate(d.handing);
@@ -2145,11 +2288,11 @@ function renderDetail() {
                     opening && opening.label,
                     opening && opening.sidelites && slProduct
                       ? opening.sidelites + " × " + modelKeyOf(slProduct) : null,
-                    d.handing && HANDING_LABELS[d.handing],
+                    d.handing && handingLabel(d.handing, opening),
                     d.swing && SWING_LABELS[d.swing],
                     d.jambDepth && d.jambDepth + '" jamb',
                     configured ? "configured item — Hoelscher prints no part number"
-                               : completeSku(product, d.glazing)].filter(Boolean).join(" · ");
+                               : completeSku(product, d.glazing, d.handing)].filter(Boolean).join(" · ");
     if (chosen) foot.appendChild(el("p", "mb-3 text-xs text-ink-mute", chosen));
     const misprint = skuCorrection(product);
     if (misprint) foot.appendChild(el("p", "mb-3 rounded-lg bg-brass-pale px-3 py-2 text-[11px] text-brass-deep",
@@ -2199,6 +2342,7 @@ function renderDetail() {
         })(),
         grilleDesign: d.grilleDesign || null,
         opening: d.opening || null, handing: d.handing || null,
+        sideliteGlazing: d.sideliteGlazing || null,
         swing: d.swing || null, jambDepth: d.jambDepth || null
       });
       saveQuote(); closeDetail(); renderQuote(); openDrawer();
@@ -2723,7 +2867,7 @@ function openingWords(l, spec) {
   if (spec.grilleDesign)  bits.push(spec.grilleDesign + " grille");
   if (spec.grilleStyle)   bits.push(spec.grilleStyle + " grille");
   if (spec.stain)         bits.push(spec.stain + " stain");
-  if (spec.handing)       bits.push(HANDING_LABELS[spec.handing]);
+  if (spec.handing)       bits.push(handingLabel(spec.handing, openingByKey(spec.opening)));
   if (spec.swing)         bits.push(SWING_LABELS[spec.swing]);
   if (spec.jambDepth)     bits.push(spec.jambDepth + '" jamb');
   return bits.filter(Boolean).join(" \u00b7 ");
@@ -2798,8 +2942,14 @@ function buildQuoteDoc(q) {
     (l.accessories || []).forEach((a, j) => {
       const sp = (spec.accessories || [])[j];
       const shape = sp && sp.shape ? " \u2014 " + sp.shape.replace(/\s*Clavos$/i, "") : "";
+      /* A sidelite is glazed like its door unless somebody changed it, and a
+         customer signing for a Satin door beside a Clear Low-E sidelite should
+         be able to see that on the page they are signing. */
+      const differs = a.kind === "product" && sp && sp.glazing &&
+                      spec.glazing && sp.glazing !== spec.glazing
+                    ? " \u2014 " + sp.glazing + " glass" : "";
       td.appendChild(el("span", "sub",
-        "+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") + accessoryLabel(a) + shape));
+        "+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") + accessoryLabel(a) + shape + differs));
     });
     tr.appendChild(td);
     tr.appendChild(el("td", "r", String(l.qty)));
@@ -2914,7 +3064,7 @@ function buildOrderDoc(q) {
   });
   thead.appendChild(hr); t.appendChild(thead);
   const tb = el("tbody", "");
-  const flagged = [];
+  const flagged = [], incomplete = [];
   q.lines.forEach((l, i) => {
     if (l.notOffered) return;
     const spec = state.quote.lines[i] || {};
@@ -2923,24 +3073,47 @@ function buildOrderDoc(q) {
     const td = el("td", "");
     // Hoelscher's desk cross-checks the number against the description, so the
     // sheet carries both, and the number exactly as Hoelscher prints it.
-    td.appendChild(el("span", null, completeSku(prod, spec.glazing)));
-    td.appendChild(el("span", "sub", l.description));
+    const skus = orderSkus(prod, spec.glazing, spec.handing, l.config);
+    skus.forEach(k => td.appendChild(el("span", "pn", k)));
+    td.appendChild(el("span", "sub", l.description +
+      (skus.length > 1 ? "  \u2014 one of each hand" : "")));
     const mis = skuCorrection(prod);
     if (mis) {
       td.appendChild(el("span", "sub pd-flag", "\u26a0 " + (o.misprintNote || "Confirm this part number.")));
       flagged.push(prod.sku);
     }
+    if (skus.some(skuIsIncomplete)) {
+      const why = (prod && prod.notes) || o.placeholderNote ||
+        "This part number still holds a placeholder. Confirm it with Hoelscher before ordering.";
+      td.appendChild(el("span", "sub pd-flag", "\u26a0 " + why));
+      skus.filter(skuIsIncomplete).forEach(k => incomplete.push(k));
+    }
     (l.accessories || []).forEach((a, j) => {
       const sp = (spec.accessories || [])[j];
       const shape = sp && sp.shape ? " \u2014 " + sp.shape.replace(/\s*Clavos$/i, "") : "";
-      td.appendChild(el("span", "sub", "+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") + accessoryLabel(a) + shape));
+      /* A sidelite is a catalogue row with a part number of its own, and its
+         glass reaches that number. The desk cannot order it from a description. */
+      let head = "";
+      if (a.kind === "product") {
+        const slSku = completeSku(state.engine.productById(a.id), sp && sp.glazing, null);
+        if (slSku) {
+          head = slSku + " \u2014 ";
+          if (skuIsIncomplete(slSku)) incomplete.push(slSku);
+        }
+      }
+      td.appendChild(el("span", "sub", "+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") +
+        head + accessoryLabel(a) + shape));
     });
     tr.appendChild(td);
     tr.appendChild(el("td", "r", String(l.qty)));
     tr.appendChild(el("td", null,
       FINISH_LABELS[l.finish] + " \u00b7 " + CONFIG_LABELS[l.config]));
+    /* The stain is the one specification that never reaches a part number —
+       Hoelscher prices every colour the same and encodes none of them — so the
+       order sheet is the only place it can be said. */
     tr.appendChild(el("td", null, [
-      spec.handing && HANDING_LABELS[spec.handing],
+      spec.stain && spec.stain + " stain",
+      spec.handing && handingLabel(spec.handing, openingByKey(spec.opening)),
       spec.swing && SWING_LABELS[spec.swing],
       spec.jambDepth && spec.jambDepth + '" jamb',
       prod && prod.size && prod.size.label
@@ -2972,6 +3145,9 @@ function buildOrderDoc(q) {
   if (flagged.length) page.appendChild(el("p", "pd-note pd-flag",
     "\u26a0 Confirm these part numbers against their description before ordering: " +
     flagged.join(", ") + "."));
+  if (incomplete.length) page.appendChild(el("p", "pd-note pd-flag",
+    "\u26a0 These part numbers are printed by Hoelscher with a placeholder this app cannot fill: " +
+    incomplete.join(", ") + ". Confirm what belongs in it before the order goes out."));
   return page;
 }
 
@@ -3097,7 +3273,7 @@ function renderQuote() {
     if (spec.stain) bits.push(spec.stain + " stain");
     if (spec.grilleDesign) bits.push(spec.grilleDesign + " grille");
     if (spec.grilleStyle) bits.push(spec.grilleStyle + " grille");
-    if (spec.handing) bits.push(HANDING_LABELS[spec.handing] || spec.handing);
+    if (spec.handing) bits.push(handingLabel(spec.handing, op));
     if (spec.swing) bits.push(SWING_LABELS[spec.swing] || spec.swing);
     if (spec.jambDepth) bits.push(spec.jambDepth + '" jamb');
     info.appendChild(el("p", "mt-0.5 text-xs text-ink-mute", bits.join(" · ")));

@@ -202,6 +202,16 @@ ok('the order sheet shows cost, not customer pricing',
 ok('it names the vendor it is ordered from',
    od.text.includes(est.orderSheet.vendor), est.orderSheet.vendor);
 
+/* eight rows carry a placeholder the glass code does not fill; the sheet the
+   order is placed from must never print one as though it were complete */
+const incompleteRows=[...catalog.fiberglassProducts,...catalog.woodProducts]
+  .filter(p=>/-$/.test(p.sku||''));
+ok('the catalogue still holds rows with an unfilled placeholder',
+   incompleteRows.length===8, incompleteRows.map(p=>p.sku).join(' | '));
+ok('and none of them is a row this quote ordered',
+   !od.rows.some(r=>/⚠.*placeholder/.test(r[0])) ||
+   /placeholder this app cannot fill/i.test(od.text));
+
 /* a misprinted part number is flagged where it is ordered */
 const mis=est.speakeasy||catalog.speakeasyOptions;
 const bad=mis.skuCorrections.find(c=>c.printed==='KA2PASEBW2880');

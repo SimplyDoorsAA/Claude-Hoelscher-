@@ -229,6 +229,72 @@ ok('the fiberglass speakeasy cards the dealer does not sell are gone',
 ok('but the rows stay in the catalogue for reference',
    catalog.fiberglassProducts.some(p=>/w\/ ?Speakeasy/i.test(p.description||'')));
 
+/* ---- a part number with a placeholder nobody can fill ---- */
+/* The dealer's own print showed KACMCBLE3080- going onto an order sheet with a
+   trailing placeholder still in it. That number reaches Hoelscher, so the sheet
+   has to say it is incomplete rather than print it as though it were not. */
+await page.evaluate(()=>{try{localStorage.clear();}catch(e){}});
+await page.goto(BASE+'/quoter/');
+await page.waitForSelector('#lineGate:not(.hidden)',{timeout:30000});
+await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/^Wood/.test(n.textContent.trim())).click();});
+await page.waitForTimeout(700);
+await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/^Knotty Alder/.test(n.textContent.trim())).click();});
+await page.waitForSelector('#catalog article',{timeout:30000});
+const craft=catalog.woodProducts.find(p=>/-$/.test(p.sku||'')&&/Craftsman/.test(p.description||''));
+ok('the catalogue still prints a Craftsman number with a trailing placeholder',
+   !!craft, craft?craft.sku:'none');
+await open('KA Craftsman',{Size:"3'0\" x 8'0\"",Finish:'Unfinished',Opening:'Single door',
+  Handing:'Left hand',Swing:'Inswing','Jamb depth':'4-9/16'});
+await page.$$eval('#detail button',ns=>{const b=ns.find(x=>x.textContent.trim()==='Add to quote');if(b)b.click();});
+await page.waitForTimeout(600);
+await page.fill('#job_customer','Placeholder Test'); await page.waitForTimeout(150);
+await page.click('#printOrder'); await page.waitForTimeout(500);
+const order=await page.evaluate(()=>document.querySelector('#printDoc').textContent);
+ok('the order sheet warns that the number holds a placeholder',
+   /placeholder/i.test(order), (order.match(/[^.]*placeholder[^.]*\./i)||['not warned'])[0].trim().slice(0,110));
+ok('and names the number it applies to',
+   /KACM\w*-/.test(order), (order.match(/KACM\S*/)||['none'])[0]);
+
+/* ---- the trailing placeholder is handing ----
+   The dealer supplied catalog page 10's numbers in full: M3GPWNSR2880L and
+   M3GPWNSR2880R. The app must reproduce them from the sheet's
+   M3GPWN--2880-- rather than print a placeholder onto a purchase order. */
+const ph=catalog.skuPlaceholders||{};
+const handRule=(ph.handing||[])[0];
+ok('the catalogue records what a trailing placeholder holds',
+   !!handRule && handRule.codes.left==='L' && handRule.codes.right==='R',
+   handRule?JSON.stringify(handRule.codes):'missing');
+const handRows=[...catalog.fiberglassProducts,...catalog.woodProducts]
+  .filter(p=>new RegExp(handRule.appliesToSkuPattern).test(p.sku||''));
+ok('and the pattern claims exactly the six rows the dealer confirmed',
+   handRows.length===6 && handRows.every(p=>/Narrow LH\/RH/.test(p.description||'')),
+   handRows.map(p=>p.sku).join(' | '));
+ok('it does not claim the two Craftsman rows, which are unconfirmed',
+   !handRows.some(p=>/Craftsman/.test(p.description||'')));
+
+await page.evaluate(()=>{try{localStorage.clear();}catch(e){}});
+await page.goto(BASE+'/quoter/');
+await page.waitForSelector('#lineGate:not(.hidden)',{timeout:30000});
+await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/^Wood/.test(n.textContent.trim())).click();});
+await page.waitForTimeout(700);
+await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/^Mahogany/.test(n.textContent.trim())).click();});
+await page.waitForSelector('#catalog article',{timeout:30000});
+await open('3 Lite Narrow LH/RH',{Size:"2'8\" x 8'0\"",Finish:'Unfinished',Opening:'Single door',
+  Handing:'Left hand',Swing:'Inswing','Jamb depth':'4-9/16'});
+await page.$$eval('#detail button',ns=>{const b=ns.find(x=>x.textContent.trim()==='Add to quote');if(b)b.click();});
+await page.waitForTimeout(600);
+await page.fill('#job_customer','Handing Test'); await page.waitForTimeout(150);
+await page.click('#printOrder'); await page.waitForTimeout(500);
+const handDoc=await page.evaluate(()=>document.querySelector('#printDoc').textContent);
+ok('a left-hand door carries the L the dealer\'s catalog page prints',
+   /M3GPWN\S*2880L/.test(handDoc), (handDoc.match(/M3GPWN\S*/)||['none'])[0]);
+/* Until the page-6 glass rule existed this number went out as M3GPWN--2880L
+   and the sheet flagged it. Both halves are now fillable, so the assertion is
+   the other way round: complete, and no warning. */
+ok('and the page-6 rule fills the glass half, so nothing is flagged',
+   /M3GPWNLE2880L/.test(handDoc) && !/placeholder/i.test(handDoc),
+   (handDoc.match(/M3GPWN\S*/)||['none'])[0]);
+
 ok('no console or page errors', !errs.length, errs.slice(0,3).join(' | '));
 report();
 await b.close(); srv.close();

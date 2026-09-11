@@ -14116,7 +14116,7 @@
         }
       },
       "catalogPage": "45",
-      "notes": null
+      "notes": "The trailing single (-) is an unidentified one-character placeholder — not glass, which the leading (--) takes, and not handing, which is not in this part number's grammar. Hoelscher has not been asked yet, so it is never guessed at: the quote refuses to print this row rather than send an unorderable number. Fill it in and this note goes away."
     },
     {
       "id": "f4c15c957d",
@@ -14148,7 +14148,7 @@
         }
       },
       "catalogPage": "45",
-      "notes": null
+      "notes": "The trailing single (-) is an unidentified one-character placeholder — not glass, which the leading (--) takes, and not handing, which is not in this part number's grammar. Hoelscher has not been asked yet, so it is never guessed at: the quote refuses to print this row rather than send an unorderable number. Fill it in and this note goes away."
     },
     {
       "id": "2af0be54d0",
@@ -20575,6 +20575,62 @@
       "notes": "Finish choice does not change the part number; captured on the quote."
     }
   ],
+  "woodStainColors": [
+    {
+      "id": "3d28663d26",
+      "code": null,
+      "name": "Aged Barrel",
+      "appliesTo": "Mahogany and Knotty Alder — prefinished only",
+      "priceImpact": "none",
+      "sourcePage": "stain chart",
+      "notes": "Confirmed by the dealer 2026-09-11: no price difference between stains, and the stain does not change the part number. An unfinished door takes no stain."
+    },
+    {
+      "id": "4e227f4f24",
+      "code": null,
+      "name": "Ebony",
+      "appliesTo": "Mahogany and Knotty Alder — prefinished only",
+      "priceImpact": "none",
+      "sourcePage": "stain chart",
+      "notes": "Confirmed by the dealer 2026-09-11: no price difference between stains, and the stain does not change the part number. An unfinished door takes no stain."
+    },
+    {
+      "id": "7d1ed2bb3b",
+      "code": null,
+      "name": "English Chestnut",
+      "appliesTo": "Mahogany and Knotty Alder — prefinished only",
+      "priceImpact": "none",
+      "sourcePage": "stain chart",
+      "notes": "Confirmed by the dealer 2026-09-11: no price difference between stains, and the stain does not change the part number. An unfinished door takes no stain."
+    },
+    {
+      "id": "2bb7f4ce21",
+      "code": null,
+      "name": "Jacobean",
+      "appliesTo": "Mahogany and Knotty Alder — prefinished only",
+      "priceImpact": "none",
+      "sourcePage": "stain chart",
+      "notes": "Confirmed by the dealer 2026-09-11: no price difference between stains, and the stain does not change the part number. An unfinished door takes no stain."
+    },
+    {
+      "id": "4ea5b7dd18",
+      "code": null,
+      "name": "Red Oak",
+      "appliesTo": "Mahogany and Knotty Alder — prefinished only",
+      "priceImpact": "none",
+      "sourcePage": "stain chart",
+      "notes": "Confirmed by the dealer 2026-09-11: no price difference between stains, and the stain does not change the part number. An unfinished door takes no stain."
+    },
+    {
+      "id": "597ad0cea2",
+      "code": null,
+      "name": "Special Walnut",
+      "appliesTo": "Mahogany and Knotty Alder — prefinished only",
+      "priceImpact": "none",
+      "sourcePage": "stain chart",
+      "notes": "Confirmed by the dealer 2026-09-11: no price difference between stains, and the stain does not change the part number. An unfinished door takes no stain."
+    }
+  ],
   "fiberglassIronGrilles": [
     {
       "id": "4c6874e3f4",
@@ -21066,6 +21122,35 @@
       "sourcePage": "46",
       "notes": "The price sheet writes P.46 in the glass column, meaning the glasses printed on that catalog page. The row is priced the same whichever is chosen; the code for it completes the part number.",
       "id": "7dc2c1e20b"
+    },
+    {
+      "kind": "glass",
+      "appliesToCollection": "wood",
+      "appliesToModelPattern": null,
+      "appliesToPriceSheetPage": "P.6",
+      "options": [
+        "Clear Low E",
+        "Sandblast",
+        "Flemish",
+        "Digital",
+        "Rain",
+        "Reeded",
+        "Small Reeded",
+        "Satin"
+      ],
+      "sourcePage": "6",
+      "notes": "Every Mahogany Contemporary row writes P.6 in the price sheet's Glass Type column, meaning the eight glasses printed on catalog page 6. Priced the same whichever is chosen; the code replaces the (--) in the part number. Narrower than the P.42/P.46 list: no Clear Bevel Low-E, Baroque, Water or Stippolyte on this page. Mahogany catalog p.6, confirmed by the dealer 2026-09-11.",
+      "id": "b8936a4f7c"
+    }
+  ],
+  "sideliteRules": [
+    {
+      "id": "ea97092baa",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": "P.6",
+      "appliesToModelPattern": null,
+      "allowSkuPattern": "^M1LCSL",
+      "notes": "Mahogany catalog pages 8-11 show the Contemporary range with the Contemporary Full Lite Sidelite and no other. Height pairing falls out of the sizes: a 6'8\" door takes the 1269 (M1LCSL--1268), an 8'0\" door the 1281 (M1LCSL--1280). The dealer confirmed on 2026-09-11 that this holds for the narrow-profile doors and for the solid 7 Panel as well."
     }
   ],
   "glassCodes": [
@@ -21300,5 +21385,21 @@
     "label": "Simulated divided lites",
     "unit": "per lite",
     "maxLites": 48
+  },
+  "skuPlaceholders": {
+    "notes": "A part number on the price sheet can carry more than one placeholder. The first is always the glass code (see glassCodes). A trailing one is filled at order time from something the configurator already knows. Only patterns confirmed against a real catalog page are listed here — anything else is flagged on the order sheet rather than guessed at.",
+    "handing": [
+      {
+        "id": "mahogany-narrow-lite",
+        "appliesToSkuPattern": "^M[345]GPWN--\\d{4}--$",
+        "codes": {
+          "left": "L",
+          "right": "R"
+        },
+        "confirmedBy": "dealer, 2026-09-11",
+        "evidence": "Catalog page 10-11 lists the numbers in full: M3GPWNSR2880L and M3GPWNSR2880R for the two handings of the 2'8\" x 8'0\", and likewise for 3'0\" x 8'0\". The glass code sits in the first placeholder, the handing letter in the trailing one.",
+        "example": "M3GPWNSR2880L"
+      }
+    ]
   }
 }
