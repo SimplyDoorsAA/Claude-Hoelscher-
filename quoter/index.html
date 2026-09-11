@@ -1638,6 +1638,53 @@ function glazingsForProduct(p) {
   const rule = glassRuleFor({ name: modelKeyOf(p), products: [p] }, state.collection);
   return rule ? rule.options.slice() : glazingOptions(p.glazing);
 }
+/* What a collection sells beside its doors. A Contemporary unit ships prehung
+   with its jamb, so the loose jamb legs, glass bead, subsills, casings and the
+   rest are not sold beside it, and the collection is not offered with
+   simulated divided lites. Jamb DEPTH is a different thing and is still asked:
+   the unit is built to a wall thickness and the order has to carry it. */
+function openingExtrasFor(product) {
+  if (!product) return null;
+  return (state.engine.catalog.openingExtrasRules || []).find(r => {
+    if (r.appliesToCollection && r.appliesToCollection !== state.collection) return false;
+    if (r.appliesToPriceSheetPage) return product.priceSheetPage === r.appliesToPriceSheetPage;
+    if (r.appliesToModelPattern)
+      return new RegExp(r.appliesToModelPattern, "i").test(modelKeyOf(product));
+    return false;
+  }) || null;
+}
+/* Which profile a trim adder is made of. The adder sheet prices casing an
+   opening once whatever the profile; where a wider one costs more, what it
+   costs is the gap between the two component rows, which the engine works out.
+   Nothing here does money. */
+const trimProfileRuleFor = adderType =>
+  (state.engine.catalog.trimProfileRules || []).find(r => r.adderType === adderType) || null;
+const componentByDescription = desc =>
+  state.engine.componentsIn(state.collection).find(c => c.description === desc) || null;
+/* A component's price is kept per wood line; the line names differ in spelling
+   between the two sheets, so match on letters alone. */
+function variantKeyFor(comp, product) {
+  const keys = Object.keys((comp && comp.priceVariantsCents) || {});
+  const want = String((product && product.line) || "").replace(/[^a-z]/gi, "").toLowerCase();
+  return keys.find(k => k.replace(/[^a-z]/gi, "").toLowerCase() === want) || keys[0];
+}
+/* The upgrades the chosen trim profiles come to, as accessories the engine can
+   price. A profile that is the baseline costs nothing and emits nothing. */
+function trimUpgrades(d) {
+  const product = draftProduct();
+  const out = [];
+  (d.accessories || []).forEach(a => {
+    if (a.kind !== "adder" || !a.profile) return;
+    const row = (state.engine.adderList() || []).find(x => x.id === a.id);
+    const rule = row && trimProfileRuleFor(row.adderType);
+    if (!rule || a.profile === rule.baseline) return;
+    const to = componentByDescription(a.profile), from = componentByDescription(rule.baseline);
+    if (!to || !from) return;
+    out.push({ kind: "componentUpgrade", id: to.id, fromId: from.id,
+               variant: variantKeyFor(to, product), qty: 1 });
+  });
+  return out;
+}
 function sideliteRuleFor(doorProduct) {
   if (!doorProduct) return null;
   const rules = state.engine.catalog.sideliteRules || [];
@@ -1699,7 +1746,7 @@ function openingAccessories(d) {
             glazing: sideliteGlazingOf(d) }];
 }
 /** Everything priced on this line: the opening's sidelites, then extras. */
-const allAccessories = d => openingAccessories(d).concat(d.accessories);
+const allAccessories = d => openingAccessories(d).concat(d.accessories, trimUpgrades(d));
 
 /* ------------------- which accessories fit which door ---------------------
    Not every component or piece of hardware pairs with every door: barn strap
@@ -1725,6 +1772,19 @@ function rulesFor(kind, acc) {
 
 /** May this accessory be fitted to the door the draft describes? */
 function accessoryFits(kind, acc, d) {
+  /* A collection can close the picker to all but a named few. This runs before
+     the per-item rules so the count, the dropdown and the notes all agree. */
+  const extras = openingExtrasFor(draftProduct());
+  if (extras && extras.componentPicker === false) {
+    /* Matched as a prefix: the vendor writes a qualifier into some names —
+       "Construction Door adder (by size)" — and the rule names the thing, not
+       the qualifier. A test asserts every entry still resolves to a real row,
+       so a rename fails there rather than silently emptying the picker. */
+    const allow = extras.allowComponentDescriptions || [];
+    const desc = String(acc.description || acc.sku || "");
+    if (!allow.some(x => desc.indexOf(x) === 0))
+      return { ok: false, why: extras.notes || "Not sold beside this door." };
+  }
   const applicable = rulesFor(kind, acc);
   if (!applicable.length) return { ok: true, why: null };
   const product = draftProduct();
@@ -2406,6 +2466,8 @@ function sdlRow() {
 function sdlBlock(product, draft) {
   const r = sdlRule(), row = sdlRow();
   if (!r || !row) return null;
+  const extras = openingExtrasFor(product);
+  if (extras && extras.simulatedDividedLites === false) return null;
   const at = draft.accessories.findIndex(a => a.kind === "component" && a.id === row.id);
   const lites = at >= 0 ? draft.accessories[at].qty : 0;
   const priced = state.engine.priceLine({
@@ -2517,6 +2579,10 @@ function accessoryLabel(priced) {
     const row = (state.engine.adderList() || []).find(a => a.id === priced.id);
     if (row) return adderLabel(row);
   }
+  /* A bare "3-1/2\" Casing" beside an "Interior casing" line reads as a second
+     charge for casing. Saying what it is an upgrade from makes it one charge. */
+  if (priced && priced.kind === "componentUpgrade" && priced.upgradeFrom)
+    return priced.label + " (upgrade from " + priced.upgradeFrom + ")";
   return priced ? priced.label : "";
 }
 
@@ -2551,8 +2617,10 @@ function prehangAdderBlock(product, draft) {
     box.id = "adder_" + row.id;
     box.checked = on;
     box.className = "h-4 w-4 shrink-0 accent-forest";
+    const profileRule = trimProfileRuleFor(row.adderType);
     box.addEventListener("change", () => {
-      if (box.checked) draft.accessories.push({ kind: "adder", id: row.id, qty: 1 });
+      if (box.checked) draft.accessories.push({ kind: "adder", id: row.id, qty: 1,
+        profile: profileRule ? profileRule.baseline : null });
       else if (at >= 0) draft.accessories.splice(at, 1);
       renderDetail();
     });
@@ -2565,6 +2633,45 @@ function prehangAdderBlock(product, draft) {
     line.appendChild(el("span", "tnum shrink-0 text-sm text-ink-mute",
       each === null ? "not priced" : formatCents(each)));
     list.appendChild(line);
+
+    /* Casing an opening is one price on the vendor's sheet whatever profile it
+       is cased in, so the profile is a second question rather than a second
+       adder. Where a profile costs more, the engine prices the difference and
+       the button says what it is. */
+    if (on && profileRule) {
+      const chosen = draft.accessories[at].profile || profileRule.baseline;
+      const wrap = el("div", "ml-7 mt-1.5");
+      const head = el("div", "mb-1 flex items-baseline gap-2");
+      head.appendChild(el("p", "text-[11px] uppercase tracking-widest text-ink-mute",
+        profileRule.label || "Profile"));
+      if (profileRule.note) head.appendChild(el("p", "text-[11px] text-ink-faint", profileRule.note));
+      wrap.appendChild(head);
+      const opts = el("div", "steprow flex flex-wrap gap-2");
+      (profileRule.options || []).forEach(name => {
+        const to = componentByDescription(name), from = componentByDescription(profileRule.baseline);
+        let delta = null;
+        if (to && from && name !== profileRule.baseline) {
+          const up = state.engine.priceLine({
+            productId: product.id, finish: draft.finish, config: draft.config, qty: 1,
+            accessories: [{ kind: "componentUpgrade", id: to.id, fromId: from.id,
+                            variant: variantKeyFor(to, product), qty: 1 }]
+          }).accessories[0];
+          const c = up && up.costCents;
+          const shown = c === null || c === undefined ? null
+            : (isCost() ? c : applyMargin(c, curMargin()));
+          delta = shown === null ? "not priced" : shown === 0 ? "no extra charge"
+                : "+" + formatCents(shown);
+        } else if (name === profileRule.baseline) {
+          delta = "included";
+        }
+        opts.appendChild(optionButton(name, chosen === name, !to, () => {
+          draft.accessories[at].profile = name;
+          renderDetail();
+        }, to ? null : "Not in the catalogue for this line", delta));
+      });
+      wrap.appendChild(opts);
+      list.appendChild(wrap);
+    }
   });
   block.appendChild(list);
   block.appendChild(el("p", "mt-2 text-[11px] text-ink-faint",
@@ -2667,6 +2774,10 @@ function accessoryBlock(product, draft) {
     // Clavos and straps have their own block above; showing them twice would
     // read as two charges for one line.
     if (acc.kind === "hardware" && configuratorOwns(hardwareById(acc.id))) return;
+    // Trim adders and the profile upgrades that ride on them are ticked and
+    // unticked in the Trim & casing block above; repeating them here reads as a
+    // second charge for the same trim.
+    if (acc.kind === "adder" || acc.kind === "componentUpgrade") return;
     const priced = state.engine.priceLine({
       productId: product.id, finish: draft.finish, config: draft.config, qty: 1, accessories: [acc]
     }).accessories[0];

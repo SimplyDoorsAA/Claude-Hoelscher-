@@ -52,6 +52,9 @@ jobs:
       - name: Mahogany Contemporary, against the dealer sheet
         run: node tests/contemporary.test.mjs
 
+      - name: What a Contemporary opening sells beside its door
+        run: node tests/contemporary-extras.test.mjs
+
       - name: Quoter under load
         run: node tests/stress-ui.mjs
 
