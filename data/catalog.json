@@ -19855,6 +19855,20 @@
       "freightUnitsPerPiece": 0,
       "sourcePage": null,
       "notes": null
+    },
+    {
+      "id": "0feed8c18c",
+      "category": "Simulated Divided Lite",
+      "partNumber": "SDL-LITE",
+      "description": "Simulated Divided Lite, per lite — applied at the factory",
+      "unit": "each",
+      "line": "fiberglass",
+      "priceBasis": "list",
+      "priceCents": 3500,
+      "priceVariantsCents": null,
+      "freightUnitsPerPiece": 0,
+      "sourcePage": null,
+      "notes": "Hoelscher applies the grid at the factory and bills per lite. Confirmed by the dealer 2026-09-10. The 8' lineal bars in this section are the other way of doing it, for a grid applied in-house."
     }
   ],
   "woodComponents": [
@@ -20177,6 +20191,20 @@
       "freightUnitsPerPiece": 0,
       "sourcePage": null,
       "notes": "Moved out of woodProducts: a lineal bar is a component, and the fiberglass SDL bars were already filed this way."
+    },
+    {
+      "id": "92c08b9bfe",
+      "category": "Simulated Divided Lite",
+      "partNumber": "SDL-LITE",
+      "description": "Simulated Divided Lite, per lite — applied at the factory",
+      "unit": "each",
+      "line": "wood",
+      "priceBasis": "list",
+      "priceCents": 3500,
+      "priceVariantsCents": null,
+      "freightUnitsPerPiece": 0,
+      "sourcePage": null,
+      "notes": "Hoelscher applies the grid at the factory and bills per lite. Confirmed by the dealer 2026-09-10. The 8' lineal bars in this section are the other way of doing it, for a grid applied in-house."
     }
   ],
   "hardware": [
@@ -21215,6 +21243,62 @@
         "resolvesAs": "KA2PASEWW2880",
         "note": "The sheet prints the Balfour part number on this Windsor row. Confirm the number with Hoelscher before ordering."
       }
-    ]
+    ],
+    "notMadeNote": "Not made on this door — the mask does not fit a circle top.",
+    "notMade": [
+      {
+        "baseSkuPattern": "^KACT2P",
+        "mask": "Balfour",
+        "reason": "The Balfour pattern does not fit a circle-top door. Confirmed by the dealer 2026-09-10, which is why the sheet prices no such row."
+      }
+    ],
+    "hiddenVariants": {
+      "notes": "The fiberglass 2 Panel Arch names its speakeasy variants in words rather than in the part number and prices the masked ones as CONFIGURED ITEM with no part number at all. The dealer does not sell fiberglass speakeasy doors (confirmed 2026-09-10), so these rows stay in the catalogue for reference but are not shown as cards to quote from.",
+      "matchCollection": "fiberglass",
+      "matchDescription": "w/ ?Speakeasy"
+    }
+  },
+  "prehangAdderRules": {
+    "notes": "A prehang adder is not something a customer picks off a list: which row applies is decided by the door they already chose. The sheet keys each row by line, top style and a configuration string that carries the size and the opening. Square-top rows spell the opening out; arch- and circle-top rows are keyed by size alone, because the vendor prices one trim per size whatever the opening. The app reads that here rather than carrying it in code.",
+    "labels": {
+      "intCasing": {
+        "name": "Interior casing",
+        "sub": "casing on the inside face"
+      },
+      "1x4": {
+        "name": "1×4 exterior trim",
+        "sub": "1×4 trim on the outside face"
+      }
+    },
+    "topStyleFromModel": [
+      {
+        "match": "circle top",
+        "topStyle": "Circle Top"
+      },
+      {
+        "match": "arch top",
+        "topStyle": "Arch Top"
+      }
+    ],
+    "defaultTopStyle": "Square Top",
+    "configurationPattern": {
+      "Square Top": "{size} {opening}",
+      "Arch Top": "{size} Arch Top",
+      "Circle Top": "{size} Circle Top Unfinished"
+    },
+    "openingWords": {
+      "single": "Single",
+      "single+1": "Single,12-14\" Sidelite",
+      "single+2": "Single,12-14\" Sidelites",
+      "double": "Double"
+    },
+    "slabNote": "A slab is not hung, so it takes no prehang adder."
+  },
+  "sdlRule": {
+    "notes": "Hoelscher applies simulated divided lites at the factory and bills per lite, so the count is a question on the door rather than bar stock off a shelf. The lineal bars in the components sections remain, for a grid applied in-house. Confirmed by the dealer 2026-09-10.",
+    "matchDescription": "Simulated Divided Lite, per lite",
+    "label": "Simulated divided lites",
+    "unit": "per lite",
+    "maxLites": 48
   }
 }

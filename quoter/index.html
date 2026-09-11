@@ -148,6 +148,13 @@ tailwind.config = {
   .opt[aria-pressed="true"] { background:#2f4538; color:#fff; border-color:#2f4538; }
   .tierbtn[aria-pressed="true"] { background:#2f4538; color:#fff; }
   .tierbtn[aria-pressed="false"] { color:#78716c; }
+  .marginin { box-sizing:border-box; font-variant-numeric:tabular-nums; }
+  #customWrap:not(.hidden) { display:flex; }
+  .no-tw #customWrap:not(.hidden) { display:inline-flex; }
+  /* The tier pill is "hidden sm:flex": Tailwind reveals it from 640px up, and
+     the fallback's blanket .hidden rule would otherwise bury it for good,
+     leaving no way to change margin from the header when the CDN is down. */
+  @media (min-width:640px){ .no-tw #tierWrap { display:flex !important; } }
   .opt:disabled { opacity:.32; cursor:not-allowed; text-decoration:line-through; }
   /* The iron add-ons are photographed on black; a small lift makes the shape
      read at thumbnail size without touching the file. */
@@ -286,6 +293,14 @@ tailwind.config = {
           class="tierbtn rounded-full px-3 py-1 text-xs font-medium transition-colors">Builder</button>
         <button id="tierRetail" type="button" data-tier="retail" aria-pressed="false"
           class="tierbtn rounded-full px-3 py-1 text-xs font-medium transition-colors">Retail</button>
+        <button id="tierCustom" type="button" data-tier="custom" aria-pressed="false"
+          class="tierbtn rounded-full px-3 py-1 text-xs font-medium transition-colors">Custom</button>
+        <label id="customWrap" class="hidden items-center gap-1 pl-1 pr-2">
+          <input id="customMargin" type="number" min="0" max="95" step="1" inputmode="numeric"
+            class="marginin w-12 rounded-full border border-paper-line bg-paper-card px-2 py-0.5 text-xs text-center"
+            aria-label="Custom margin percentage">
+          <span class="text-xs text-ink-mute">%</span>
+        </label>
       </div>
 
       <!-- price context toggle -->
@@ -463,7 +478,8 @@ const state = {
   job: null,                              // who the quote is for; see JOB_FIELDS
   ready: false,
   mode: "customer",                       // "customer" | "cost"
-  marginTier: null,                       // "builder" | "retail" — set from the rules file
+  marginTier: null,                       // "builder" | "retail" | "custom"
+  customMargin: null,                     // a fraction, when the tier is "custom"
   collection: null,                       // "fiberglass" | "wood" — chosen before anything shows
   group: null,                            // the collection within it, e.g. "woodgrain", "mahogany"
   filters: { q: "", line: "", family: "", glazing: "", type: "" },
@@ -478,7 +494,13 @@ const nextUid = () => "L" + (uidSeq++);
 
 const isCost = () => state.mode === "cost";
 /** The margin fraction currently in force. Always via the engine. */
-const curMargin = () => state.engine.marginFor(state.marginTier);
+/* Builder and Retail come from the rules file. A custom margin is the dealer's
+   own, typed in, and it wins while it is set — every price on screen, in the
+   quote and on both printed documents moves with it. */
+const isCustomTier = () => state.marginTier === "custom" && state.customMargin !== null;
+const curMargin = () => isCustomTier()
+  ? state.customMargin
+  : state.engine.marginFor(state.marginTier);
 
 const LINE_KEY = "simplydoors.line.v1";
 const LINE_LOOK = {
@@ -570,12 +592,22 @@ const groupLabel = v => {
 };
 
 const TIER_KEY = "simplydoors.tier.v1";
-function saveTier() { try { localStorage.setItem(TIER_KEY, state.marginTier); } catch (e) {} }
+const CUSTOM_KEY = "simplydoors.custommargin.v1";
+function saveTier() {
+  try {
+    localStorage.setItem(TIER_KEY, state.marginTier);
+    if (state.customMargin === null) localStorage.removeItem(CUSTOM_KEY);
+    else localStorage.setItem(CUSTOM_KEY, String(state.customMargin));
+  } catch (e) {}
+}
 function restoreTier() {
-  let t = null;
-  try { t = localStorage.getItem(TIER_KEY); } catch (e) {}
+  let t = null, c = null;
+  try { t = localStorage.getItem(TIER_KEY); c = localStorage.getItem(CUSTOM_KEY); } catch (e) {}
+  const n = parseFloat(c);
+  state.customMargin = (isFinite(n) && n >= 0 && n < 0.95) ? n : null;
   const tiers = state.engine.marginTiers();
-  state.marginTier = (t && tiers[t] !== undefined) ? t : state.engine.defaultMarginTier;
+  state.marginTier = (t === "custom" && state.customMargin !== null) ? "custom"
+    : (t && tiers[t] !== undefined) ? t : state.engine.defaultMarginTier;
 }
 
 /** Persist the quote so a refresh on a job site does not lose it. */
@@ -961,6 +993,18 @@ function speakeasyFor(model) {
 }
 const MASK_NONE = "None";
 const maskName = m => m.name || MASK_NONE;
+/* A missing price means one of two different things, and a customer deserves
+   to be told which: the vendor never priced it, or the vendor does not make it.
+   The catalogue says which combinations are the second kind. */
+function notMadeReason(model, mask) {
+  const opt = speakeasyOptions();
+  const rows = (opt && opt.notMade) || [];
+  const skus = (model.products || []).map(p => p.sku || "");
+  const hit = rows.find(r =>
+    maskName(mask) === r.mask &&
+    skus.some(sku => { try { return new RegExp(r.baseSkuPattern).test(sku); } catch (e) { return false; } }));
+  return hit ? (hit.reason || opt.notMadeNote) : null;
+}
 /* The manifest keys the pictures by the catalog's caption ("Wood Insert");
    the configurator says it the way a customer would ("Wood panel"). */
 function insertLabel(name) {
@@ -995,11 +1039,27 @@ function extraRows(extra) {
     .filter(h => rxTest(extra.matchDescription, h.description));
 }
 
+/* Rows the dealer does not sell. They stay in the catalogue — the price sheet
+   printed them and a future dealer may want them — but they are not cards
+   anybody can quote from. */
+function hiddenVariantIds() {
+  const h = (speakeasyOptions() || {}).hiddenVariants;
+  const set = new Set();
+  if (!h) return set;
+  state.engine.products.forEach(p => {
+    if (h.matchCollection && state.engine.collectionOf(p) !== h.matchCollection) return;
+    if (!rxTest(h.matchDescription, p.description)) return;
+    set.add(p.id);
+  });
+  return set;
+}
+
 /** Products reachable only as an option on another model, e.g. iron grille. */
 function optionOnlyIds() {
   const set = new Set();
   (state.engine.catalog.fiberglassIronGrilles || []).forEach(g => set.add(g.productId));
   speakeasyIndex().variantIds.forEach(id => set.add(id));
+  hiddenVariantIds().forEach(id => set.add(id));
   return set;
 }
 function grillesForModel(name) {
@@ -1067,7 +1127,10 @@ function buildModels() {
 
 /** The whole quote, priced by the engine. Never compute money outside this. */
 function pricedQuote() {
-  return state.engine.priceQuote({ lines: state.quote.lines, marginTier: state.marginTier });
+  return isCustomTier()
+    ? state.engine.priceQuote({ lines: state.quote.lines,
+                                marginTier: "custom", marginPercent: state.customMargin })
+    : state.engine.priceQuote({ lines: state.quote.lines, marginTier: state.marginTier });
 }
 
 /** Cheapest offered configuration of one product, in the active context. */
@@ -1875,9 +1938,11 @@ function renderDetail() {
         const v = ok ? fromPrice(c.product) : null;
         const delta = (ok && bareCents !== null && v !== null && v !== bareCents)
           ? "+" + formatCents(v - bareCents) : null;
+        const notMade = ok ? null : notMadeReason(model, m);
         mb.row.appendChild(optionButton(m.label || maskName(m), d.mask === maskName(m), !ok, () => {
           d.mask = maskName(m); renderDetail();
-        }, ok ? null : opt.unpricedNote, ok ? delta : "not priced",
+        }, ok ? null : (notMade || opt.unpricedNote),
+           ok ? delta : (notMade ? "not made" : "not priced"),
            designThumb(m.name, "h-12 w-12")));
       });
       body.appendChild(mb);
@@ -2054,6 +2119,9 @@ function renderDetail() {
 
   // 11. accessories and the price, once everything is answered
   if (!blocked && product && d.finish && d.config) {
+    body.appendChild(prehangAdderBlock(product, d));
+    const sdl = sdlBlock(product, d);
+    if (sdl) body.appendChild(sdl);
     if (model.speakeasy) body.appendChild(speakeasyExtrasBlock(product, d));
     body.appendChild(accessoryBlock(product, d));
 
@@ -2124,6 +2192,11 @@ function renderDetail() {
         glazing: d.glazing || null, caming: d.caming || null,
         insert: d.speakeasy === "yes" ? d.insert : null,
         mask: d.speakeasy === "yes" ? d.mask : null,
+        sdlLites: (() => {
+          const row = sdlRow();
+          const a = row && d.accessories.find(x => x.kind === "component" && x.id === row.id);
+          return a ? a.qty : null;
+        })(),
         grilleDesign: d.grilleDesign || null,
         opening: d.opening || null, handing: d.handing || null,
         swing: d.swing || null, jambDepth: d.jambDepth || null
@@ -2171,6 +2244,188 @@ function accessoryPhoto(label) {
   const rec = name && state.designs.accessories[name];
   if (!rec) return null;
   return { src: CONFIG.designBase + encodeURIComponent(rec.file), note: rule.note };
+}
+
+/* --------------------- simulated divided lites ---------------------------
+   Hoelscher applies the grid at the factory and bills per lite, so the count is
+   a question about the door rather than bar stock off a shelf. The lineal bars
+   stay in the picker for a grid applied in-house. */
+
+const sdlRule = () => state.engine.catalog.sdlRule || null;
+/** The per-lite row for the collection on screen, or null. */
+function sdlRow() {
+  const r = sdlRule();
+  if (!r) return null;
+  return state.engine.componentsIn(state.collection)
+    .find(c => rxTest(r.matchDescription, c.description)) || null;
+}
+function sdlBlock(product, draft) {
+  const r = sdlRule(), row = sdlRow();
+  if (!r || !row) return null;
+  const at = draft.accessories.findIndex(a => a.kind === "component" && a.id === row.id);
+  const lites = at >= 0 ? draft.accessories[at].qty : 0;
+  const priced = state.engine.priceLine({
+    productId: product.id, finish: draft.finish, config: draft.config, qty: 1,
+    accessories: [{ kind: "component", id: row.id, qty: 1 }]
+  }).accessories[0];
+  const each = priced.costCents === null ? null
+    : (isCost() ? priced.costCents : applyMargin(priced.costCents, curMargin()));
+
+  const block = el("div", "");
+  block.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-mute",
+    r.label || "Simulated divided lites"));
+  const line = el("div", "flex items-center gap-3 rounded-lg border border-paper-line bg-paper-card px-3 py-2");
+  const words = el("div", "min-w-0 flex-1");
+  words.appendChild(el("p", "text-sm", "Grid applied at the factory"));
+  words.appendChild(el("p", "tnum text-[11px] text-ink-faint",
+    (each === null ? "not priced" : formatCents(each)) + " " + (r.unit || "per lite") +
+    (lites ? "  \u00b7  " + formatCents(each * lites) + " for " + lites : "")));
+  line.appendChild(words);
+
+  const setLites = n => {
+    const v = Math.max(0, Math.min(Number(r.maxLites) || 48, n));
+    if (v <= 0) { if (at >= 0) draft.accessories.splice(at, 1); }
+    else if (at >= 0) draft.accessories[at].qty = v;
+    else draft.accessories.push({ kind: "component", id: row.id, qty: v });
+    renderDetail();
+  };
+  const step = el("div", "flex shrink-0 items-center gap-1");
+  const dec = el("button", "h-7 w-7 rounded border border-paper-line text-sm disabled:opacity-30", "\u2212");
+  dec.type = "button"; dec.disabled = lites === 0;
+  dec.setAttribute("aria-label", "One fewer lite");
+  dec.addEventListener("click", () => setLites(lites - 1));
+  const n = el("span", "tnum w-8 text-center text-sm", lites ? String(lites) : "\u2014");
+  const inc = el("button", "h-7 w-7 rounded border border-paper-line text-sm disabled:opacity-30", "+");
+  inc.type = "button"; inc.disabled = each === null;
+  inc.setAttribute("aria-label", "One more lite");
+  inc.addEventListener("click", () => setLites(lites + 1));
+  step.append(dec, n, inc);
+  line.appendChild(step);
+  block.appendChild(line);
+  block.appendChild(el("p", "mt-2 text-[11px] text-ink-faint",
+    "Counted per lite. The 8' lineal bars in the picker are the other way \u2014 a grid applied in-house."));
+  return block;
+}
+
+/* ------------------------- prehang adders --------------------------------
+   Interior casing and 1x4 trim are priced per opening, and which row applies is
+   decided by the door already chosen rather than picked off a list: the sheet
+   keys each by line, top style, size and opening. The mapping is published in
+   catalog.json (prehangAdderRules), so the app reads it rather than knowing it.
+
+   These were in the catalogue and priced, and the engine has always been able
+   to price them, but nothing ever offered them — so every prehung quote that
+   should have carried casing was short by $69 to $302 of list. */
+
+const adderRules = () => state.engine.catalog.prehangAdderRules || null;
+
+/** Square, arch or circle top, read off the model's own name. */
+function adderTopStyle(modelName) {
+  const r = adderRules();
+  if (!r) return null;
+  const name = String(modelName || "").toLowerCase();
+  const hit = (r.topStyleFromModel || []).find(x => name.indexOf(String(x.match).toLowerCase()) >= 0);
+  return hit ? hit.topStyle : (r.defaultTopStyle || "Square Top");
+}
+/** The configuration string the sheet would print for this opening. */
+function adderConfiguration(product, d) {
+  const r = adderRules();
+  const size = product && product.size && product.size.code;
+  if (!r || !size || !d.config || d.config === "slab") return null;
+  const topStyle = adderTopStyle(d.model.name);
+  const pattern = (r.configurationPattern || {})[topStyle];
+  if (!pattern) return null;
+  let opening = null;
+  if (pattern.indexOf("{opening}") >= 0) {
+    const o = openingByKey(d.opening);
+    const key = d.config === "doublePH" ? "double"
+      : "single" + (o && o.sidelites ? "+" + o.sidelites : "");
+    opening = (r.openingWords || {})[key];
+    if (!opening) return null;
+  }
+  return { topStyle,
+           configuration: pattern.replace("{size}", size).replace("{opening}", opening || "") };
+}
+/** The adder rows this opening can take, one per type, priced. */
+function addersFor(product, d) {
+  const r = adderRules();
+  const want = adderConfiguration(product, d);
+  if (!r || !want) return [];
+  return state.engine.addersIn(state.collection).filter(a =>
+    a.topStyle === want.topStyle && a.configuration === want.configuration);
+}
+/** What a customer should read on a quote, not the sheet's own shorthand. */
+function adderLabel(row) {
+  const r = adderRules();
+  const l = r && r.labels && r.labels[row.adderType];
+  return (l && l.name) || row.adderType;
+}
+function adderSub(row) {
+  const r = adderRules();
+  const l = r && r.labels && r.labels[row.adderType];
+  return (l && l.sub) || null;
+}
+/* The engine labels an adder with the sheet's own fields, which reads as
+   "wood - Square Top - 3068 Single - intCasing" on a customer's estimate. Every
+   surface that shows an accessory goes through here instead. */
+function accessoryLabel(priced) {
+  if (priced && priced.kind === "adder") {
+    const row = (state.engine.adderList() || []).find(a => a.id === priced.id);
+    if (row) return adderLabel(row);
+  }
+  return priced ? priced.label : "";
+}
+
+function prehangAdderBlock(product, draft) {
+  const rows = addersFor(product, draft);
+  const block = el("div", "");
+  block.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-mute",
+    "Trim & casing"));
+  if (!rows.length) {
+    block.appendChild(el("p", "text-[11px] text-ink-faint",
+      draft.config === "slab"
+        ? ((adderRules() || {}).slabNote || "A slab takes no prehang adder.")
+        : "The price sheet lists no casing or trim for this opening."));
+    return block;
+  }
+  const list = el("div", "flex flex-col gap-2");
+  rows.forEach(row => {
+    const at = draft.accessories.findIndex(a => a.kind === "adder" && a.id === row.id);
+    const on = at >= 0;
+    const priced = state.engine.priceLine({
+      productId: product.id, finish: draft.finish, config: draft.config, qty: 1,
+      accessories: [{ kind: "adder", id: row.id, qty: 1 }]
+    }).accessories[0];
+    const each = priced.costCents === null ? null
+      : (isCost() ? priced.costCents : applyMargin(priced.costCents, curMargin()));
+
+    const line = el("label",
+      "flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer transition-colors " +
+      (on ? "border-forest bg-forest/5" : "border-paper-line bg-paper-card hover:border-brass"));
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.id = "adder_" + row.id;
+    box.checked = on;
+    box.className = "h-4 w-4 shrink-0 accent-forest";
+    box.addEventListener("change", () => {
+      if (box.checked) draft.accessories.push({ kind: "adder", id: row.id, qty: 1 });
+      else if (at >= 0) draft.accessories.splice(at, 1);
+      renderDetail();
+    });
+    line.appendChild(box);
+    const words = el("div", "min-w-0 flex-1");
+    words.appendChild(el("p", "text-sm", adderLabel(row)));
+    const sub = [adderSub(row), row.configuration].filter(Boolean).join(" \u00b7 ");
+    words.appendChild(el("p", "text-[11px] text-ink-faint", sub));
+    line.appendChild(words);
+    line.appendChild(el("span", "tnum shrink-0 text-sm text-ink-mute",
+      each === null ? "not priced" : formatCents(each)));
+    list.appendChild(line);
+  });
+  block.appendChild(list);
+  block.appendChild(el("p", "mt-2 text-[11px] text-ink-faint",
+    "Priced per opening, by size and top style, from the vendor's prehang adder sheet."));
+  return block;
 }
 
 /* Clavos and straps are priced per piece and installed, on the same doors the
@@ -2285,7 +2540,7 @@ function accessoryBlock(product, draft) {
       thumb.appendChild(im);
       row.appendChild(thumb);
     }
-    row.appendChild(el("span", "flex-1 truncate text-sm", priced.label));
+    row.appendChild(el("span", "flex-1 truncate text-sm", accessoryLabel(priced)));
     row.appendChild(el("span", "tnum text-sm text-ink-mute",
       formatCents(isCost() ? priced.costCents : applyMargin(priced.costCents, curMargin()))));
     const rm = el("button", "rounded p-1 text-ink-faint hover:text-red-700", "✕");
@@ -2544,7 +2799,7 @@ function buildQuoteDoc(q) {
       const sp = (spec.accessories || [])[j];
       const shape = sp && sp.shape ? " \u2014 " + sp.shape.replace(/\s*Clavos$/i, "") : "";
       td.appendChild(el("span", "sub",
-        "+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") + a.label + shape));
+        "+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") + accessoryLabel(a) + shape));
     });
     tr.appendChild(td);
     tr.appendChild(el("td", "r", String(l.qty)));
@@ -2678,7 +2933,7 @@ function buildOrderDoc(q) {
     (l.accessories || []).forEach((a, j) => {
       const sp = (spec.accessories || [])[j];
       const shape = sp && sp.shape ? " \u2014 " + sp.shape.replace(/\s*Clavos$/i, "") : "";
-      td.appendChild(el("span", "sub", "+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") + a.label + shape));
+      td.appendChild(el("span", "sub", "+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") + accessoryLabel(a) + shape));
     });
     tr.appendChild(td);
     tr.appendChild(el("td", "r", String(l.qty)));
@@ -2856,7 +3111,7 @@ function renderQuote() {
       const sp = (spec.accessories || [])[j];
       const shape = sp && sp.shape ? " \u2014 " + sp.shape.replace(/\s*Clavos$/i, "") : "";
       info.appendChild(el("p", "mt-0.5 text-xs text-ink-faint",
-        "+ " + (a.qty > 1 ? a.qty + " × " : "") + a.label + shape +
+        "+ " + (a.qty > 1 ? a.qty + " × " : "") + accessoryLabel(a) + shape +
         (a.notOffered ? " (unavailable)" : "")));
     });
     top.appendChild(info);
@@ -3156,7 +3411,9 @@ function switchLine() {
 
 function renderTier() {
   const tiers = state.engine ? state.engine.marginTiers() : {};
-  const pct = t => Math.round((tiers[t] || 0) * 100) + "%";
+  const pct = t => t === "custom"
+    ? Math.round((state.customMargin || 0) * 100) + "%"
+    : Math.round((tiers[t] || 0) * 100) + "%";
   ["builder", "retail"].forEach(t => {
     const b = document.getElementById("tier" + t.charAt(0).toUpperCase() + t.slice(1));
     if (!b) return;
@@ -3165,6 +3422,16 @@ function renderTier() {
     b.title = titleize(t) + " margin " + pct(t);
     b.hidden = tiers[t] === undefined;
   });
+  const cb = $("#tierCustom"), wrap = $("#customWrap"), inp = $("#customMargin");
+  if (cb) {
+    const on = state.marginTier === "custom";
+    cb.setAttribute("aria-pressed", String(on));
+    cb.title = on ? "Custom margin " + pct("custom") : "Price at a margin of your own";
+    wrap.classList.toggle("hidden", !on);
+    if (on && document.activeElement !== inp) {
+      inp.value = state.customMargin === null ? "" : String(Math.round(state.customMargin * 1000) / 10);
+    }
+  }
   const dt = $("#drawerTier");
   if (dt) dt.textContent = titleize(state.marginTier || "") + " " + pct(state.marginTier);
 }
@@ -3207,20 +3474,44 @@ function wire() {
   };
   // The header toggle is covered while the drawer is open, and the drawer is
   // exactly where cost-vs-price gets compared, so it carries its own switch.
-  const setTier = t => {
-    const tiers = state.engine.marginTiers();
-    if (tiers[t] === undefined) return;
-    state.marginTier = t;
+  const repriceEverything = () => {
     saveTier();
     renderTier();
     renderCatalog(true);
     renderQuote();
     if (state.draft) renderDetail();
   };
+  const setTier = t => {
+    if (t === "custom") {
+      // Start from whatever is on screen, so switching never moves a price by
+      // itself — the dealer types the change.
+      if (state.customMargin === null) state.customMargin = curMargin();
+      state.marginTier = "custom";
+      repriceEverything();
+      const inp = $("#customMargin");
+      if (inp) { inp.focus(); inp.select(); }
+      return;
+    }
+    if (state.engine.marginTiers()[t] === undefined) return;
+    state.marginTier = t;
+    repriceEverything();
+  };
   $$(".tierbtn").forEach(b => b.addEventListener("click", () => setTier(b.dataset.tier)));
+  $("#customMargin").addEventListener("input", () => {
+    const v = parseFloat($("#customMargin").value);
+    // Margin-on-sell divides by (1 - m), so 100% is a division by zero and
+    // anything above it is a negative price. The engine would throw; the field
+    // simply will not go there.
+    if (!isFinite(v) || v < 0 || v > 95) return;
+    state.customMargin = Math.round(v * 10) / 1000;
+    repriceEverything();
+  });
   // The drawer covers the header, so it can cycle the tier itself.
   $("#drawerTier").addEventListener("click", () => {
-    const names = Object.keys(state.engine.marginTiers());
+    // Cycle the tiers the rules file defines, and a custom margin only once one
+    // has been set — so this button never invents a margin nobody typed.
+    const names = Object.keys(state.engine.marginTiers())
+      .concat(state.customMargin !== null ? ["custom"] : []);
     if (!names.length) return;
     setTier(names[(names.indexOf(state.marginTier) + 1) % names.length]);
   });

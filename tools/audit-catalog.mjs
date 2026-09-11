@@ -22,7 +22,12 @@ const centsPaths = [];
   if (node === null || typeof node !== 'object') return;
   for (const [k, v] of Object.entries(node)) {
     const at = p + '.' + k;
-    if (/Cents$/.test(k) || /^(slab|singlePH|doublePH)$/.test(k)) {
+    /* A price cell is named for its configuration, but those words are also
+       ordinary vocabulary elsewhere in the catalogue — a rule keyed by opening,
+       say. Only count them as money inside a prices object, so the contract
+       check cannot misfire on a string that was never a price. */
+    const isPriceCell = /^(slab|singlePH|doublePH)$/.test(k) && /\.prices\./.test(p);
+    if (/Cents$/.test(k) || isPriceCell) {
       const vals = (v && typeof v === 'object') ? Object.values(v) : [v];
       vals.forEach(x => { if (x !== null && x !== undefined && typeof x !== 'object') centsPaths.push([at, x]); });
     }

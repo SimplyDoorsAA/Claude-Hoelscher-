@@ -46,6 +46,9 @@ jobs:
       - name: Printed quote and order sheet
         run: node tests/print.test.mjs
 
+      - name: Adders, divided lites and custom margin
+        run: node tests/opening-extras.test.mjs
+
       - name: Quoter under load
         run: node tests/stress-ui.mjs
 

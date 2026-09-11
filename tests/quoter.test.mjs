@@ -33,7 +33,19 @@ const keyOf=p=>{
 };
 const grilleRows=catalog.fiberglassIronGrilles||[];
 const stainRows =catalog.fiberglassStainColors||[];
+/* Rows the dealer does not sell are in the catalogue but are not cards anybody
+   can quote from, so they do not count towards what the browser shows. */
+function hiddenVariantIdsOf(cat){
+  const h=(cat.speakeasyOptions||{}).hiddenVariants, out=new Set();
+  if(!h) return out;
+  const of={fiberglass:cat.fiberglassProducts||[],wood:cat.woodProducts||[]};
+  const rows=h.matchCollection?(of[h.matchCollection]||[]):[...(cat.fiberglassProducts||[]),...(cat.woodProducts||[])];
+  const rx=new RegExp(h.matchDescription,'i');
+  rows.forEach(p=>{ if(rx.test(p.description||'')) out.add(p.id); });
+  return out;
+}
 const optionOnly=new Set(grilleRows.map(g=>g.productId));
+hiddenVariantIdsOf(catalog).forEach(id=>optionOnly.add(id));
 /* The speakeasy programme prices a door, its kit and its mask as one part
    number. Those rows reach the customer through the door's configurator, not
    as cards of their own, so they are option-only here too. Recomputed from the
@@ -914,8 +926,10 @@ const seBase=[...seVariants.keys()].map(id=>engine.productById(id));
 const seModels=new Set(seBase.map(keyOf));
 ok('nine doors carry the catalog\'s speakeasy note',
    seModels.size===9, [...seModels].sort().join(' | '));
+const seVariantCount=[...seVariants.values()]
+  .reduce((n,combos)=>n+combos.filter(c=>c.product).length,0);
 ok('and between them the sheet prices 140 variant part numbers',
-   optionOnly.size-grilleRows.length===140, String(optionOnly.size-grilleRows.length));
+   seVariantCount===140, String(seVariantCount));
 
 await page.click('#clearFilters').catch(()=>{});
 await page.fill('#q','2 Panel Square'); await page.waitForTimeout(600);

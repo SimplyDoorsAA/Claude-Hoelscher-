@@ -209,6 +209,8 @@ gets exercised.
 | `glassRules` | Glasses a row offers by name, by model, or by the page its glass column points at |
 | `glassCodes` | The 12 codes that replace the (--) in a part number |
 | `speakeasyOptions` | The part-number grammar behind the speakeasy programme, and the four add-ons the configurator owns |
+| `prehangAdderRules` | How an opening resolves to the casing and 1×4 rows the sheet keys to it |
+| `sdlRule` | The per-lite simulated divided lite charge, applied at the factory |
 
 The split follows the vendor price sheets, not a guess: the fiberglass sheet
 carries its own Components, SDL Bars and Prehang Adders sections and no

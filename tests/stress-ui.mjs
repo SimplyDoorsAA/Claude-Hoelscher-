@@ -61,6 +61,18 @@ const keyOf=p=>{
     if(rx.test(d)) return d.replace(rx,'$1').replace(/\s+/g,' ').trim(); }
   return d.replace(SIZE_PREFIX,'').trim();
 };
+/* Rows the dealer does not sell are in the catalogue but are not cards anybody
+   can quote from, so they do not count towards what the browser shows. */
+function hiddenVariantIdsOf(cat){
+  const h=(cat.speakeasyOptions||{}).hiddenVariants, out=new Set();
+  if(!h) return out;
+  const of={fiberglass:cat.fiberglassProducts||[],wood:cat.woodProducts||[]};
+  const rows=h.matchCollection?(of[h.matchCollection]||[]):[...(cat.fiberglassProducts||[]),...(cat.woodProducts||[])];
+  const rx=new RegExp(h.matchDescription,'i');
+  rows.forEach(p=>{ if(rx.test(p.description||'')) out.add(p.id); });
+  return out;
+}
+const hiddenIds=hiddenVariantIdsOf(cat);
 /* A speakeasy door, its kit and its mask are one part number, and those rows
    are reached through the door's configurator rather than as cards, so they
    are not counted here either. Read from the grammar the catalogue publishes. */
@@ -81,6 +93,7 @@ const seVariantIds=(()=>{
       if(v) out.add(v.id);
     }
   }
+  hiddenIds.forEach(id=>out.add(id));
   return out;
 })();
 const stains=(cat.fiberglassStainColors||[]).map(x=>x.name);
