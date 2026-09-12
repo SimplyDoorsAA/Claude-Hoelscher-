@@ -952,7 +952,7 @@ ok('the speakeasy door asks whether to fit the kit',
 await pick('Speakeasy kit');
 const inserts=await optionsOf('Insert');
 ok('then which insert goes behind the grille',
-   inserts.length===2 && inserts.some(o=>/Glass/.test(o)) && inserts.some(o=>/Wood/.test(o)),
+   inserts.length===2 && inserts.some(o=>/glass/i.test(o)) && inserts.some(o=>/Wood/.test(o)),
    inserts.join(' | '));
 await pick('Wood panel');
 const masks=await optionsOf('Iron mask');

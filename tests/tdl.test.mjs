@@ -78,7 +78,7 @@ ok('and it withholds the two the page does not print',
 ok('every one of the ten has a code in the sheet\'s legend',
    !!p12 && p12.options.every(g=>(cat.glassCodes||[]).some(c=>c.name===g)));
 
-const pairs=(cat.sideliteRules||[]).filter(r=>r.appliesToModelPattern);
+const pairs=(cat.sideliteRules||[]).filter(r=>/^\^[46] Lite 1 Panel/.test(r.appliesToModelPattern||''));
 ok('the four TDL door-and-sidelite pairings are recorded', pairs.length===4,
    pairs.map(r=>r.appliesToModelPattern).join(' | '));
 ok('and each pairing keeps raised moulding with raised moulding',

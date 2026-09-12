@@ -1,5 +1,17 @@
 {
   "accessories": {
+    "1-1/4\" bar": {
+      "file": "acc-sdlbar-1-1-4.webp",
+      "kind": "sdlBar",
+      "source": "SDL Bars catalog page, profile drawing supplied by the dealer 2026-09-12",
+      "handFiled": true
+    },
+    "7/8\" bar": {
+      "file": "acc-sdlbar-7-8.webp",
+      "kind": "sdlBar",
+      "source": "SDL Bars catalog page, profile drawing supplied by the dealer 2026-09-12",
+      "handFiled": true
+    },
     "Balfour": {
       "file": "acc-ironmask-balfour.webp",
       "kind": "ironMask",
@@ -42,6 +54,12 @@
     }
   },
   "decorativeGlass": {
+    "Blanco": {
+      "basis": "caption",
+      "file": "glass-blanco.webp",
+      "source": "79d5f9d9-Compressed.pdf p25 /Im1 (the same photograph as the door card, filed by hand)",
+      "handFiled": true
+    },
     "Bowie": {
       "basis": "caption",
       "file": "glass-bowie.webp",

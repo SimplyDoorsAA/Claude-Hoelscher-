@@ -61,6 +61,12 @@ jobs:
       - name: Every fiberglass price, against the vendor price sheet
         run: node tests/fiberglass-sheet.test.mjs
 
+      - name: Simulated Divided Lite, the door, its sidelite and the factory grid
+        run: node tests/sdl.test.mjs
+
+      - name: Legacy & Panel doors, and the Blanco's caming letter
+        run: node tests/legacy-panel.test.mjs
+
       - name: Quoter under load
         run: node tests/stress-ui.mjs
 

@@ -124,22 +124,12 @@ ok('ticking casing adds exactly its priced amount to the door',
    before+' -> '+after+'  (+'+formatCents(money(after)-money(before))+')');
 
 /* ---------------- simulated divided lites ---------------- */
-const sdl=catalog.woodComponents.find(c=>/Simulated Divided Lite, per lite/.test(c.description||''));
-ok('the catalogue prices a per-lite charge', !!sdl && sdl.priceCents===3500,
-   sdl?('$'+(sdl.priceCents/100)+' '+sdl.priceBasis):'missing');
-ok('and it carries no stray price table from a neighbouring row',
-   sdl.priceVariantsCents===null && sdl.freightUnitsPerPiece===0,
-   JSON.stringify({v:sdl.priceVariantsCents,f:sdl.freightUnitsPerPiece}));
-const beforeSdl=money(await priceShown());
-for(let i=0;i<6;i++){
-  await page.$$eval('#detail button',ns=>{
-    const b=ns.find(x=>x.getAttribute('aria-label')==='One more lite'); if(b)b.click();});
-  await page.waitForTimeout(120);
-}
-const afterSdl=money(await priceShown());
-ok('six lites cost six times the per-lite charge',
-   afterSdl-beforeSdl===6*sell(cost(sdl.priceCents),RETAIL),
-   formatCents(afterSdl-beforeSdl)+' vs '+formatCents(6*sell(cost(sdl.priceCents),RETAIL)));
+/* The factory grid is the SDL door's alone on wood (tests/sdl.test.mjs drives
+   it); a knotty alder door is offered none, so a sales person cannot add a
+   per-lite charge the catalog never prints for this door. */
+ok('a knotty alder door is not offered the factory grid',
+   !/Grid applied at the factory/.test(await page.textContent('#detail')) &&
+   !(await steps()).includes('Simulated divided lites'));
 
 await page.$$eval('#detail button',ns=>{const b=ns.find(x=>x.textContent.trim()==='Add to quote');b.click();});
 await page.waitForTimeout(600);
@@ -189,8 +179,7 @@ ok('the estimate names the casing in words',
    /Interior casing/.test(doc) && !/intCasing/.test(doc));
 ok('and never prints the sheet\'s internal shorthand',
    !/Square Top · 3068 Single/.test(doc) && !/\bwood · Square Top\b/.test(doc));
-ok('the lites are described on the estimate', /6 simulated divided lites/i.test(doc),
-   (doc.match(/\d+ simulated divided lites/i)||['not found'])[0]);
+ok('and no lites are described on it, since none could be added', !/simulated divided lites/i.test(doc));
 const estMaterials=engine.priceQuote({lines:spec.lines,marginTier:'custom',marginPercent:0.22}).grandTotalSellCents;
 ok('and the estimate totals at the custom margin too',
    doc.includes(formatCents(estMaterials)), formatCents(estMaterials));

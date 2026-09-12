@@ -20195,8 +20195,8 @@
     {
       "id": "92c08b9bfe",
       "category": "Simulated Divided Lite",
-      "partNumber": "SDL-LITE",
-      "description": "Simulated Divided Lite, per lite — applied at the factory",
+      "partNumber": "SDL-LITE-78",
+      "description": "Simulated Divided Lite, per lite, 7/8\" bar — applied at the factory",
       "unit": "each",
       "line": "wood",
       "priceBasis": "list",
@@ -20204,7 +20204,21 @@
       "priceVariantsCents": null,
       "freightUnitsPerPiece": 0,
       "sourcePage": null,
-      "notes": "Hoelscher applies the grid at the factory and bills per lite. Confirmed by the dealer 2026-09-10. The 8' lineal bars in this section are the other way of doing it, for a grid applied in-house."
+      "notes": "Hoelscher applies the grid at the factory and bills per lite; the Dealer Wood Pricing sheet prints it on the MSDLBAR7880 row as +35 per lite. Confirmed by the dealer 2026-09-10; bar width added 2026-09-12. The 8' lineal bars in this section are the other way of doing it, for a grid applied in-house. SDL-LITE-78 is our own number: the sheet prints none."
+    },
+    {
+      "id": "1a230b3664",
+      "category": "Simulated Divided Lite",
+      "partNumber": "SDL-LITE-114",
+      "description": "Simulated Divided Lite, per lite, 1-1/4\" bar — applied at the factory",
+      "unit": "each",
+      "line": "wood",
+      "priceBasis": "list",
+      "priceCents": 4000,
+      "priceVariantsCents": null,
+      "freightUnitsPerPiece": 0,
+      "sourcePage": null,
+      "notes": "The Dealer Wood Pricing sheet prints the factory grid with the 1-1/4\" bar on the MSDLBAR11480 row as +40 per lite. Added 2026-09-12 with the dealer. SDL-LITE-114 is our own number: the sheet prints none."
     }
   ],
   "hardware": [
@@ -21114,6 +21128,19 @@
       "nameBasis": "column",
       "notes": null,
       "id": "b61cdd3adc"
+    },
+    {
+      "name": "Blanco",
+      "partNumberInfix": "BLA",
+      "caming": [
+        "Patina",
+        "Zinc"
+      ],
+      "priceImpact": "none",
+      "sourcePage": "25",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 25, Blanco Center Arch Raised Moulding: MCABLAP3068 with Patina caming, MCABLAZ3068 with Zinc. The sheet prices one row, MCABLA--3068, so the caming costs nothing. Walked with the dealer 2026-09-12.",
+      "id": "9f10a2eb24"
     }
   ],
   "glassRules": [
@@ -21256,6 +21283,14 @@
       "appliesToModelPattern": null,
       "allowSkuPattern": "^M1LCSL",
       "notes": "Mahogany catalog pages 8-11 show the Contemporary range with the Contemporary Full Lite Sidelite and no other. Height pairing falls out of the sizes: a 6'8\" door takes the 1269 (M1LCSL--1268), an 8'0\" door the 1281 (M1LCSL--1280). The dealer confirmed on 2026-09-11 that this holds for the narrow-profile doors and for the solid 7 Panel as well."
+    },
+    {
+      "id": "c2202329e2",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": null,
+      "appliesToModelPattern": "^3/4 Lite 1 Panel NRM$",
+      "allowSkuPattern": "^M34SL--1P\\d+$",
+      "notes": "Mahogany catalog page 21 (Simulated Divided Lite Doors) shows the 3/4 Lite 1 Panel for SDL with the 3/4 Lite 1 Panel Sidelite for SDL, M34SLLE1P1068 / 1080, and no other. Height still breaks the tie between the sidelite's two sizes. Confirmed with the dealer 2026-09-12."
     }
   ],
   "glassCodes": [
@@ -21351,7 +21386,9 @@
       {
         "code": "--",
         "name": "Glass Insert",
-        "label": "Glass"
+        "label": "Clear IG glass",
+        "printedAs": "Clear IG",
+        "printedCode": "C"
       },
       {
         "code": "W",
@@ -21381,7 +21418,7 @@
         "label": "Windsor"
       }
     ],
-    "insertNote": "Hoelscher prices the kit the same with a wood or a glass insert.",
+    "insertNote": "Hoelscher prices the kit the same with a wood or a glass insert. The glass insert is clear insulated glass only: both catalogs print it as C (mahogany page 26, knotty alder page 8), whatever the sheet's glass column says.",
     "extras": [
       {
         "name": "Clavos",
@@ -21485,14 +21522,29 @@
     "slabNote": "A slab is not hung, so it takes no prehang adder."
   },
   "sdlRule": {
-    "notes": "Hoelscher applies simulated divided lites at the factory and bills per lite, so the count is a question on the door rather than bar stock off a shelf. The lineal bars in the components sections remain, for a grid applied in-house. Confirmed by the dealer 2026-09-10.",
+    "notes": "Hoelscher applies simulated divided lites at the factory and bills per lite, so the count is a question on the door rather than bar stock off a shelf. The Dealer Wood Pricing sheet prices it +35 per lite with the 7/8\" bar and +40 with the 1-1/4\", so the bar is asked. Mahogany catalog page 21 offers the grid on one door, the 3/4 Lite 1 Panel for SDL, so on wood it is offered there and nowhere else; the lineal bars in the components sections remain, for a grid applied in-house. Confirmed by the dealer 2026-09-10 and 2026-09-12.",
     "matchDescription": "Simulated Divided Lite, per lite",
     "label": "Simulated divided lites",
     "unit": "per lite",
-    "maxLites": 48
+    "maxLites": 48,
+    "bars": [
+      {
+        "label": "7/8\" bar",
+        "matchDescription": "per lite, 7/8",
+        "barPartNumber": "MSDLBAR7880"
+      },
+      {
+        "label": "1-1/4\" bar",
+        "matchDescription": "per lite, 1-1/4",
+        "barPartNumber": "MSDLBAR11480"
+      }
+    ],
+    "appliesToModelPattern": {
+      "wood": "^3/4 Lite 1 Panel NRM$"
+    }
   },
   "skuPlaceholders": {
-    "notes": "A part number on the price sheet can carry more than one placeholder. The first is always the glass code (see glassCodes). A trailing one is filled at order time from something the configurator already knows. Only patterns confirmed against a real catalog page are listed here — anything else is flagged on the order sheet rather than guessed at.",
+    "notes": "A part number on the price sheet can carry more than one placeholder. The first is always the glass code (see glassCodes) — except after a decorative-glass design infix, where it is the caming letter, and in a speakeasy kit number, where it is the C of the clear insulated-glass insert; both are listed here by pattern. A trailing one is filled at order time from something the configurator already knows. Only patterns confirmed against a real catalog page are listed here — anything else is flagged on the order sheet rather than guessed at.",
     "handing": [
       {
         "id": "mahogany-narrow-lite",
@@ -21504,6 +21556,29 @@
         "confirmedBy": "dealer, 2026-09-11",
         "evidence": "Catalog page 10-11 lists the numbers in full: M3GPWNSR2880L and M3GPWNSR2880R for the two handings of the 2'8\" x 8'0\", and likewise for 3'0\" x 8'0\". The glass code sits in the first placeholder, the handing letter in the trailing one.",
         "example": "M3GPWNSR2880L"
+      }
+    ],
+    "caming": [
+      {
+        "id": "mahogany-blanco-center-arch",
+        "appliesToSkuPattern": "^MCABLA--\\d{4}$",
+        "codes": {
+          "Patina": "P",
+          "Zinc": "Z"
+        },
+        "confirmedBy": "dealer, 2026-09-12",
+        "evidence": "Catalog page 25 lists the numbers in full beside the caming: MCABLAP3068 Patina, MCABLAZ3068 Zinc. The placeholder after the design infix BLA is the caming letter, not a glass code.",
+        "example": "MCABLAP3068"
+      }
+    ],
+    "speakeasyGlass": [
+      {
+        "id": "speakeasy-glass-insert",
+        "appliesToSkuPattern": "^(M|KA)[A-Z0-9]*SE[MBW]?--\\d{4}$",
+        "code": "C",
+        "confirmedBy": "dealer, 2026-09-12",
+        "evidence": "Mahogany catalog page 26 prints every speakeasy glass-insert number with C where the sheet prints --: M2PASEC3068, M2PASEBC3068, M2PASEMC3068, M2PASEWC3068 (Clear IG), against W for the wood insert. Knotty alder page 8 prints the same grammar: KA2PASEC3068, KA2PASEBC2880 and so on. The sheet keys these rows to P.22, the ten-glass list; the dealer chose the catalog's reading, so no glass is asked and the number fills with C.",
+        "example": "M2PASEMC3068"
       }
     ]
   }

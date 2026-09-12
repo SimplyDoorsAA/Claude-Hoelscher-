@@ -120,6 +120,14 @@ reading "Clear Bevel Low-E", and `M4L1P--3680NRM` puts the glass code after the
 `1P` where every sibling puts it before. The sheet and the catalog agree on that
 second one, so it is a real vendor quirk and our data already had it right.
 
+The Arch Lite's shelf numbers, page 18, change glass code with the shelf:
+`MCMA4LCLE3068S` (shelf) against `MCMA4LCBLE3068` (no shelf), and the same at
+3080, where every other door on the page keeps `CBLE` both ways. The sheet
+prices one row, `MCMA4L--3068`, for the door. The dealer read it as a
+misprint (2026-09-12): the glass code follows the glass chosen and the `S`
+follows the shelf, so Clear Bevel with a shelf is `MCMA4LCBLE3068S` even
+though the catalog never prints it. One more for Hoelscher.
+
 ## A description we had lost
 
 `MCMA4L--3080` read "Craftsman 4 Lite" where both the sheet's Door Style column
