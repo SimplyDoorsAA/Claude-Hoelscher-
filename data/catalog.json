@@ -21038,6 +21038,531 @@
       "id": "51fecccc54",
       "style": "3/4 Lite",
       "photo": "grille-knotty-alder-3-4-lite-whitney.webp"
+    },
+    {
+      "name": "Cordoba",
+      "code": "CRD",
+      "line": "mahogany",
+      "style": "2/3 Arch Lite",
+      "sizeCodes": [
+        "3068"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "English Chestnut",
+      "priceImpact": "none",
+      "sourcePage": "35",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 35. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "b7bb7d13fe",
+      "photo": "grille-knotty-alder-3-4-lite-cordoba.webp"
+    },
+    {
+      "name": "Santiago",
+      "code": "STG",
+      "line": "mahogany",
+      "style": "2/3 Arch Lite",
+      "sizeCodes": [
+        "3068"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Special Walnut",
+      "priceImpact": "none",
+      "sourcePage": "35",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 35. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "80fe338060",
+      "photo": "grille-knotty-alder-3-4-lite-santiago.webp"
+    },
+    {
+      "name": "Sienna",
+      "code": "SIE",
+      "line": "mahogany",
+      "style": "2/3 Arch Lite",
+      "sizeCodes": [
+        "3068"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Jacobean",
+      "priceImpact": "none",
+      "sourcePage": "35",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 35. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "e8851e43ec",
+      "photo": "grille-knotty-alder-3-4-lite-sienna.webp"
+    },
+    {
+      "name": "Whitney",
+      "code": "WHI",
+      "line": "mahogany",
+      "style": "2/3 Arch Lite",
+      "sizeCodes": [
+        "3068"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Aged Barrel",
+      "priceImpact": "none",
+      "sourcePage": "35",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 35. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "0c6afece70",
+      "photo": "grille-knotty-alder-3-4-lite-whitney.webp"
+    },
+    {
+      "name": "Avignon",
+      "code": "AVI",
+      "line": "mahogany",
+      "style": "2/3 Lite",
+      "sizeCodes": [
+        "2880",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Ebony",
+      "priceImpact": "none",
+      "sourcePage": "36",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 36. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "fb6a1da8a4",
+      "photo": "grille-knotty-alder-3-4-lite-avignon.webp"
+    },
+    {
+      "name": "Barcelona",
+      "code": "BAR",
+      "line": "mahogany",
+      "style": "2/3 Lite",
+      "sizeCodes": [
+        "2880",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Special Walnut",
+      "priceImpact": "none",
+      "sourcePage": "36",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 36. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "ef9f550d4a",
+      "photo": "grille-knotty-alder-3-4-lite-barcelona.webp"
+    },
+    {
+      "name": "Cordoba",
+      "code": "CRD",
+      "line": "mahogany",
+      "style": "2/3 Lite",
+      "sizeCodes": [
+        "2880",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Red Oak",
+      "priceImpact": "none",
+      "sourcePage": "36",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 36. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "e71d24d2c4",
+      "photo": "grille-knotty-alder-3-4-lite-cordoba.webp"
+    },
+    {
+      "name": "Santiago",
+      "code": "STG",
+      "line": "mahogany",
+      "style": "2/3 Lite",
+      "sizeCodes": [
+        "2880",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Jacobean",
+      "priceImpact": "none",
+      "sourcePage": "36",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 36. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "1dc82f7076",
+      "photo": "grille-knotty-alder-3-4-lite-santiago.webp"
+    },
+    {
+      "name": "Sienna",
+      "code": "SIE",
+      "line": "mahogany",
+      "style": "2/3 Lite",
+      "sizeCodes": [
+        "2880",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "English Chestnut",
+      "priceImpact": "none",
+      "sourcePage": "37",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 37. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "eb8548cea2",
+      "photo": "grille-knotty-alder-3-4-lite-sienna.webp"
+    },
+    {
+      "name": "Whitney",
+      "code": "WHI",
+      "line": "mahogany",
+      "style": "2/3 Lite",
+      "sizeCodes": [
+        "2880",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Aged Barrel",
+      "priceImpact": "none",
+      "sourcePage": "37",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 37. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "cb00837ebb",
+      "photo": "grille-knotty-alder-3-4-lite-whitney.webp"
+    },
+    {
+      "name": "Avignon",
+      "code": "AVI",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "sizeCodes": [
+        "2868",
+        "3068",
+        "2880",
+        "3080",
+        "3680"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Special Walnut",
+      "priceImpact": "none",
+      "sourcePage": "38",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 38. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12. The page prints a 3680 number too, but the sheet prices no 3/4 Lite Iron Grille in 3680, so that size is not offered; on the Hoelscher list.",
+      "id": "38bb2e4264",
+      "photo": "grille-knotty-alder-3-4-lite-avignon.webp"
+    },
+    {
+      "name": "Barcelona",
+      "code": "BAR",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "sizeCodes": [
+        "2868",
+        "3068",
+        "2880",
+        "3080",
+        "3680"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "English Chestnut",
+      "priceImpact": "none",
+      "sourcePage": "38",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 38. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12. The page prints a 3680 number too, but the sheet prices no 3/4 Lite Iron Grille in 3680, so that size is not offered; on the Hoelscher list.",
+      "id": "1d71ac18c3",
+      "photo": "grille-knotty-alder-3-4-lite-barcelona.webp"
+    },
+    {
+      "name": "Cordoba",
+      "code": "CRD",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "sizeCodes": [
+        "2868",
+        "3068",
+        "2880",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Special Walnut",
+      "priceImpact": "none",
+      "sourcePage": "38",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 38. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "86c30f1730",
+      "photo": "grille-knotty-alder-3-4-lite-cordoba.webp"
+    },
+    {
+      "name": "Saltillo",
+      "code": "SLT",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "sizeCodes": [
+        "2880",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Ebony",
+      "priceImpact": "none",
+      "sourcePage": "38",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 38. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "5dca37f61d",
+      "photo": "grille-knotty-alder-3-4-lite-saltillo.webp"
+    },
+    {
+      "name": "Santiago",
+      "code": "STG",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "sizeCodes": [
+        "2868",
+        "3068",
+        "2880",
+        "3080"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Red Oak",
+      "priceImpact": "none",
+      "sourcePage": "39",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 39. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "d5fdb35d1f",
+      "photo": "grille-knotty-alder-3-4-lite-santiago.webp"
+    },
+    {
+      "name": "Sienna",
+      "code": "SIE",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "sizeCodes": [
+        "2868",
+        "3068",
+        "2880",
+        "3080",
+        "3680"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "English Chestnut",
+      "priceImpact": "none",
+      "sourcePage": "39",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 39. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12. The page prints a 3680 number too, but the sheet prices no 3/4 Lite Iron Grille in 3680, so that size is not offered; on the Hoelscher list.",
+      "id": "91caa8a20d",
+      "photo": "grille-knotty-alder-3-4-lite-sienna.webp"
+    },
+    {
+      "name": "Southampton",
+      "code": "SHN",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "sizeCodes": [
+        "2880",
+        "3080",
+        "3680"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Jacobean",
+      "priceImpact": "none",
+      "sourcePage": "39",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 39. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12. The page prints a 3680 number too, but the sheet prices no 3/4 Lite Iron Grille in 3680, so that size is not offered; on the Hoelscher list.",
+      "id": "622b983ded",
+      "photo": "grille-knotty-alder-3-4-lite-southampton.webp"
+    },
+    {
+      "name": "Whitney",
+      "code": "WHI",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "sizeCodes": [
+        "2868",
+        "3068",
+        "2880",
+        "3080",
+        "3680"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Special Walnut",
+      "priceImpact": "none",
+      "sourcePage": "39",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 39. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12. The page prints a 3680 number too, but the sheet prices no 3/4 Lite Iron Grille in 3680, so that size is not offered; on the Hoelscher list.",
+      "id": "82e41aed83",
+      "photo": "grille-knotty-alder-3-4-lite-whitney.webp"
+    },
+    {
+      "name": "Avignon",
+      "code": "AVI",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "sizeCodes": [
+        "3068"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Special Walnut",
+      "priceImpact": "none",
+      "sourcePage": "40",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 40. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "fc9f0a436f",
+      "photo": "grille-knotty-alder-3-4-lite-avignon.webp"
+    },
+    {
+      "name": "Balfour",
+      "code": "BAL",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "sizeCodes": [
+        "3068"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Red Oak",
+      "priceImpact": "none",
+      "sourcePage": "40",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 40. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "561f21463c",
+      "photo": "grille-knotty-alder-3-4-lite-balfour.webp"
+    },
+    {
+      "name": "Cordoba",
+      "code": "CRD",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "sizeCodes": [
+        "3068"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "English Chestnut",
+      "priceImpact": "none",
+      "sourcePage": "40",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 40. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "547b872097",
+      "photo": "grille-knotty-alder-3-4-lite-cordoba.webp"
+    },
+    {
+      "name": "Hammond",
+      "code": "HMM",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "sizeCodes": [
+        "3068"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Jacobean",
+      "priceImpact": "none",
+      "sourcePage": "40",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 40. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "f36f8b1461",
+      "photo": "grille-knotty-alder-3-4-lite-hammond.webp"
+    },
+    {
+      "name": "Santiago",
+      "code": "STG",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "sizeCodes": [
+        "3068"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "English Chestnut",
+      "priceImpact": "none",
+      "sourcePage": "41",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 41. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "6fcd393d6d",
+      "photo": "grille-knotty-alder-3-4-lite-santiago.webp"
+    },
+    {
+      "name": "Saltillo",
+      "code": "SLT",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "sizeCodes": [
+        "3068"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Aged Barrel",
+      "priceImpact": "none",
+      "sourcePage": "41",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 41. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "41950b9d0b",
+      "photo": "grille-knotty-alder-3-4-lite-saltillo.webp"
+    },
+    {
+      "name": "Sienna",
+      "code": "SIE",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "sizeCodes": [
+        "3068"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Special Walnut",
+      "priceImpact": "none",
+      "sourcePage": "41",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 41. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "2fecaec6fb",
+      "photo": "grille-knotty-alder-3-4-lite-sienna.webp"
+    },
+    {
+      "name": "Southampton",
+      "code": "SHN",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "sizeCodes": [
+        "3068"
+      ],
+      "includesFlatMoulding": true,
+      "matchingSidelites": true,
+      "glassShown": "Clear Low-E",
+      "stainShown": "Ebony",
+      "priceImpact": "none",
+      "sourcePage": "41",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 41. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
+      "id": "f4c4e7bf61",
+      "photo": "grille-knotty-alder-3-4-lite-southampton.webp"
     }
   ],
   "decorativeGlassDesigns": [
@@ -21374,6 +21899,42 @@
       "allowSkuPattern": "^M23SL-",
       "allowModelPattern": "^2/3 Sidelite - (Flat|Decorative) Glass$",
       "notes": "Mahogany catalog page 32 photographs the 2/3 Arch Lite with the 2/3 sidelites (\"2/3 Arch Lite With Blanco Decorative Glass And Matching Sidelites\"); there is no arch sidelite. Not the iron-grille sidelite, which shares the number stem. Height still breaks the tie between the sidelite's sizes; the glass chosen picks flat against decorative. Confirmed with the dealer 2026-09-12."
+    },
+    {
+      "id": "5cadc4a2c5",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": null,
+      "appliesToModelPattern": "^2/3 Arch Lite Iron Grille$",
+      "allowSkuPattern": "^M23SL-",
+      "allowModelPattern": "^2/3 Lite Sidelite Iron Grille$",
+      "notes": "Mahogany catalog pages 35-36: \"Matching sidelites available.\" The 2/3 Lite Sidelite Iron Grille is the one 2/3 grille sidelite the sheet prices; page 32 photographs the arch lite with 2/3 sidelites. Height breaks the tie between sizes. Dealer, 2026-09-12."
+    },
+    {
+      "id": "651a85556d",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": null,
+      "appliesToModelPattern": "^2/3 Lite Iron Grille$",
+      "allowSkuPattern": "^M23SL-",
+      "allowModelPattern": "^2/3 Lite Sidelite Iron Grille$",
+      "notes": "Mahogany catalog pages 35-36: \"Matching sidelites available.\" The 2/3 Lite Sidelite Iron Grille is the one 2/3 grille sidelite the sheet prices; page 32 photographs the arch lite with 2/3 sidelites. Height breaks the tie between sizes. Dealer, 2026-09-12."
+    },
+    {
+      "id": "00a487146b",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": null,
+      "appliesToModelPattern": "^3/4 Lite Iron Grille$",
+      "allowSkuPattern": "^M34SL-",
+      "allowModelPattern": "^3/4 Lite Sidelite Iron Grille$",
+      "notes": "Mahogany catalog pages 38-39: \"Matching sidelites available.\" The 3/4 Lite Sidelite Iron Grille (1269 and 1281) is the grille sidelite the sheet prices with these doors; not the flat, decorative or SDL 3/4 sidelites, which share the M34SL stem. Height breaks the tie between sizes. Dealer, 2026-09-12."
+    },
+    {
+      "id": "273c327358",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": null,
+      "appliesToModelPattern": "^Full Lite Iron Grille$",
+      "allowSkuPattern": "^MFULLSL-",
+      "allowModelPattern": "^Full Sidelite Iron Grille$",
+      "notes": "Mahogany catalog pages 40-41: \"Matching sidelites available.\" The Full Sidelite Iron Grille printed with these pages; the sheet prices the same sidelite a second time on the page-35 block as \"Full Lite Sidelite Iron Grille\", same number MFULLSL--1268 and same prices, so only the pages-40-41 row is offered and the duplicate goes on the Hoelscher list. Not the flat, decorative or SDL Full sidelites, which share the MFULLSL stem. Dealer, 2026-09-12."
     }
   ],
   "glassCodes": [
@@ -21676,6 +22237,36 @@
         "MFULLDARP3068",
         "M34SLCOLZ1268"
       ]
+    },
+    "ironGrille": {
+      "clearCode": "C",
+      "clearGlass": "Clear Low E",
+      "confirmedBy": "dealer, 2026-09-12",
+      "evidence": "Both catalogs print an iron-grille door as the stem, the grille design infix and a C, every one shown with Clear Low-E: mahogany page 35 M23ACRDC3068, M23ASTGC3068, M23ASIEC3068, M23AWHIC3068; page 36 M23AVIC2880, M23BARC3080, M23CRDC2880, M23STGC3080; knotty alder pages 55-57 KA34AVIC3068, KA34BALC2880 and the rest. The sheet prices one generic row per size with the gap. The dealer chose: infix + C when the glass is Clear Low-E, exactly as printed; infix + the legend code for Flemish, Rain, Reeded and Stippolyte, which no catalog prints and which go on the Hoelscher list. A grille row with no design chosen stays a placeholder.",
+      "examples": [
+        "M23ACRDC3068",
+        "M23AVIC2880",
+        "KA34AVIC3068",
+        "M23AWHIF3068"
+      ]
     }
-  }
+  },
+  "skuCorrections": [
+    {
+      "id": "ffdf2128dc",
+      "productId": "170894c314",
+      "printed": "M23A--2880",
+      "resolvesAs": "M23--2880",
+      "appliesToNumber": true,
+      "note": "The sheet prints the 2/3 Lite (not arch) iron-grille rows with the arch stem M23A; catalog page 36 prints them M23AVIC2880, M23BARC2880, M23CRDC2880, M23STGC2880, without the A, and page 35 keeps the A for the arch doors alone. The row keeps the sheet's number for price matching; the number written follows the catalog. Dealer, 2026-09-12."
+    },
+    {
+      "id": "96df396022",
+      "productId": "88d6f4e977",
+      "printed": "M23A--3080",
+      "resolvesAs": "M23--3080",
+      "appliesToNumber": true,
+      "note": "The sheet prints the 2/3 Lite (not arch) iron-grille rows with the arch stem M23A; catalog page 36 prints them M23AVIC3080, M23BARC3080, M23CRDC3080, M23STGC3080, without the A, and page 35 keeps the A for the arch doors alone. The row keeps the sheet's number for price matching; the number written follows the catalog. Dealer, 2026-09-12."
+    }
+  ]
 }

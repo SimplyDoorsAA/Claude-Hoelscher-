@@ -70,6 +70,9 @@ jobs:
       - name: Legacy Full and 3/4 Lite, flat and decorative glass
         run: node tests/legacy-lites.test.mjs
 
+      - name: Mahogany iron grilles, and the grille number grammar
+        run: node tests/legacy-grilles.test.mjs
+
       - name: Quoter under load
         run: node tests/stress-ui.mjs
 

@@ -837,7 +837,7 @@ const designOpts=await page.$$eval('#detail .steprow',ns=>{
     return h&&h.textContent.trim()==='Grille design';});
   return row?[...row.querySelectorAll('.opt')].map(n=>({t:n.textContent.trim(),off:n.disabled})):[];});
 ok('all eleven grille designs are shown', designOpts.length===11, String(designOpts.length));
-const madeIn3680=grilleDesigns.filter(g=>g.sizeCodes.includes('3680')).map(g=>g.name);
+const madeIn3680=grilleDesigns.filter(g=>g.line==='knotty_alder'&&g.sizeCodes.includes('3680')).map(g=>g.name);
 ok('and the ones not made in 3\'6" are shown but disabled',
    designOpts.filter(o=>!o.off).length===madeIn3680.length,
    designOpts.filter(o=>!o.off).map(o=>o.t.split('\n')[0]).join(' | '));
