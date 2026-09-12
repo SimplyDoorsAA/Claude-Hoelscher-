@@ -145,6 +145,10 @@ ok('each bar shows the sheet\'s per-lite price after cost and margin',
    barOpts[1].includes(formatCents(sell(cost(p114.priceCents),RETAIL))),
    barOpts.join(' | '));
 
+const barArt=await page.$$eval('#detail .steprow img',ns=>ns.map(i=>({src:i.getAttribute('src')||'',ok:i.complete&&i.naturalWidth>0})));
+ok('each bar button carries its profile drawing, and both load',
+   barArt.length===2 && barArt.every(a=>/acc-sdlbar-/.test(a.src)&&a.ok), JSON.stringify(barArt));
+
 const before=money(await priceShown());
 for(let i=0;i<6;i++){
   await page.$$eval('#detail button',ns=>{const x=ns.find(n=>n.getAttribute('aria-label')==='One more lite'); if(x)x.click();});

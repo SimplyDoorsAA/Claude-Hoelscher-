@@ -1,5 +1,15 @@
 {
   "accessories": {
+    "1-1/4\" bar": {
+      "file": "acc-sdlbar-1-1-4.webp",
+      "kind": "sdlBar",
+      "source": "SDL Bars catalog page, profile drawing supplied by the dealer 2026-09-12"
+    },
+    "7/8\" bar": {
+      "file": "acc-sdlbar-7-8.webp",
+      "kind": "sdlBar",
+      "source": "SDL Bars catalog page, profile drawing supplied by the dealer 2026-09-12"
+    },
     "Balfour": {
       "file": "acc-ironmask-balfour.webp",
       "kind": "ironMask",

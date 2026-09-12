@@ -13,6 +13,11 @@ sheet does not name.
   these as a flat swatch; each is printed as a door glazed with it, which is
   what is stored here.
 - **accessories** — the three iron masks and the two speakeasy inserts (page 50).
+- **accessories / sdlBar** — the two SDL bar profile drawings (7/8" and
+  1-1/4", both 1/2" tall on 1 mm adhesive tape) from the SDL Bars page,
+  supplied by the dealer as images rather than extracted from a PDF. Keyed by
+  the bar label `sdlRule.bars` uses, so the grid step shows the profile beside
+  the price.
 
 `basis` in the manifest says how each name was tied to its picture:
 

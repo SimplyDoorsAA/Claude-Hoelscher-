@@ -1505,8 +1505,11 @@ function optionButton(label, pressed, disabled, onClick, title, sub, art) {
 function designThumb(name, cls) {
   const rec = name && state.designs.accessories[name];
   if (!rec) return null;
+  // The mask photographs are shot on black; the bar profiles are line
+  // drawings on white, and each sits on the ground it was made for.
   const box = el("span", (cls || "h-12 w-12") +
-    " block shrink-0 overflow-hidden rounded border border-paper-line bg-ink");
+    " block shrink-0 overflow-hidden rounded border border-paper-line " +
+    (rec.kind === "sdlBar" ? "bg-white" : "bg-ink"));
   const im = document.createElement("img");
   im.src = CONFIG.designBase + encodeURIComponent(rec.file);
   im.alt = ""; im.loading = "lazy"; im.decoding = "async";
@@ -2568,7 +2571,8 @@ function sdlBlock(product, draft) {
         if (q > 0) draft.accessories.push({ kind: "component", id: x.row.id, qty: q });
         draft.sdlBar = x.row.id;
         renderDetail();
-      }, x.row.description, e === null ? "not priced" : formatCents(e) + " " + (r.unit || "per lite")));
+      }, x.row.description, e === null ? "not priced" : formatCents(e) + " " + (r.unit || "per lite"),
+         designThumb(x.bar.label, "h-12 w-20")));
     });
     block.appendChild(bars);
   }
