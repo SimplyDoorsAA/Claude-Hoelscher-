@@ -1,7 +1,7 @@
-# Mahogany Legacy & Panel — the Full Lite and 3/4 Lite pages
+# Mahogany Legacy & Panel — the Full, 3/4 and 2/3 Lite pages
 
-Catalog pages 28–29, walked with the dealer on 2026-09-12. Three decisions,
-one new design, two sidelite pairings. No price changes.
+Catalog pages 28–32, walked with the dealer on 2026-09-12. Three decisions,
+two new designs, four sidelite pairings. No price changes.
 
 ## The page-22 glass list reaches the flat-glass rows
 
@@ -59,16 +59,19 @@ Medina is made in 2868 and 3068 only, as the page says with an asterisk; the
 8'0" sizes show but cannot be chosen once Medina is picked. That was already
 so — the rows' glazing lists carry it — and the suite now pins it.
 
-Brazos, named on the 2/3 Lite rows (page 30), is not yet a design; those rows
-wait for that page.
+**Brazos** (page 30) joins the designs too — BRZ, Patina and Zinc, 3068 only
+(`M23BRZZ3068` / `M23BRZP3068`), with the page's door photograph as its
+swatch. With it, every decorative glass any wood row names is a design with an
+infix, and every mahogany glass placeholder from page 6 to page 31 completes.
 
 ## Each door pairs with the sidelite of its lite style
 
 Page 29 shows the 3/4 Lite Raised Moulding with the 3/4 Sidelite Raised
-Moulding; page 28 the Full Lite with the Full Lite Sidelite. Two
-`sideliteRules` entries pair `^3/4 Lite - (Flat|Decorative) Glass$` with the
-3/4 sidelites and `^Full Lite - (Flat|Decorative) Glass$` with the Full ones,
-flat and decorative both, and the glass chosen picks between them. Because the
+Moulding; page 28 the Full Lite with the Full Lite Sidelite; page 30 the 2/3
+Lite with the 2/3 Sidelite; and page 32 photographs the 2/3 Arch Lite "with
+matching sidelites" — the same 2/3 sidelites, there being no arch sidelite.
+Four `sideliteRules` entries pair each door style with its own sidelites, flat
+and decorative both, and the glass chosen picks between them. Because the
 flat and iron-grille Full sidelites share a number (`MFULLSL--1268`), a
 sidelite rule may now also name the model (`allowModelPattern`), and these two
 do, so the SDL and iron-grille sidelites stay out.
@@ -82,5 +85,15 @@ pairings; then the app: the ten offered on a flat 3/4 Lite, only 3/4 sidelites
 beside it, `M34LE3068` and `M34SLLE1268` on the order sheet with nothing
 flagged, `MFULLCBLE3068`, the four designs and the caming on the decorative
 3/4 Lite, `M34COLZ3068`, Medina's two sizes, a Dartmouth Full Lite with its
-Full sidelite printing `MFULLDARP3068` and `MFULLSLDARP1068`, and a knotty
-alder door printing `KA34COLP3068`.
+Full sidelite printing `MFULLDARP3068` and `MFULLSLDARP1068`; on pages 30–31,
+Brazos in 3068 only with its 2/3 sidelite (`M23BRZZ3068`, `M23SLBRZZ1068`), a
+flat 2/3 Lite (`M23RN2880`), the Arch Lite's Pecos and Blanco with the 2/3
+sidelites (`M23ABLAZ3068`); and a knotty alder door printing `KA34COLP3068`.
+
+## Catalog typos on these pages, for Hoelscher
+
+- Page 30 prints the 2'8" × 8'0" size as `(24" x 96")` and its number as
+  `24" M232880`; the sheet and the size table say 2'8" (32").
+- `MFULLSL1068-8` (page 28) and `M23SL1068-8` (page 30) carry a stray `-8`.
+- Page 29 prints the 2880 flat 3/4 Lite as `M342880NRM` on the raised-moulding
+  page.

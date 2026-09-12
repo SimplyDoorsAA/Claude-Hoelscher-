@@ -21154,6 +21154,19 @@
       "nameBasis": "caption",
       "notes": "Mahogany catalog page 28: MFULLDARP3068 Patina, MFULLDARZ3068 Zinc, on the Full Lite Raised Moulding and its sidelite. Walked with the dealer 2026-09-12.",
       "id": "2f88343832"
+    },
+    {
+      "name": "Brazos",
+      "partNumberInfix": "BRZ",
+      "caming": [
+        "Patina",
+        "Zinc"
+      ],
+      "priceImpact": "none",
+      "sourcePage": "30",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 30: M23BRZZ3068 Zinc, M23BRZP3068 Patina, on the 2/3 Lite Raised Moulding, 3068 only, and named for the 2/3 sidelite. Walked with the dealer 2026-09-12.",
+      "id": "31e5f8a7a0"
     }
   ],
   "glassRules": [
@@ -21343,6 +21356,24 @@
       "allowSkuPattern": "^MFULLSL-",
       "notes": "Mahogany catalog page 28 shows the Full Lite Raised Moulding with the Full Lite Sidelite Raised Moulding and no other, flat or decorative — not the iron-grille sidelite, which shares its number. Height still breaks the tie between the sidelite's sizes; the glass chosen picks flat against decorative. Confirmed with the dealer 2026-09-12.",
       "allowModelPattern": "^Full Sidelite - (Flat|Decorative) Glass$"
+    },
+    {
+      "id": "1e942abb1a",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": null,
+      "appliesToModelPattern": "^2/3 Lite - (Flat|Decorative) Glass$",
+      "allowSkuPattern": "^M23SL-",
+      "allowModelPattern": "^2/3 Sidelite - (Flat|Decorative) Glass$",
+      "notes": "Mahogany catalog page 30 shows the 2/3 Lite Raised Moulding with the 2/3 Sidelite Raised Moulding and no other, flat or decorative; page 32 photographs the pair. Not the iron-grille sidelite, which shares the number stem. Height still breaks the tie between the sidelite's sizes; the glass chosen picks flat against decorative. Confirmed with the dealer 2026-09-12."
+    },
+    {
+      "id": "303694a885",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": null,
+      "appliesToModelPattern": "^2/3 Arch Lite - (Flat|Decorative) Glass$",
+      "allowSkuPattern": "^M23SL-",
+      "allowModelPattern": "^2/3 Sidelite - (Flat|Decorative) Glass$",
+      "notes": "Mahogany catalog page 32 photographs the 2/3 Arch Lite with the 2/3 sidelites (\"2/3 Arch Lite With Blanco Decorative Glass And Matching Sidelites\"); there is no arch sidelite. Not the iron-grille sidelite, which shares the number stem. Height still breaks the tie between the sidelite's sizes; the glass chosen picks flat against decorative. Confirmed with the dealer 2026-09-12."
     }
   ],
   "glassCodes": [

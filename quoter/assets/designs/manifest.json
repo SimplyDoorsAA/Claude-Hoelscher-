@@ -65,6 +65,12 @@
       "file": "glass-bowie.webp",
       "source": "f80a4145-HoelscherWood_Doors.pdf p6 /Im0"
     },
+    "Brazos": {
+      "basis": "caption",
+      "file": "glass-brazos.webp",
+      "source": "79d5f9d9-Compressed.pdf p30 /Im0 (the door card's own photograph, Glass Shown: Brazos; filed by hand)",
+      "handFiled": true
+    },
     "Columbia": {
       "basis": "remainder",
       "file": "glass-columbia.webp",
