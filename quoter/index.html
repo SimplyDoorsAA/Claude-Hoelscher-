@@ -751,16 +751,27 @@ function completeSku(product, glazing, handing, shelf, caming) {
   // decorative-glass design infix, where the catalog prints the caming letter
   // (MCABLAP3068 / MCABLAZ3068) and the pattern is listed in skuPlaceholders.
   if (sku.includes("--")) {
+    // The sheet prints the same gap two or three dashes wide; whatever fills
+    // it replaces the whole run, never leaving a stray dash behind.
+    const GAP = /-{2,}/;
     const cr = caming && ruleFor("caming");
     const code = cr && cr.codes && cr.codes[caming];
     // A speakeasy kit's glass insert is clear insulated glass only, printed C.
     const se = ruleFor("speakeasyGlass");
-    if (code) sku = sku.replace("--", code);
-    else if (se && se.code) sku = sku.replace("--", se.code);
+    // A decorative glass is a design: the catalog prints its infix and the
+    // caming letter together where the sheet prints the gap (M34COLZ3068).
+    const dd = (state.engine.catalog.skuPlaceholders || {}).decorativeDesign;
+    const design = dd && glazing && (state.engine.catalog.decorativeGlassDesigns || [])
+      .find(x => x.name === glazing && x.partNumberInfix);
+    const designCaming = design && (caming || (design.caming && design.caming.length === 1 ? design.caming[0] : null));
+    const designCode = design && dd.codes && dd.codes[designCaming];
+    if (code) sku = sku.replace(GAP, code);
+    else if (design && designCode && !raw.includes(design.partNumberInfix)) sku = sku.replace(GAP, design.partNumberInfix + designCode);
+    else if (se && se.code) sku = sku.replace(GAP, se.code);
     else {
       const want = glassKey(glazing);
       const hit = (state.engine.catalog.glassCodes || []).find(c => glassKey(c.name) === want);
-      if (hit) sku = sku.replace("--", hit.code);
+      if (hit) sku = sku.replace(GAP, hit.code);
     }
   }
   // A trailing placeholder is filled from something the configurator already
@@ -1740,10 +1751,14 @@ function sideliteChoices(doorProduct, glazing) {
      sidelite belongs beside a door, that wins over the resemblance test. */
   const rule = sideliteRuleFor(doorProduct);
   const allowed = rule && rule.allowSkuPattern ? new RegExp(rule.allowSkuPattern) : null;
+  // Two sidelites can share a number stem (the flat and the iron-grille Full
+  // sidelite are both MFULLSL--1268), so a rule may also name the model.
+  const allowedModel = rule && rule.allowModelPattern ? new RegExp(rule.allowModelPattern) : null;
   const rows = state.engine.productsIn(state.collection).filter(p =>
     p.type === "sidelite" &&
     state.engine.availableOptions(p.id).configs.length &&
     (!allowed || allowed.test(String(p.sku || ""))) &&
+    (!allowedModel || allowedModel.test(modelKeyOf(p))) &&
     (!want || p[g.field] === want) &&
     (!h || Math.abs(((p.size && p.size.heightIn) || 0) - h) <= 2));
   const best = new Map();
@@ -3315,7 +3330,9 @@ function buildOrderDoc(q) {
          glass reaches that number. The desk cannot order it from a description. */
       let head = "";
       if (a.kind === "product") {
-        const slSku = completeSku(state.engine.productById(a.id), sp && sp.glazing, null);
+        // A decorative sidelite is leaded like its door, so the door's caming
+        // reaches its number too.
+        const slSku = completeSku(state.engine.productById(a.id), sp && sp.glazing, null, false, spec.caming);
         if (slSku) {
           head = slSku + " \u2014 ";
           if (skuIsIncomplete(slSku)) incomplete.push(slSku);
