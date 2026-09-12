@@ -13,6 +13,9 @@ sheet does not name.
   these as a flat swatch; each is printed as a door glazed with it, which is
   what is stored here.
 - **accessories** — the three iron masks and the two speakeasy inserts (page 50).
+- **decorativeGlass / Blanco** — page 25 photographs the Blanco only as the
+  Blanco Center Arch door, which is the door card's own picture; it is filed
+  here by hand so the glass has a swatch where it is a choice (page 31).
 - **accessories / sdlBar** — the two SDL bar profile drawings (7/8" and
   1-1/4", both 1/2" tall on 1 mm adhesive tape) from the SDL Bars page,
   supplied by the dealer as images rather than extracted from a PDF. Keyed by
@@ -31,3 +34,6 @@ photograph matches the stain the catalog prints for that design.
 
 The iron mask photographs are shot on black, so the app puts them on a dark
 tile rather than a white one.
+
+Entries marked `handFiled: true` were placed by hand; `extract-door-images.py
+--designs` keeps them across a re-run.

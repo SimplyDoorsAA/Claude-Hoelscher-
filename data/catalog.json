@@ -21128,6 +21128,19 @@
       "nameBasis": "column",
       "notes": null,
       "id": "b61cdd3adc"
+    },
+    {
+      "name": "Blanco",
+      "partNumberInfix": "BLA",
+      "caming": [
+        "Patina",
+        "Zinc"
+      ],
+      "priceImpact": "none",
+      "sourcePage": "25",
+      "nameBasis": "caption",
+      "notes": "Mahogany catalog page 25, Blanco Center Arch Raised Moulding: MCABLAP3068 with Patina caming, MCABLAZ3068 with Zinc. The sheet prices one row, MCABLA--3068, so the caming costs nothing. Walked with the dealer 2026-09-12.",
+      "id": "9f10a2eb24"
     }
   ],
   "glassRules": [
@@ -21529,7 +21542,7 @@
     }
   },
   "skuPlaceholders": {
-    "notes": "A part number on the price sheet can carry more than one placeholder. The first is always the glass code (see glassCodes). A trailing one is filled at order time from something the configurator already knows. Only patterns confirmed against a real catalog page are listed here — anything else is flagged on the order sheet rather than guessed at.",
+    "notes": "A part number on the price sheet can carry more than one placeholder. The first is always the glass code (see glassCodes). A trailing one, or the one after a decorative-glass design infix, is filled at order time from something the configurator already knows. Only patterns confirmed against a real catalog page are listed here — anything else is flagged on the order sheet rather than guessed at.",
     "handing": [
       {
         "id": "mahogany-narrow-lite",
@@ -21541,6 +21554,19 @@
         "confirmedBy": "dealer, 2026-09-11",
         "evidence": "Catalog page 10-11 lists the numbers in full: M3GPWNSR2880L and M3GPWNSR2880R for the two handings of the 2'8\" x 8'0\", and likewise for 3'0\" x 8'0\". The glass code sits in the first placeholder, the handing letter in the trailing one.",
         "example": "M3GPWNSR2880L"
+      }
+    ],
+    "caming": [
+      {
+        "id": "mahogany-blanco-center-arch",
+        "appliesToSkuPattern": "^MCABLA--\\d{4}$",
+        "codes": {
+          "Patina": "P",
+          "Zinc": "Z"
+        },
+        "confirmedBy": "dealer, 2026-09-12",
+        "evidence": "Catalog page 25 lists the numbers in full beside the caming: MCABLAP3068 Patina, MCABLAZ3068 Zinc. The placeholder after the design infix BLA is the caming letter, not a glass code.",
+        "example": "MCABLAP3068"
       }
     ]
   }

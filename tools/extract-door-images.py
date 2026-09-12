@@ -598,15 +598,17 @@ def extract_designs(pdfs, dry):
                 total += os.path.getsize(path)
             out[dest][rec.pop('label', label) if group == 'accessories' else label] = rec
 
-    # The SDL bar profiles were supplied by the dealer as drawings, not pulled
-    # from a PDF, so a re-extraction carries them over rather than dropping them.
+    # Entries filed by hand (the SDL bar drawings the dealer supplied, the
+    # Blanco photograph reused from the door card) carry handFiled: true, and a
+    # re-extraction carries them over rather than dropping them.
     mpath = os.path.join(DESIGN_DIR, 'manifest.json')
     if os.path.exists(mpath):
         with open(mpath) as f:
-            kept = json.load(f).get('accessories', {})
-        for k, v in kept.items():
-            if v.get('kind') == 'sdlBar':
-                out.setdefault('accessories', {}).setdefault(k, v)
+            kept = json.load(f)
+        for group in ('grilles', 'decorativeGlass', 'accessories'):
+            for k, v in kept.get(group, {}).items():
+                if v.get('handFiled'):
+                    out.setdefault(group, {}).setdefault(k, v)
     if not dry:
         with open(mpath, 'w') as f:
             json.dump({'note': 'Iron grille designs, decorative glass and speakeasy '

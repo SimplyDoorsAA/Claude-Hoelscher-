@@ -741,24 +741,31 @@ function glassSwatch(name) {
 /* The price sheet prints a part number with (--) standing in for the glass and
    a legend of codes to fill it with, so a quote can name the part the customer
    actually orders rather than the template. */
-function completeSku(product, glazing, handing, shelf) {
+function completeSku(product, glazing, handing, shelf, caming) {
   let sku = String((product && product.sku) || "");
   if (!sku.includes("-")) return withShelf(sku, product, shelf);
-  // The first placeholder is the glass code, always.
+  const raw = sku;
+  const placeholderRules = key => ((state.engine.catalog.skuPlaceholders || {})[key]) || [];
+  const ruleFor = key => placeholderRules(key).find(x => rxTest(x.appliesToSkuPattern, raw));
+  // The first placeholder is the glass code, always — except after a
+  // decorative-glass design infix, where the catalog prints the caming letter
+  // (MCABLAP3068 / MCABLAZ3068) and the pattern is listed in skuPlaceholders.
   if (sku.includes("--")) {
-    const want = glassKey(glazing);
-    const hit = (state.engine.catalog.glassCodes || []).find(c => glassKey(c.name) === want);
-    if (hit) sku = sku.replace("--", hit.code);
+    const cr = caming && ruleFor("caming");
+    const code = cr && cr.codes && cr.codes[caming];
+    if (code) sku = sku.replace("--", code);
+    else {
+      const want = glassKey(glazing);
+      const hit = (state.engine.catalog.glassCodes || []).find(c => glassKey(c.name) === want);
+      if (hit) sku = sku.replace("--", hit.code);
+    }
   }
   // A trailing placeholder is filled from something the configurator already
   // knows. Only patterns confirmed against a real catalog page are listed in
   // skuPlaceholders, so an unconfirmed one stays a placeholder and is flagged
   // rather than guessed at.
-  const rules = ((state.engine.catalog.skuPlaceholders || {}).handing) || [];
   if (handing) {
-    const raw = String((product && product.sku) || "");
-    const r = rules.find(x => { try { return new RegExp(x.appliesToSkuPattern).test(raw); }
-                               catch (e) { return false; } });
+    const r = ruleFor("handing");
     const code = r && r.codes && r.codes[handing];
     if (code) sku = sku.replace(/-+$/, code);
   }
@@ -780,10 +787,10 @@ const skuIsIncomplete = sku => /-/.test(String(sku || ""));
    leaves, so a handed door is ordered twice — once left, once right — and the
    handing answer names which of the two operates rather than choosing between
    them. Everything else orders as one number. */
-function orderSkus(product, glazing, handing, config, shelf) {
+function orderSkus(product, glazing, handing, config, shelf, caming) {
   if (config === "doublePH" && skuNeedsHanding(product))
-    return [completeSku(product, glazing, "left", shelf), completeSku(product, glazing, "right", shelf)];
-  return [completeSku(product, glazing, handing, shelf)];
+    return [completeSku(product, glazing, "left", shelf, caming), completeSku(product, glazing, "right", shelf, caming)];
+  return [completeSku(product, glazing, handing, shelf, caming)];
 }
 function glazingOptions(value) {
   if (!value) return [];
@@ -2396,7 +2403,7 @@ function renderDetail() {
                     d.swing && SWING_LABELS[d.swing],
                     d.jambDepth && d.jambDepth + '" jamb',
                     configured ? "configured item — Hoelscher prints no part number"
-                               : completeSku(product, d.glazing, d.handing, d.dentilShelf === "yes")].filter(Boolean).join(" · ");
+                               : completeSku(product, d.glazing, d.handing, d.dentilShelf === "yes", d.caming)].filter(Boolean).join(" · ");
     if (chosen) foot.appendChild(el("p", "mb-3 text-xs text-ink-mute", chosen));
     const misprint = skuCorrection(product);
     if (misprint) foot.appendChild(el("p", "mb-3 rounded-lg bg-brass-pale px-3 py-2 text-[11px] text-brass-deep",
@@ -3283,7 +3290,7 @@ function buildOrderDoc(q) {
     // Hoelscher's desk cross-checks the number against the description, so the
     // sheet carries both, and the number exactly as Hoelscher prints it.
     const skus = orderSkus(prod, spec.glazing, spec.handing, l.config,
-                           spec.dentilShelf === "yes");
+                           spec.dentilShelf === "yes", spec.caming);
     skus.forEach(k => td.appendChild(el("span", "pn", k)));
     td.appendChild(el("span", "sub", l.description +
       (skus.length > 1 ? "  \u2014 one of each hand" : "")));
@@ -3323,6 +3330,7 @@ function buildOrderDoc(q) {
        order sheet is the only place it can be said. */
     tr.appendChild(el("td", null, [
       spec.stain && spec.stain + " stain",
+      spec.caming && spec.caming + " caming",
       spec.dentilShelf && (spec.dentilShelf === "yes" ? "with dentil shelf" : "no dentil shelf"),
       spec.handing && handingLabel(spec.handing, openingByKey(spec.opening)),
       spec.swing && SWING_LABELS[spec.swing],
