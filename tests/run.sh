@@ -6,6 +6,7 @@ set -e
 here=$(cd "$(dirname "$0")" && pwd)
 node "$here/../packages/pricing-engine/engine.test.mjs"
 node "$here/../packages/pricing-engine/stress.test.mjs"
+node "$here/fiberglass-sheet.test.mjs"
 node "$here/appa.test.mjs"
 node "$here/quoter.test.mjs"
 node "$here/print.test.mjs"

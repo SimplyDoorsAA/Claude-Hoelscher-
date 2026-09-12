@@ -151,11 +151,15 @@ you commit anything.
 | `tests/appa.test.mjs` | App A loads and edits both published files |
 | `tests/quoter.test.mjs` | App B end to end, incl. the whole configurator |
 | `tests/stress-ui.mjs` | Real quotes built through App B, checked against the sheets |
+| `tests/fiberglass-sheet.test.mjs` | Every fiberglass price against the vendor's 7-1-2026 sheet, transcribed in `tests/fixtures/fiberglass-price-sheet.json` |
+| `tests/tdl.test.mjs` | Every wood price against the vendor's 7-1-2026 sheet, transcribed in `tests/fixtures/wood-price-sheet.json` |
 | `tools/audit-catalog.mjs` | Structural audit of the published data |
 | `tools/audit-prices.mjs` | Recomputes every price from the rules file alone and compares it to the engine |
 | `quoter/assets/brand/` | The SimplyDoors letterhead mark, taken from the dealer's own estimate |
-| `docs/audit-2026-09-10.md` | The last full audit: pricing verified, and the three things blocking office use |
-| `docs/audit-2026-09-09.md` | The audit before it, and what it left open |
+| `docs/audit-2026-09-12.md` | The latest full audit: every wood price reconciled, every card priced, what is still open |
+| `docs/fiberglass-price-reconciliation.md` | Every fiberglass price against the 2026 sheet, and what moved since the 2025 list |
+| `docs/audit-2026-09-10.md` | The audit before it: pricing verified, and the three things blocking office use |
+| `docs/audit-2026-09-09.md` | The first audit, and what it left open |
 | `quoter/assets/doors/` | Door photography extracted from the catalogs, plus `manifest.json` |
 | `docs/photography.md` | Which models have a picture, which borrow one, and what is still missing |
 | `quoter/assets/glass/` | Glass swatches with Hoelscher's privacy ratings |
@@ -173,12 +177,12 @@ you commit anything.
 
 ```sh
 npm install && npx playwright install chromium   # once
-npm test                             # both audits and all eleven suites, ~10 minutes
+npm test                             # both audits and all twelve suites, ~10 minutes
 npm run audit                        # data contracts and cross-references only
 TAILWIND_CSS=/path/to/tw.css ./tests/run.sh   # faithful screenshots
 ```
 
-476 checks, and the same set CI runs on every pull request. The browser suites
+483 checks, and the same set CI runs on every pull request. The browser suites
 drive real Chromium through Playwright, found in `node_modules`, image-wide, or
 wherever `PLAYWRIGHT_MODULE` points — whichever exists. Each serves the repo on
 a port the OS picks, so a killed run cannot block the next one. Screenshots land
