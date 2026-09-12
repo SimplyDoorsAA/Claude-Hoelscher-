@@ -1,0 +1,3355 @@
+{
+ "source": "Hoelscher Dealer Fiberglass Price List (Follows Catalog), 4 pages, effective 7-1-2026, supplied by the dealer 2026-09-06.",
+ "note": "Transcribed from the vendor PDF, not from catalog.json. Prices are whole dollars exactly as printed; null is the sheet's N/A; ea marks a sidelite row whose prehung cells are printed as a per-each adder (+N(ea)). CONFIGURED ITEM rows carry no part number on the sheet and are matched by description. This is the independent copy the reconciliation test compares against.",
+ "netMultiplierPrinted": 0.48,
+ "rows": [
+  {
+   "p": 1,
+   "sku": "FG1LVCLE3080",
+   "desc": "3080 Contemporary 1 Lite Vertical - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG1LVSN3080",
+   "desc": "3080 Contemporary 1 Lite Vertical - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG1LVSB3080",
+   "desc": "3080 Contemporary 1 Lite Vertical - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG1LVR3080",
+   "desc": "3080 Contemporary 1 Lite Vertical - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG3GPWCLE3068",
+   "desc": "3068 Contemporary 3 Lite - Mahogany Grain Skin",
+   "u": [
+    "1485",
+    "2204",
+    "3891"
+   ],
+   "f": [
+    "2005",
+    "3270",
+    "6023"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG3GPWSN3068",
+   "desc": "3068 Contemporary 3 Lite - Mahogany Grain Skin",
+   "u": [
+    "1485",
+    "2204",
+    "3891"
+   ],
+   "f": [
+    "2005",
+    "3270",
+    "6023"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG3GPWRN3068",
+   "desc": "3068 Contemporary 3 Lite - Mahogany Grain Skin",
+   "u": [
+    "1485",
+    "2204",
+    "3891"
+   ],
+   "f": [
+    "2005",
+    "3270",
+    "6023"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG3GPWR3068",
+   "desc": "3068 Contemporary 3 Lite - Mahogany Grain Skin",
+   "u": [
+    "1485",
+    "2204",
+    "3891"
+   ],
+   "f": [
+    "2005",
+    "3270",
+    "6023"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG3GPWCLE3080",
+   "desc": "3080 Contemporary 3 Lite - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG3GPWSN3080",
+   "desc": "3080 Contemporary 3 Lite - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG3GPWRN3080",
+   "desc": "3080 Contemporary 3 Lite - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG3GPWR3080",
+   "desc": "3080 Contemporary 3 Lite - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG3GPWF3080",
+   "desc": "3080 Contemporary 3 Lite - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4GPWCLE3068",
+   "desc": "3068 Contemporary 4 Lite - Mahogany Grain Skin",
+   "u": [
+    "1485",
+    "2204",
+    "3891"
+   ],
+   "f": [
+    "2005",
+    "3270",
+    "6023"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4GPWSB3068",
+   "desc": "3068 Contemporary 4 Lite - Mahogany Grain Skin",
+   "u": [
+    "1485",
+    "2204",
+    "3891"
+   ],
+   "f": [
+    "2005",
+    "3270",
+    "6023"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4GPWSN3068",
+   "desc": "3068 Contemporary 4 Lite - Mahogany Grain Skin",
+   "u": [
+    "1485",
+    "2204",
+    "3891"
+   ],
+   "f": [
+    "2005",
+    "3270",
+    "6023"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4GPWRN3068",
+   "desc": "3068 Contemporary 4 Lite - Mahogany Grain Skin",
+   "u": [
+    "1485",
+    "2204",
+    "3891"
+   ],
+   "f": [
+    "2005",
+    "3270",
+    "6023"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4GPWR3068",
+   "desc": "3068 Contemporary 4 Lite - Mahogany Grain Skin",
+   "u": [
+    "1485",
+    "2204",
+    "3891"
+   ],
+   "f": [
+    "2005",
+    "3270",
+    "6023"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5GPWCLE3080",
+   "desc": "3080 Contemporary 5 Lite - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5GPWSN3080",
+   "desc": "3080 Contemporary 5 Lite - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5GPWSB3080",
+   "desc": "3080 Contemporary 5 Lite - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5GPWRN3080",
+   "desc": "3080 Contemporary 5 Lite - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5GPWF3080",
+   "desc": "3080 Contemporary 5 Lite - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5GPWR3080",
+   "desc": "3080 Contemporary 5 Lite - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5GPWCLE3680",
+   "desc": "3680 Contemporary 5 Lite - Mahogany Grain Skin",
+   "u": [
+    "1938",
+    "2769",
+    "4943"
+   ],
+   "f": [
+    "2633",
+    "4257",
+    "7919"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5GPWSN3680",
+   "desc": "3680 Contemporary 5 Lite - Mahogany Grain Skin",
+   "u": [
+    "1938",
+    "2769",
+    "4943"
+   ],
+   "f": [
+    "2633",
+    "4257",
+    "7919"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5GPWSB3680",
+   "desc": "3680 Contemporary 5 Lite - Mahogany Grain Skin",
+   "u": [
+    "1938",
+    "2769",
+    "4943"
+   ],
+   "f": [
+    "2633",
+    "4257",
+    "7919"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5GPWRN3680",
+   "desc": "3680 Contemporary 5 Lite - Mahogany Grain Skin",
+   "u": [
+    "1938",
+    "2769",
+    "4943"
+   ],
+   "f": [
+    "2633",
+    "4257",
+    "7919"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5GPWF3680",
+   "desc": "3680 Contemporary 5 Lite - Mahogany Grain Skin",
+   "u": [
+    "1938",
+    "2769",
+    "4943"
+   ],
+   "f": [
+    "2633",
+    "4257",
+    "7919"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5GPWR3680",
+   "desc": "3680 Contemporary 5 Lite - Mahogany Grain Skin",
+   "u": [
+    "1938",
+    "2769",
+    "4943"
+   ],
+   "f": [
+    "2633",
+    "4257",
+    "7919"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5HGCLE3068",
+   "desc": "3068 Contemporary 5 Lite Horizontal - Mahogany Grain Skin",
+   "u": [
+    "1485",
+    "2204",
+    "3891"
+   ],
+   "f": [
+    "2005",
+    "3270",
+    "6023"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5HGSN3068",
+   "desc": "3068 Contemporary 5 Lite Horizontal - Mahogany Grain Skin",
+   "u": [
+    "1485",
+    "2204",
+    "3891"
+   ],
+   "f": [
+    "2005",
+    "3270",
+    "6023"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5HGRN3068",
+   "desc": "3068 Contemporary 5 Lite Horizontal - Mahogany Grain Skin",
+   "u": [
+    "1485",
+    "2204",
+    "3891"
+   ],
+   "f": [
+    "2005",
+    "3270",
+    "6023"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG5HGSB3068",
+   "desc": "3068 Contemporary 5 Lite Horizontal - Mahogany Grain Skin",
+   "u": [
+    "1485",
+    "2204",
+    "3891"
+   ],
+   "f": [
+    "2005",
+    "3270",
+    "6023"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG6HGCLE3080",
+   "desc": "3080 Contemporary 6 lite Horiztonal - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG6HGSN3080",
+   "desc": "3080 Contemporary 6 lite Horiztonal - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG6HGRN3080",
+   "desc": "3080 Contemporary 6 lite Horiztonal - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG6HGSB3080",
+   "desc": "3080 Contemporary 6 lite Horiztonal - Mahogany Grain Skin",
+   "u": [
+    "1728",
+    "2516",
+    "4480"
+   ],
+   "f": [
+    "2334",
+    "3828",
+    "7104"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG34LE1P3068",
+   "desc": "3068 3/4 Lite 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1165",
+    "1884",
+    "3251"
+   ],
+   "f": [
+    "1685",
+    "2950",
+    "5383"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG34SN1P3068",
+   "desc": "3068 3/4 Lite 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1165",
+    "1884",
+    "3251"
+   ],
+   "f": [
+    "1685",
+    "2950",
+    "5383"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG34RN1P3068",
+   "desc": "3068 3/4 Lite 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1165",
+    "1884",
+    "3251"
+   ],
+   "f": [
+    "1685",
+    "2950",
+    "5383"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG34FL1P3068",
+   "desc": "3068 3/4 Lite 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1165",
+    "1884",
+    "3251"
+   ],
+   "f": [
+    "1685",
+    "2950",
+    "5383"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": null,
+   "desc": "3068 3/4 Lite 1 Panel with Iron Grille - Mahogany Grain Skin*",
+   "u": [
+    "1605",
+    "2324",
+    "4131"
+   ],
+   "f": [
+    "2125",
+    "3390",
+    "6263"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG34LE1P3080",
+   "desc": "3080 3/4 Lite 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1370",
+    "2158",
+    "3764"
+   ],
+   "f": [
+    "1976",
+    "3470",
+    "6388"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG34SN1P3080",
+   "desc": "3080 3/4 Lite 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1370",
+    "2158",
+    "3764"
+   ],
+   "f": [
+    "1976",
+    "3470",
+    "6388"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG34RN1P3080",
+   "desc": "3080 3/4 Lite 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1370",
+    "2158",
+    "3764"
+   ],
+   "f": [
+    "1976",
+    "3470",
+    "6388"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG34FL1P3080",
+   "desc": "3080 3/4 Lite 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1370",
+    "2158",
+    "3764"
+   ],
+   "f": [
+    "1976",
+    "3470",
+    "6388"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": null,
+   "desc": "3080 3/4 Lite 1 Panel with Iron Grille - Mahogany Grain Skin*",
+   "u": [
+    "1850",
+    "2638",
+    "4724"
+   ],
+   "f": [
+    "2456",
+    "3950",
+    "7348"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4L1PCBLE2668",
+   "desc": "2668 4 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1324",
+    "2043",
+    "3569"
+   ],
+   "f": [
+    "1844",
+    "3109",
+    "5701"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4L1PLE2680",
+   "desc": "2680 4 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4L1PCBLE2680",
+   "desc": "2680 4 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4L1PCBLE2868",
+   "desc": "2868 4 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1324",
+    "2043",
+    "3569"
+   ],
+   "f": [
+    "1844",
+    "3109",
+    "5701"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4L1PCBLE2880",
+   "desc": "2880 4 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4L1PCBLE3068",
+   "desc": "3068 4 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1324",
+    "2043",
+    "3569"
+   ],
+   "f": [
+    "1844",
+    "3109",
+    "5701"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4L1PRN3068",
+   "desc": "3068 4 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1324",
+    "2043",
+    "3569"
+   ],
+   "f": [
+    "1844",
+    "3109",
+    "5701"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4L1PF3068",
+   "desc": "3068 4 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1324",
+    "2043",
+    "3569"
+   ],
+   "f": [
+    "1844",
+    "3109",
+    "5701"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4L1PLE3080",
+   "desc": "3080 4 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4L1PCBLE3080",
+   "desc": "3080 4 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4L1PRN3080",
+   "desc": "3080 4 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG4L1PF3080",
+   "desc": "3080 4 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG6L1PCBLE2668",
+   "desc": "2668 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1324",
+    "2043",
+    "3569"
+   ],
+   "f": [
+    "1844",
+    "3109",
+    "5701"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG6L1PLE2680",
+   "desc": "2680 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG6L1PCBLE2680",
+   "desc": "2680 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG6L1PCBLE2868",
+   "desc": "2868 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1324",
+    "2043",
+    "3569"
+   ],
+   "f": [
+    "1844",
+    "3109",
+    "5701"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG6L1PCBLE2880",
+   "desc": "2880 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG6L1PCBLE3068",
+   "desc": "3068 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1324",
+    "2043",
+    "3569"
+   ],
+   "f": [
+    "1844",
+    "3109",
+    "5701"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG6L1PRN3068",
+   "desc": "3068 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1324",
+    "2043",
+    "3569"
+   ],
+   "f": [
+    "1844",
+    "3109",
+    "5701"
+   ]
+  },
+  {
+   "p": 1,
+   "sku": "FG6L1PF3068",
+   "desc": "3068 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1324",
+    "2043",
+    "3569"
+   ],
+   "f": [
+    "1844",
+    "3109",
+    "5701"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FG6L1PCBLE3080",
+   "desc": "3080 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FG6L1PLE3080",
+   "desc": "3080 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FG6L1PRN3080",
+   "desc": "3080 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FG6L1PF3080",
+   "desc": "3080 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1534",
+    "2322",
+    "4092"
+   ],
+   "f": [
+    "2140",
+    "3634",
+    "6716"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FG6L1PCBLE3680",
+   "desc": "3680 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1938",
+    "2769",
+    "4943"
+   ],
+   "f": [
+    "2633",
+    "4257",
+    "7919"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FG6L1PLE3680",
+   "desc": "3680 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1938",
+    "2769",
+    "4943"
+   ],
+   "f": [
+    "2633",
+    "4257",
+    "7919"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FG6L1PRN3680",
+   "desc": "3680 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1938",
+    "2769",
+    "4943"
+   ],
+   "f": [
+    "2633",
+    "4257",
+    "7919"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FG6L1PF3680",
+   "desc": "3680 6 Lite TDL 1 Panel - Mahogany Grain Skin",
+   "u": [
+    "1938",
+    "2769",
+    "4943"
+   ],
+   "f": [
+    "2633",
+    "4257",
+    "7919"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGKTX6P3068",
+   "desc": "3068 6 Panel - Oak Grain Skin",
+   "u": [
+    "440",
+    "1159",
+    "1801"
+   ],
+   "f": [
+    "960",
+    "2225",
+    "3933"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGKTX6P3080",
+   "desc": "3080 6 Panel - Oak Grain Skin",
+   "u": [
+    "856",
+    "1644",
+    "2736"
+   ],
+   "f": [
+    "1462",
+    "2956",
+    "5360"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FG2PSQS3068",
+   "desc": "3068 2 Panel Square - Mahogany Grain Skin",
+   "u": [
+    "630",
+    "1349",
+    "2181"
+   ],
+   "f": [
+    "1150",
+    "2415",
+    "4313"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FG2PSQS3080",
+   "desc": "3080 2 Panel Square - Mahogany Grain Skin",
+   "u": [
+    "856",
+    "1644",
+    "2736"
+   ],
+   "f": [
+    "1462",
+    "2956",
+    "5360"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FG2PAVG3068",
+   "desc": "3068 2 Panel Arch, V-Grooved - Mahogany Grain Skin",
+   "u": [
+    "630",
+    "1349",
+    "2181"
+   ],
+   "f": [
+    "1150",
+    "2415",
+    "4313"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FG2PAVG3080",
+   "desc": "3080 2 Panel Arch, V-Grooved - Mahogany Grain Skin",
+   "u": [
+    "856",
+    "1644",
+    "2736"
+   ],
+   "f": [
+    "1462",
+    "2956",
+    "5360"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGCMCBLE3068",
+   "desc": "3068 Craftsman 6 Lite 2 Panel Shaker - Mahogany Grain Skin",
+   "u": [
+    "1252",
+    "1971",
+    "3425"
+   ],
+   "f": [
+    "1772",
+    "3037",
+    "5557"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGCMRN3068",
+   "desc": "3068 Craftsman 6 Lite 2 Panel Shaker - Mahogany Grain Skin",
+   "u": [
+    "1252",
+    "1971",
+    "3425"
+   ],
+   "f": [
+    "1772",
+    "3037",
+    "5557"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGCMF3068",
+   "desc": "3068 Craftsman 6 Lite 2 Panel Shaker - Mahogany Grain Skin",
+   "u": [
+    "1252",
+    "1971",
+    "3425"
+   ],
+   "f": [
+    "1772",
+    "3037",
+    "5557"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGCMCBLE3080",
+   "desc": "3080 Craftsman 6 Lite 2 Panel Shaker - Mahogany Grain Skin",
+   "u": [
+    "1615",
+    "2403",
+    "4254"
+   ],
+   "f": [
+    "2221",
+    "3715",
+    "6878"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGCMRN3080",
+   "desc": "3080 Craftsman 6 Lite 2 Panel Shaker - Mahogany Grain Skin",
+   "u": [
+    "1615",
+    "2403",
+    "4254"
+   ],
+   "f": [
+    "2221",
+    "3715",
+    "6878"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGCMF3080",
+   "desc": "3080 Craftsman 6 Lite 2 Panel Shaker - Mahogany Grain Skin",
+   "u": [
+    "1615",
+    "2403",
+    "4254"
+   ],
+   "f": [
+    "2221",
+    "3715",
+    "6878"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": null,
+   "desc": "3068 2 Panel Arch, V-Grooved - Mahogany Grain Skin w/ Speakeasy",
+   "u": [
+    "953",
+    "1672",
+    "2827"
+   ],
+   "f": [
+    "1473",
+    "2738",
+    "4959"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": null,
+   "desc": "3068 2 Panel Arch, V-Grooved - Mahogany Grain Skin w/ Speakeasy & Standard Iron Mask",
+   "u": [
+    "1147",
+    "1866",
+    "3215"
+   ],
+   "f": [
+    "1667",
+    "2932",
+    "5347"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": null,
+   "desc": "3068 2 Panel Arch, V-Grooved - Mahogany Grain Skin w/Speakeasy & Balfour Iron Mask",
+   "u": [
+    "1147",
+    "1866",
+    "3215"
+   ],
+   "f": [
+    "1667",
+    "2932",
+    "5347"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": null,
+   "desc": "3068 2 Panel Arch, V-Grooved - Mahogany Grain Skin w/Speakeasy & Windsor Iron Mask",
+   "u": [
+    "1147",
+    "1866",
+    "3215"
+   ],
+   "f": [
+    "1667",
+    "2932",
+    "5347"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": null,
+   "desc": "3080 2 Panel Arch, V-Grooved - Mahogany Grain Skin w/ Speakeasy",
+   "u": [
+    "1179",
+    "1967",
+    "3382"
+   ],
+   "f": [
+    "1785",
+    "3279",
+    "6006"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": null,
+   "desc": "3080 2 Panel Arch, V-Grooved - Mahogany Grain Skin w/ Speakeasy & Standard Iron Mask",
+   "u": [
+    "1373",
+    "2161",
+    "3770"
+   ],
+   "f": [
+    "1979",
+    "3473",
+    "6394"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": null,
+   "desc": "3080 2 Panel Arch, V-Grooved - Mahogany Grain Skin w/Speakeasy & Balfour Iron Mask",
+   "u": [
+    "1373",
+    "2161",
+    "3770"
+   ],
+   "f": [
+    "1979",
+    "3473",
+    "6394"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": null,
+   "desc": "3080 2 Panel Arch, V-Grooved - Mahogany Grain Skin w/Speakeasy & Windsor Iron Mask",
+   "u": [
+    "1373",
+    "2161",
+    "3770"
+   ],
+   "f": [
+    "1979",
+    "3473",
+    "6394"
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FG1CSLLE1268",
+   "desc": "1269 Contemporary Full Lite Sidelite - Mahogany Grain Skin",
+   "u": [
+    "725",
+    "1444",
+    "1444"
+   ],
+   "f": [
+    "1245",
+    "2510",
+    "2510"
+   ],
+   "ea": true
+  },
+  {
+   "p": 2,
+   "sku": "FG1LCSLRN1268",
+   "desc": "1269 Contemporary Full Lite Sidelite - Mahogany Grain Skin",
+   "u": [
+    "725",
+    "1444",
+    "1444"
+   ],
+   "f": [
+    "1245",
+    "2510",
+    "2510"
+   ],
+   "ea": true
+  },
+  {
+   "p": 2,
+   "sku": "FG1LCSLR1268",
+   "desc": "1269 Contemporary Full Lite Sidelite - Mahogany Grain Skin",
+   "u": [
+    "725",
+    "1444",
+    "1444"
+   ],
+   "f": [
+    "1245",
+    "2510",
+    "2510"
+   ],
+   "ea": true
+  },
+  {
+   "p": 2,
+   "sku": "FG1LCSLF1268",
+   "desc": "1269 Contemporary Full Lite Sidelite - Mahogany Grain Skin",
+   "u": [
+    "725",
+    "1444",
+    "1444"
+   ],
+   "f": [
+    "1245",
+    "2510",
+    "2510"
+   ],
+   "ea": true
+  },
+  {
+   "p": 2,
+   "sku": "FG1LCSLSN1268",
+   "desc": "1269 Contemporary Full Lite Sidelite - Mahogany Grain Skin",
+   "u": [
+    "725",
+    "1444",
+    "1444"
+   ],
+   "f": [
+    "1245",
+    "2510",
+    "2510"
+   ],
+   "ea": true
+  },
+  {
+   "p": 2,
+   "sku": "FG1CSLLE1280",
+   "desc": "1281 Contemporary Full Lite Sidelite - Mahogany Grain Skin",
+   "u": [
+    "905",
+    "1693",
+    "1693"
+   ],
+   "f": [
+    "1511",
+    "3005",
+    "3005"
+   ],
+   "ea": true
+  },
+  {
+   "p": 2,
+   "sku": "FG1LCSLRN1280",
+   "desc": "1281 Contemporary Full Lite Sidelite - Mahogany Grain Skin",
+   "u": [
+    "905",
+    "1693",
+    "1693"
+   ],
+   "f": [
+    "1511",
+    "3005",
+    "3005"
+   ],
+   "ea": true
+  },
+  {
+   "p": 2,
+   "sku": "FG1LCSLR1280",
+   "desc": "1281 Contemporary Full Lite Sidelite - Mahogany Grain Skin",
+   "u": [
+    "905",
+    "1693",
+    "1693"
+   ],
+   "f": [
+    "1511",
+    "3005",
+    "3005"
+   ],
+   "ea": true
+  },
+  {
+   "p": 2,
+   "sku": "FG1LCSLF1280",
+   "desc": "1281 Contemporary Full Lite Sidelite - Mahogany Grain Skin",
+   "u": [
+    "905",
+    "1693",
+    "1693"
+   ],
+   "f": [
+    "1511",
+    "3005",
+    "3005"
+   ],
+   "ea": true
+  },
+  {
+   "p": 2,
+   "sku": "FG1LCSLSN1280",
+   "desc": "1281 Contemporary Full Lite Sidelite - Mahogany Grain Skin",
+   "u": [
+    "905",
+    "1693",
+    "1693"
+   ],
+   "f": [
+    "1511",
+    "3005",
+    "3005"
+   ],
+   "ea": true
+  },
+  {
+   "p": 2,
+   "sku": "FGSH3PCMBPSM3068NP",
+   "desc": "3068 Craftsman 3 Panel Shaker - Smooth Skin",
+   "u": [
+    "403",
+    "1122",
+    "1727"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGSH3PCMBPF3068NP",
+   "desc": "3068 Craftsman 3 Panel Shaker - Fir Skin",
+   "u": [
+    "450",
+    "1169",
+    "1821"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGSH3PCMBPSM3080NP",
+   "desc": "3080 Craftsman 3 Panel Shaker - Smooth Skin",
+   "u": [
+    "513",
+    "1301",
+    "2050"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGSH3PCMBPF3080NP",
+   "desc": "3080 Craftsman 3 Panel Shaker - Fir Skin",
+   "u": [
+    "546",
+    "1334",
+    "2116"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGSHCMLESM3068NP",
+   "desc": "3068 Craftsman 1 Lite 2 Panel Shaker - Smooth Skin",
+   "u": [
+    "600",
+    "1319",
+    "2121"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGSHCMLEF3068NP",
+   "desc": "3068 Craftsman 1 Lite 2 Panel Shaker - Fir Skin",
+   "u": [
+    "660",
+    "1379",
+    "2241"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGSHCMRNSM3068NP",
+   "desc": "3068 Craftsman 1 Lite 2 Panel Shaker - Smooth Skin",
+   "u": [
+    "650",
+    "1369",
+    "2221"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGSHCMLESM3080NP",
+   "desc": "3080 Craftsman 1 Lite 2 Panel Shaker - Smooth Skin",
+   "u": [
+    "689",
+    "1477",
+    "2402"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGSHCMLEF3080NP",
+   "desc": "3080 Craftsman 1 Lite 2 Panel Shaker - Fir Skin",
+   "u": [
+    "752",
+    "1540",
+    "2528"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGSHCMRNSM3080NP",
+   "desc": "3080 Craftsman 1 Lite 2 Panel Shaker - Smooth Skin",
+   "u": [
+    "737",
+    "1525",
+    "2498"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "FGSHCMLEF3680NP",
+   "desc": "",
+   "u": [
+    "1150",
+    "1981",
+    "3367"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "NLFGTCMLESM3068NP",
+   "desc": "3068 Craftsman Flat Panel - Smooth Skin",
+   "u": [
+    "643",
+    "1362",
+    "2207"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "NLFGTCMLEF3068NP",
+   "desc": "3068 Craftsman Flat Panel - Fir Skin",
+   "u": [
+    "708",
+    "1427",
+    "2337"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "NLFGTCMRNSM3068NP",
+   "desc": "3068 Craftsman Flat Panel - Smooth Skin",
+   "u": [
+    "698",
+    "1417",
+    "2316"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "NLFGTCMRNF3068NP",
+   "desc": "3068 Craftsman Flat Panel - Fir Skin",
+   "u": [
+    "762",
+    "1481",
+    "2446"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "NLFGTCMLESM3080NP",
+   "desc": "3080 Craftsman Flat Panel - Smooth Skin",
+   "u": [
+    "737",
+    "1525",
+    "2497"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "NLFGTCMLEF3080NP",
+   "desc": "3080 Craftsman Flat Panel - Fir Skin",
+   "u": [
+    "804",
+    "1592",
+    "2632"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "NLFGTCMRNSM3080NP",
+   "desc": "3080 Craftsman Flat Panel - Smooth Skin",
+   "u": [
+    "788",
+    "1576",
+    "2601"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "NLFGTCMRNF3080NP",
+   "desc": "3080 Craftsman Flat Panel - Fir Skin",
+   "u": [
+    "866",
+    "1654",
+    "2756"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 2,
+   "sku": "NLFGSMHL2PBLE2868NB",
+   "desc": "2868 Half Lite 2 Panel - Smooth Skin",
+   "u": [
+    "722",
+    "1441",
+    "2366"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "FGSH2PSQSM2868NP",
+   "desc": "2868 2 Panel Shaker - Smooth Skin",
+   "u": [
+    "403",
+    "1122",
+    "1727"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "FGSH2PSQSM2880NP",
+   "desc": "2880 2 Panel Shaker - Smooth Skin",
+   "u": [
+    "607",
+    "1395",
+    "2238"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "FGSH2PSQSM3068NP",
+   "desc": "3068 2 Panel Shaker - Smooth Skin",
+   "u": [
+    "630",
+    "1349",
+    "2181"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "FGSH2PSQSM3080NP",
+   "desc": "3080 2 Panel Shaker - Smooth Skin",
+   "u": [
+    "609",
+    "1397",
+    "2242"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NL2PSQSM2868NP",
+   "desc": "2868 2 Panel Raised Panel - Smooth Skin",
+   "u": [
+    "358",
+    "1077",
+    "1637"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "FG2PSQSM3068NP",
+   "desc": "3068 2 Panel Raised Panel - Smooth Skin",
+   "u": [
+    "630",
+    "1349",
+    "2181"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "FG2PSQSM3080NP",
+   "desc": "3080 2 Panel Raised Panel - Smooth Skin",
+   "u": [
+    "522",
+    "1310",
+    "2068"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLSH1PBSM3068NP",
+   "desc": "3068 1 Panel Flat Panel - White Brushed Smooth / Smooth Skin",
+   "u": [
+    "642",
+    "1361",
+    "2205"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLSH1PBSM3080NP",
+   "desc": "3080 1 Panel Flat Panel - White Brushed Smooth / Smooth Skin",
+   "u": [
+    "995",
+    "1783",
+    "3013"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLSM6P2868NB",
+   "desc": "2868 6 Panel - Smooth Skin",
+   "u": [
+    "358",
+    "1077",
+    "1637"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLSM6P2880NB",
+   "desc": "2880 6 Panel - Smooth Skin",
+   "u": [
+    "651",
+    "1439",
+    "2326"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLSM6P3068NB",
+   "desc": "3068 6 Panel - Smooth Skin",
+   "u": [
+    "390",
+    "1109",
+    "1702"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLSM6P3080NB",
+   "desc": "3080 6 Panel - Smooth Skin",
+   "u": [
+    "651",
+    "1439",
+    "2326"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE2068NB",
+   "desc": "2068 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "642",
+    "1361",
+    "2205"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEI2068NB",
+   "desc": "2068 Full Lite - White Brushed Smooth Skin - Impact",
+   "u": [
+    "1813",
+    "2532",
+    "4547"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLETL2068NB",
+   "desc": "2068 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "1142",
+    "1861",
+    "3206"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE2080NB",
+   "desc": "2080 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "995",
+    "1783",
+    "3013"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEI2080NB",
+   "desc": "2080 Full Lite - White Brushed Smooth Skin - Impact",
+   "u": [
+    "2095",
+    "2883",
+    "5215"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLETL2080NB",
+   "desc": "2080 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "1389",
+    "2177",
+    "3802"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE2668NB",
+   "desc": "2668 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "642",
+    "1361",
+    "2205"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEI2668NB",
+   "desc": "2668 Full Lite - White Brushed Smooth Skin - Impact",
+   "u": [
+    "1813",
+    "2532",
+    "4547"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE2668NBBL",
+   "desc": "2668 Full Lite - Black Brushed Smooth Skin",
+   "u": [
+    "812",
+    "1531",
+    "2544"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLETL2668NB",
+   "desc": "2668 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "1142",
+    "1861",
+    "3206"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE2680NB",
+   "desc": "2680 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "995",
+    "1783",
+    "3013"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEI2680NB",
+   "desc": "2680 Full Lite - White Brushed Smooth Skin - Impact",
+   "u": [
+    "2095",
+    "2883",
+    "5215"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE2680NBBL",
+   "desc": "2680 Full Lite - Black Brushed Smooth Skin",
+   "u": [
+    "1189",
+    "1977",
+    "3402"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLETL2680NB",
+   "desc": "2680 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "1389",
+    "2177",
+    "3802"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE2868NB",
+   "desc": "2868 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "642",
+    "1361",
+    "2205"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEI2868NB",
+   "desc": "2868 Full Lite - White Brushed Smooth - Impact",
+   "u": [
+    "1813",
+    "2532",
+    "4547"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE2868NBBL",
+   "desc": "2868 Full Lite - Black Brushed Smooth Skin",
+   "u": [
+    "812",
+    "1531",
+    "2544"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLETL2868NB",
+   "desc": "2868 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "1142",
+    "1861",
+    "3206"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE2880NB",
+   "desc": "2880 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "995",
+    "1783",
+    "3013"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEI2880NB",
+   "desc": "2880 Full Lite - White Brushed Smooth Skin - Impact",
+   "u": [
+    "2095",
+    "2883",
+    "5215"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE2880NBBL",
+   "desc": "2880 Full Lite - Black Brushed Smooth Skin",
+   "u": [
+    "1189",
+    "1977",
+    "3402"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLETL2880NB",
+   "desc": "2880 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "1389",
+    "2177",
+    "3802"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE3068NB",
+   "desc": "3068 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "642",
+    "1361",
+    "2205"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEI3068NB",
+   "desc": "3068 Full Lite - White Brushed Smooth Skin - Impact",
+   "u": [
+    "1813",
+    "2532",
+    "4547"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE3068NBBL",
+   "desc": "3068 Full Lite - Black Brushed Smooth Skin",
+   "u": [
+    "812",
+    "1531",
+    "2544"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLETL3068NB",
+   "desc": "3068 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "1142",
+    "1861",
+    "3206"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE3080NB",
+   "desc": "3080 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "995",
+    "1783",
+    "3013"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEI3080NB",
+   "desc": "3080 Full Lite - White Brushed Smooth Skin - Impact",
+   "u": [
+    "2095",
+    "2883",
+    "5215"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLE3080NBBL",
+   "desc": "3080 Full Lite - Black Brushed Smooth Skin",
+   "u": [
+    "1189",
+    "1977",
+    "3402"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLETL3080NB",
+   "desc": "3080 Full Lite - White Brushed Smooth Skin",
+   "u": [
+    "1389",
+    "2177",
+    "3802"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEMBR2068NB",
+   "desc": "2068 Full Lite with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "974",
+    "1693",
+    "2869"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEMBR2080NB",
+   "desc": "2080 Full Lite with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "1341",
+    "2129",
+    "3706"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEMBR2668NB",
+   "desc": "2668 Full Lite with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "974",
+    "1693",
+    "2869"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEMBR2680NB",
+   "desc": "2680 Full Lite with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "1341",
+    "2129",
+    "3706"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEMBR2868NB",
+   "desc": "2868 Full Lite with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "974",
+    "1693",
+    "2869"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEMBR2880NB",
+   "desc": "2880 Full Lite with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "1341",
+    "2129",
+    "3706"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEMBR3068NB",
+   "desc": "3068 Full Lite with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "974",
+    "1693",
+    "2869"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFGFULLLEMBR3080NB",
+   "desc": "3080 Full Lite with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "1341",
+    "2129",
+    "3706"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LE2668NB",
+   "desc": "2668 3/4 Lite 1 Panel - White Brushed Smooth Skin",
+   "u": [
+    "722",
+    "1441",
+    "2366"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LETL2668NB",
+   "desc": "2668 3/4 Lite 1 Panel - White Brushed Smooth Skin",
+   "u": [
+    "1161",
+    "1880",
+    "3242"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LE2680NB",
+   "desc": "2680 3/4 Lite 1 Panel - White Brushed Smooth Skin",
+   "u": [
+    "1083",
+    "1871",
+    "3189"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LETL2680NB",
+   "desc": "2680 3/4 Lite 1 Panel - White Brushed Smooth Skin",
+   "u": [
+    "1425",
+    "2213",
+    "3874"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LE2868NB",
+   "desc": "2868 3/4 Lite 1 Panel - White Brushed Smooth Skin",
+   "u": [
+    "722",
+    "1441",
+    "2366"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LETL2868NB",
+   "desc": "2868 3/4 Lite 1 Panel - White Brushed Smooth Skin",
+   "u": [
+    "1161",
+    "1880",
+    "3242"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LE2880NB",
+   "desc": "2880 3/4 Lite 1 Panel - White Brushed Smooth Skin",
+   "u": [
+    "1083",
+    "1871",
+    "3189"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LETL2880NB",
+   "desc": "2880 3/4 Lite 1 Panel - White Brushed Smooth Skin",
+   "u": [
+    "1425",
+    "2213",
+    "3874"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LE3068NB",
+   "desc": "3068 3/4 Lite 1 Panel - White Brushed Smooth Skin",
+   "u": [
+    "722",
+    "1441",
+    "2366"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LE3068NBBL",
+   "desc": "3068 3/4 Lite 1 Panel - Black Brushed Smooth Skin",
+   "u": [
+    "892",
+    "1611",
+    "2705"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LET3068NB",
+   "desc": "3068 3/4 Lite 1 Panel - White Brushed Smooth Skin",
+   "u": [
+    "1427",
+    "2146",
+    "3774"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LETL3068NBBL",
+   "desc": "3068 3/4 Lite 1 Panel - Black Brushed Smooth Skin",
+   "u": [
+    "1316",
+    "2035",
+    "3553"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LRN3068NBBL",
+   "desc": "3068 3/4 Lite 1 Panel - Black Brushed Smooth Skin",
+   "u": [
+    "1031",
+    "1750",
+    "2983"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LEF3068NBBL",
+   "desc": "3068 3/4 Lite 1 Panel - Black Brushed Smooth Skin",
+   "u": [
+    "1031",
+    "1750",
+    "2983"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LE3080NB",
+   "desc": "3080 3/4 Lite 1 Panel - White Brushed Smooth Skin",
+   "u": [
+    "1083",
+    "1871",
+    "3189"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LE3080NBBL",
+   "desc": "3080 3/4 Lite 1 Panel - Black Brushed Smooth Skin",
+   "u": [
+    "1277",
+    "2065",
+    "3579"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LETL3080NB",
+   "desc": "3080 3/4 Lite 1 Panel - White Brushed Smooth Skin",
+   "u": [
+    "1425",
+    "2213",
+    "3874"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LETL3080NBBL",
+   "desc": "3080 3/4 Lite 1 Panel - Black Brushed Smooth Skin",
+   "u": [
+    "1862",
+    "2650",
+    "4748"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LRN3080NBBL",
+   "desc": "3080 3/4 Lite 1 Panel - Black Brushed Smooth Skin",
+   "u": [
+    "1524",
+    "2312",
+    "4071"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LEF3080NBBL",
+   "desc": "3080 3/4 Lite 1 Panel - Black Brushed Smooth Skin",
+   "u": [
+    "1524",
+    "2312",
+    "4071"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LEMBR2668NB",
+   "desc": "2668 3/4 Lite 1 Panel with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "1050",
+    "1769",
+    "3022"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LEMBR2680NB",
+   "desc": "2680 3/4 Lite 1 Panel with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "1416",
+    "2204",
+    "3856"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LEMBR2868NB",
+   "desc": "2868 3/4 Lite 1 Panel with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "1050",
+    "1769",
+    "3022"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LEMBR2880NB",
+   "desc": "2880 3/4 Lite 1 Panel with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "1416",
+    "2204",
+    "3856"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LEMBR3068NB",
+   "desc": "3068 3/4 Lite 1 Panel with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "1050",
+    "1769",
+    "3022"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 3,
+   "sku": "NLFG34LEMBR3080NB",
+   "desc": "3080 3/4 Lite 1 Panel with Mini Blind - White Brushed Smooth Skin",
+   "u": [
+    "1416",
+    "2204",
+    "3856"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 4,
+   "sku": "NLSMFL2068NB",
+   "desc": "2068 Flush - Smooth Skin",
+   "u": [
+    "390",
+    "1109",
+    "1702"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 4,
+   "sku": "NLSMFL2080NB",
+   "desc": "2080 Flush - Smooth Skin",
+   "u": [
+    "651",
+    "1439",
+    "2326"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 4,
+   "sku": "NLSMFL2468NB",
+   "desc": "2468 Flush - Smooth Skin",
+   "u": [
+    "390",
+    "1109",
+    "1702"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 4,
+   "sku": "NLSMFL2668NB",
+   "desc": "2668 Flush - Smooth Skin",
+   "u": [
+    "390",
+    "1109",
+    "1702"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 4,
+   "sku": "NLSMFL2680NB",
+   "desc": "2680 Flush - Smooth Skin",
+   "u": [
+    "651",
+    "1439",
+    "2326"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 4,
+   "sku": "NLSMFL2868NB",
+   "desc": "2868 Flush - Smooth Skin",
+   "u": [
+    "390",
+    "1109",
+    "1702"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 4,
+   "sku": "NLSMFL2880NB",
+   "desc": "2880 Flush - Smooth Skin",
+   "u": [
+    "651",
+    "1439",
+    "2326"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 4,
+   "sku": "NLSMFL21068NB",
+   "desc": "21068 Flush - Smooth Skin",
+   "u": [
+    "390",
+    "1109",
+    "1702"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 4,
+   "sku": "NLSMFL21080NB",
+   "desc": "21080 Flush - Smooth Skin",
+   "u": [
+    "651",
+    "1439",
+    "2326"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 4,
+   "sku": "NLSMFL3068NB",
+   "desc": "3068 Flush - Smooth Skin",
+   "u": [
+    "390",
+    "1109",
+    "1702"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 4,
+   "sku": "NLSMFL3080NB",
+   "desc": "",
+   "u": [
+    "651",
+    "1439",
+    "2326"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "p": 4,
+   "sku": "NLFG34SLLE1068",
+   "desc": "1069 3/4 Lite 1 Panel Sidelite - White Brushed Smooth Skin",
+   "u": [
+    "613",
+    "1332",
+    "1332"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ],
+   "ea": true
+  },
+  {
+   "p": 4,
+   "sku": "NLFG34SLLE1080",
+   "desc": "1081 3/4 Lite 1 Panel Sidelite - White Brushed Smooth Skin",
+   "u": [
+    "718",
+    "1506",
+    "1506"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ],
+   "ea": true
+  },
+  {
+   "p": 4,
+   "sku": "NLFG34SLLE1268",
+   "desc": "1269 3/4 Lite 1 Panel Sidelite - White Brushed Smooth Skin",
+   "u": [
+    "613",
+    "1332",
+    "1332"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ],
+   "ea": true
+  },
+  {
+   "p": 4,
+   "sku": "NLFG34SLLE1280",
+   "desc": "1281 3/4 Lite 1 Panel Sidelite - White Brushed Smooth Skin",
+   "u": [
+    "718",
+    "1506",
+    "1506"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ],
+   "ea": true
+  },
+  {
+   "p": 4,
+   "sku": "NLFGFULLSLLE1068",
+   "desc": "1069 Full Lite Sidelite - White Brushed Smooth Skin",
+   "u": [
+    "604",
+    "1323",
+    "1323"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ],
+   "ea": true
+  },
+  {
+   "p": 4,
+   "sku": "NLFGFULLSLLE1080",
+   "desc": "1081 Full Lite Sidelite - White Brushed Smooth Skin",
+   "u": [
+    "707",
+    "1495",
+    "1495"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ],
+   "ea": true
+  },
+  {
+   "p": 4,
+   "sku": "NLFGFULLSLLE1268",
+   "desc": "1269 Full Lite Sidelite - White Brushed Smooth Skin",
+   "u": [
+    "604",
+    "1323",
+    "1323"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ],
+   "ea": true
+  },
+  {
+   "p": 4,
+   "sku": "NLFGFULLSLLE1280",
+   "desc": "1281 Full Lite Sidelite - White Brushed Smooth Skin",
+   "u": [
+    "707",
+    "1495",
+    "1495"
+   ],
+   "f": [
+    null,
+    null,
+    null
+   ],
+   "ea": true
+  }
+ ]
+}

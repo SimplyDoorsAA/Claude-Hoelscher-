@@ -58,6 +58,9 @@ jobs:
       - name: True Divided Lite, against the vendor price sheet
         run: node tests/tdl.test.mjs
 
+      - name: Every fiberglass price, against the vendor price sheet
+        run: node tests/fiberglass-sheet.test.mjs
+
       - name: Quoter under load
         run: node tests/stress-ui.mjs
 
