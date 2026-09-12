@@ -163,7 +163,7 @@ you commit anything.
 | `docs/fiberglass-price-reconciliation.md` | Every fiberglass price against the 2026 sheet, and what moved since the 2025 list |
 | `docs/mahogany-sdl.md` | Catalog page 21: the SDL door, its own sidelite, and the grid priced per lite by bar width |
 | `docs/mahogany-legacy-panel.md` | Catalog pages 22–27: the panel doors, the Blanco's caming, the speakeasy insert's C |
-| `docs/mahogany-legacy-lites.md` | Catalog pages 28–29: the page-22 glass list on the flat-glass rows, decorative numbers as infix + caming, sidelite pairings |
+| `docs/mahogany-legacy-lites.md` | Catalog pages 28–32: the page-22 glass list on the flat-glass rows, decorative numbers as infix + caming, sidelite pairings |
 | `docs/audit-2026-09-10.md` | The audit before it: pricing verified, and the three things blocking office use |
 | `docs/audit-2026-09-09.md` | The first audit, and what it left open |
 | `quoter/assets/doors/` | Door photography extracted from the catalogs, plus `manifest.json` |
@@ -188,7 +188,7 @@ npm run audit                        # data contracts and cross-references only
 TAILWIND_CSS=/path/to/tw.css ./tests/run.sh   # faithful screenshots
 ```
 
-551 checks, and the same set CI runs on every pull request. The browser suites
+560 checks, and the same set CI runs on every pull request. The browser suites
 drive real Chromium through Playwright, found in `node_modules`, image-wide, or
 wherever `PLAYWRIGHT_MODULE` points — whichever exists. Each serves the repo on
 a port the OS picks, so a killed run cannot block the next one. Screenshots land

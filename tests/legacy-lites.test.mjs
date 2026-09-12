@@ -51,12 +51,14 @@ ok('the design-infix fill is recorded with the catalog\'s own numbers as evidenc
 const named=[...new Set(cat.woodProducts.flatMap(p=>String(p.glazing||'').split(',').map(s=>s.trim())))].filter(Boolean);
 const decoNamed=named.filter(n=>!(cat.glassCodes||[]).some(c=>c.name===n));
 const missing=decoNamed.filter(n=>!(cat.decorativeGlassDesigns||[]).some(d=>d.name===n));
-ok('every decorative glass a row names is a design with an infix, bar Brazos (page 30, not yet walked)',
-   missing.every(n=>n==='Brazos'), missing.join(', ')||'none missing');
+ok('every decorative glass a row names is a design with an infix',
+   missing.length===0, missing.join(', ')||'none missing');
+const brz=(cat.decorativeGlassDesigns||[]).find(d=>d.name==='Brazos');
+ok('Brazos is a decorative design, BRZ, in Patina and Zinc, with a photograph', !!brz && brz.partNumberInfix==='BRZ' && brz.caming.join()==='Patina,Zinc' && !!designs.decorativeGlass.Brazos);
 
-const pairs=(cat.sideliteRules||[]).filter(r=>/^\^(3\/4|Full) Lite - \(Flat\|Decorative\) Glass\$$/.test(r.appliesToModelPattern||''));
-ok('the 3/4 Lite and Full Lite pair with the sidelite of their own lite style', pairs.length===2 &&
-   pairs.some(r=>r.allowSkuPattern==='^M34SL-') && pairs.some(r=>r.allowSkuPattern==='^MFULLSL-'),
+const pairs=(cat.sideliteRules||[]).filter(r=>/^\^(3\/4|Full|2\/3|2\/3 Arch) Lite - \(Flat\|Decorative\) Glass\$$/.test(r.appliesToModelPattern||''));
+ok('the 3/4, Full, 2/3 and 2/3 Arch Lite pair with the sidelite of their own lite style', pairs.length===4 &&
+   pairs.some(r=>r.allowSkuPattern==='^M34SL-') && pairs.some(r=>r.allowSkuPattern==='^MFULLSL-') && pairs.filter(r=>r.allowSkuPattern==='^M23SL-').length===2,
    pairs.map(r=>r.appliesToModelPattern+' -> '+r.allowSkuPattern).join('  '));
 
 /* ================= 2. the app, driven =================================== */
@@ -163,6 +165,37 @@ await pick('Handing','Left'); await pick('Swing','Inswing'); await pick('Jamb de
 const d4=await orderDoc('Deco Full');
 ok('the door prints MFULLDARP3068', /MFULLDARP3068/.test(d4), numbers(d4).join(', '));
 ok('and the sidelite by the same grammar, MFULLSLDARP1068', /MFULLSLDARP1068/.test(d4) && !/still holds a placeholder/i.test(d4), numbers(d4).join(', '));
+
+/* page 30-31: the 2/3 Lite and the 2/3 Arch Lite */
+await open('2/3 Lite - Decorative Glass');
+const g23=await optionsOf('Glass');
+ok('the 2/3 Lite offers Brazos and Pecos', g23.length===2 && g23.some(o=>o.startsWith('Brazos')) && g23.some(o=>o.startsWith('Pecos')), g23.join('|'));
+await pick('Glass','Brazos'); await pick('Caming','Zinc');
+const brzSizes=await optionsOf('Size'); const brzLive=brzSizes.filter(x=>!x.startsWith('[x] '));
+ok('Brazos is made in 3068 only, as the page says', brzLive.length===1 && /3'0" x 6'8"/.test(brzLive[0]), brzSizes.join('|'));
+await pick('Size',"3'0\" x 6'8\""); await pick('Finish','Unfinished'); await pick('Opening','Single + 1 sidelite');
+const sl23=await optionsOf('Sidelite');
+ok('and is offered the 2/3 sidelites only', sl23.length>0 && sl23.every(o=>/^2\/3 Sidelite/.test(o)), sl23.join(' | '));
+await pick('Sidelite','2/3 Sidelite - Decorative');
+await pick('Handing','Left'); await pick('Swing','Inswing'); await pick('Jamb depth','4-9/16');
+const d6=await orderDoc('Brazos');
+ok('and prints M23BRZZ3068 with its sidelite M23SLBRZZ1068', /M23BRZZ3068/.test(d6) && /M23SLBRZZ1068/.test(d6) && !/still holds a placeholder/i.test(d6), numbers(d6).join(', '));
+
+await open('2/3 Lite - Flat Glass');
+await pick('Glass','Rain'); await pick('Size',"2'8\" x 8'0\""); await finishSingle();
+const d7=await orderDoc('Flat 2/3');
+ok('a flat 2/3 Lite prints the legend\'s code: M23RN2880', /M23RN2880/.test(d7) && !/still holds a placeholder/i.test(d7), numbers(d7).join(', '));
+
+await open('2/3 Arch Lite - Decorative Glass');
+const gA=await optionsOf('Glass');
+ok('the 2/3 Arch Lite offers Pecos and Blanco', gA.length===2 && gA.some(o=>o.startsWith('Pecos')) && gA.some(o=>o.startsWith('Blanco')), gA.join('|'));
+await pick('Glass','Blanco'); await pick('Caming','Zinc'); await pick('Finish','Unfinished'); await pick('Opening','Single + 1 sidelite');
+const slA=await optionsOf('Sidelite');
+ok('and pairs with the 2/3 sidelites, as page 32 photographs it', slA.length>0 && slA.every(o=>/^2\/3 Sidelite/.test(o)), slA.join(' | '));
+await pick('Sidelite','2/3 Sidelite - Flat');
+await pick('Handing','Left'); await pick('Swing','Inswing'); await pick('Jamb depth','4-9/16');
+const d8=await orderDoc('Arch Blanco');
+ok('and prints M23ABLAZ3068', /M23ABLAZ3068/.test(d8), numbers(d8).join(', '));
 
 /* knotty alder prints the same grammar on page 48 */
 await open('KA 3/4 Lite RM - Decorative Glass','Knotty');
