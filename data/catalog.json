@@ -9512,7 +9512,7 @@
     },
     {
       "id": "b3e5f298dd",
-      "sku": "M6L--AT5080",
+      "sku": "M6LC--AT5080",
       "line": "mahogany",
       "family": "Mahogany",
       "type": "door",
@@ -9540,7 +9540,7 @@
         }
       },
       "catalogPage": "18",
-      "notes": "Duplicate part# - curved variant"
+      "notes": "The price sheet writes M6L--AT5080 for this door and for the 6 Lite Arch Top Double at the same size, two different doors $190 apart. Mahogany catalog page 18 prints M6LCAT5080 for the Curved, which is what the dealer confirmed on 2026-09-11 the order should carry. The id is unchanged, so saved quotes still resolve."
     },
     {
       "id": "fe9b306d5c",
@@ -9580,7 +9580,7 @@
       "line": "mahogany",
       "family": "Mahogany",
       "type": "door",
-      "description": "3080 Craftsman 4 Lite",
+      "description": "3080 Craftsman 4 Lite Arch Lite",
       "glazing": null,
       "priceSheetPage": "P.12",
       "size": {
@@ -20778,6 +20778,17 @@
       "notes": "Both profiles are priced identically on both wood lines ($45.00 mahogany, $52.00 knotty alder), so the choice is a specification and costs nothing today. The difference is still computed rather than assumed to be zero, so a reprice would be picked up."
     }
   ],
+  "dentilShelfRule": {
+    "id": "a04d1b2af3",
+    "appliesToCollection": "wood",
+    "appliesToModelPattern": "Craftsman",
+    "label": "Dentil shelf",
+    "note": "a shelf beneath the lites",
+    "suffix": "S",
+    "priceImpact": "none",
+    "excludeSkuPattern": "S$",
+    "notes": "Mahogany catalog pages 18-19 print two part numbers for each Craftsman size, Shelf Yes and Shelf No, and the Dealer Wood Pricing sheet prices one row per size — so on a wood door the shelf costs nothing and only changes the number. The $184.00 dentil shelf in the catalogue is a FIBERGLASS component and is not charged here; no shelf appears anywhere on the seven pages of the wood sheet. MCM--3068S already carries the S: the sheet prices only that variant at 6'8\", so it is not asked. Confirmed with the dealer 2026-09-11."
+  },
   "ironGrilleDesigns": [
     {
       "name": "Avignon",
@@ -21182,9 +21193,62 @@
       "sourcePage": "6",
       "notes": "Every Mahogany Contemporary row writes P.6 in the price sheet's Glass Type column, meaning the eight glasses printed on catalog page 6. Priced the same whichever is chosen; the code replaces the (--) in the part number. Narrower than the P.42/P.46 list: no Clear Bevel Low-E, Baroque, Water or Stippolyte on this page. Mahogany catalog p.6, confirmed by the dealer 2026-09-11.",
       "id": "b8936a4f7c"
+    },
+    {
+      "kind": "glass",
+      "appliesToCollection": "wood",
+      "appliesToModelPattern": null,
+      "appliesToPriceSheetPage": "P.12",
+      "options": [
+        "Clear Low E",
+        "Clear Bevel Low E",
+        "Baroque",
+        "Flemish",
+        "Water",
+        "Stippolyte",
+        "Rain",
+        "Reeded",
+        "Small Reeded",
+        "Satin"
+      ],
+      "sourcePage": "12",
+      "notes": "All 60 True Divided Lite rows write P.12 in the price sheet's Glass Type column, meaning the ten glasses printed on catalog page 12. The same ten as the P.42 and P.46 pages; Digital and Sandblast are the two the legend carries that this page does not, and they are exactly the two page 6 adds. Confirmed with the dealer 2026-09-11.",
+      "id": "d8507325a0"
     }
   ],
   "sideliteRules": [
+    {
+      "id": "5ed88e5efc",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": null,
+      "appliesToModelPattern": "^6 Lite 1 Panel NRM$",
+      "allowSkuPattern": "^M3L--SL\\d+NRM$",
+      "notes": "Mahogany catalog page 17 shows this door with the 3 Lite 1 Panel Sidelite NRM and no other. Height still breaks the tie between the sidelite's own sizes. The moulding style has to match: the pairing is by lite count and by raised moulding together. Confirmed with the dealer 2026-09-11."
+    },
+    {
+      "id": "b0c388bb39",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": null,
+      "appliesToModelPattern": "^6 Lite 1 Panel RM$",
+      "allowSkuPattern": "^M3L--SL\\d+$",
+      "notes": "Mahogany catalog page 17 shows this door with the 3 Lite 1 Panel Sidelite RM and no other. Height still breaks the tie between the sidelite's own sizes. The moulding style has to match: the pairing is by lite count and by raised moulding together. Confirmed with the dealer 2026-09-11."
+    },
+    {
+      "id": "57d32e628e",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": null,
+      "appliesToModelPattern": "^4 Lite 1 Panel NRM$",
+      "allowSkuPattern": "^M2L--SL\\d+NRM$",
+      "notes": "Mahogany catalog page 15 shows this door with the 2 Lite 1 Panel Sidelite NRM and no other. Height still breaks the tie between the sidelite's own sizes. The moulding style has to match: the pairing is by lite count and by raised moulding together. Confirmed with the dealer 2026-09-11."
+    },
+    {
+      "id": "469fc2d4f6",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": null,
+      "appliesToModelPattern": "^4 Lite 1 Panel RM$",
+      "allowSkuPattern": "^M2L--SL\\d+$",
+      "notes": "Mahogany catalog page 15 shows this door with the 2 Lite 1 Panel Sidelite RM and no other. Height still breaks the tie between the sidelite's own sizes. The moulding style has to match: the pairing is by lite count and by raised moulding together. Confirmed with the dealer 2026-09-11."
+    },
     {
       "id": "ea97092baa",
       "appliesToCollection": "wood",
