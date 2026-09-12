@@ -1,8 +1,8 @@
-/* Mahogany iron grilles — catalog pages 34–36 (2/3 Arch Lite and 2/3 Lite).
+/* Mahogany iron grilles — catalog pages 34–41 (2/3 Arch Lite, 2/3 Lite, 3/4 Lite, Full Lite).
 
    The sheet prices one generic row per size; the catalog prints a number per
    design, stem + grille infix + C, every one shown with Clear Low-E. The rules
-   as data first, then the app driven through both pages and a knotty alder
+   as data first, then the app driven through the pages and a knotty alder
    grille door, which prints by the same grammar. */
 import { playwright } from './playwright.mjs';
 const { chromium } = await playwright();
@@ -37,9 +37,21 @@ const arch=mg.filter(g=>g.style==='2/3 Arch Lite'), lite=mg.filter(g=>g.style===
 ok('page 35 offers four designs on the 2/3 Arch Lite, 3068 only',
    arch.length===4 && ['Cordoba','Santiago','Sienna','Whitney'].every(n=>arch.some(g=>g.name===n)) && arch.every(g=>g.sizeCodes.join()==='3068'),
    arch.map(g=>g.name).join('|'));
-ok('page 36 offers four designs on the 2/3 Lite, 2880 and 3080',
-   lite.length===4 && ['Avignon','Barcelona','Cordoba','Santiago'].every(n=>lite.some(g=>g.name===n)) && lite.every(g=>g.sizeCodes.join()==='2880,3080'),
+ok('pages 36-37 offer six designs on the 2/3 Lite, 2880 and 3080',
+   lite.length===6 && ['Avignon','Barcelona','Cordoba','Santiago','Sienna','Whitney'].every(n=>lite.some(g=>g.name===n)) && lite.every(g=>g.sizeCodes.join()==='2880,3080'),
    lite.map(g=>g.name).join('|'));
+const l34=mg.filter(g=>g.style==='3/4 Lite'), full=mg.filter(g=>g.style==='Full Lite');
+const sizes34={Avignon:'2868,3068,2880,3080,3680',Barcelona:'2868,3068,2880,3080,3680',Cordoba:'2868,3068,2880,3080',Saltillo:'2880,3080',
+  Santiago:'2868,3068,2880,3080',Sienna:'2868,3068,2880,3080,3680',Southampton:'2880,3080,3680',Whitney:'2868,3068,2880,3080,3680'};
+ok('pages 38-39 offer eight designs on the 3/4 Lite, each in the sizes its caption prints',
+   l34.length===8 && Object.keys(sizes34).every(n=>(l34.find(g=>g.name===n)||{sizeCodes:[]}).sizeCodes.join()===sizes34[n]),
+   l34.map(g=>g.name+':'+g.sizeCodes.join('/')).join(' '));
+ok('the 3680 five of them print is a size the sheet never prices on the 3/4 Lite grille, and the entries say so',
+   !cat.woodProducts.some(p=>p.line==='mahogany'&&/3\/4 Lite Iron Grille$/.test(p.description)&&p.size.code==='3680') &&
+   l34.filter(g=>g.sizeCodes.includes('3680')).every(g=>/3680/.test(g.notes)&&/Hoelscher/.test(g.notes)));
+ok('pages 40-41 offer eight designs on the Full Lite, 3068 only',
+   full.length===8 && ['Avignon','Balfour','Cordoba','Hammond','Santiago','Saltillo','Sienna','Southampton'].every(n=>full.some(g=>g.name===n)) && full.every(g=>g.sizeCodes.join()==='3068'),
+   full.map(g=>g.name).join('|'));
 ok('every mahogany design carries the infix the catalog prints and a photograph on disk',
    mg.every(g=>/^[A-Z]{3}$/.test(g.code) && g.photo && fs.existsSync(ROOT+'/quoter/assets/designs/'+g.photo)));
 ok('and the same infix as its knotty alder namesake',
@@ -55,8 +67,15 @@ ok('the sheet\'s M23A stem on the 2/3 Lite grille rows is corrected to M23, writ
 const archRow=cat.woodProducts.find(p=>p.sku==='M23A--3068'&&/Arch Lite Iron Grille/.test(p.description));
 ok('while the arch door keeps its A', !!archRow && !(cat.skuCorrections||[]).some(c=>c.productId===archRow.id));
 const gp=(cat.sideliteRules||[]).filter(r=>/Iron Grille\$$/.test(r.appliesToModelPattern||''));
-ok('both 2/3 grille doors pair with the 2/3 grille sidelite', gp.length===2 && gp.every(r=>r.allowModelPattern==='^2/3 Lite Sidelite Iron Grille$'),
+ok('both 2/3 grille doors pair with the 2/3 grille sidelite', gp.length===4 && gp.filter(r=>/2\/3/.test(r.appliesToModelPattern)).length===2 &&
+   gp.filter(r=>/2\/3/.test(r.appliesToModelPattern)).every(r=>r.allowModelPattern==='^2/3 Lite Sidelite Iron Grille$'),
    gp.map(r=>r.appliesToModelPattern).join('  '));
+const p34=gp.find(r=>r.appliesToModelPattern==='^3/4 Lite Iron Grille$'), pfull=gp.find(r=>r.appliesToModelPattern==='^Full Lite Iron Grille$');
+ok('the 3/4 Lite grille pairs with the 3/4 grille sidelite alone', !!p34 && p34.allowSkuPattern==='^M34SL-' && p34.allowModelPattern==='^3/4 Lite Sidelite Iron Grille$');
+const fullSl=cat.woodProducts.filter(p=>p.sku==='MFULLSL--1268'&&/Iron Grille/.test(p.description));
+ok('the sheet prices the Full grille sidelite twice under two names, the same number and prices both times',
+   fullSl.length===2 && JSON.stringify(fullSl[0].prices)===JSON.stringify(fullSl[1].prices), fullSl.map(p=>p.description).join(' / '));
+ok('and the Full Lite grille pairs with the pages-40-41 row alone', !!pfull && pfull.allowSkuPattern==='^MFULLSL-' && pfull.allowModelPattern==='^Full Sidelite Iron Grille$');
 
 /* ================= 2. the app, driven =================================== */
 const b=await chromium.launch();
@@ -134,7 +153,7 @@ ok('another glass takes the legend\'s code after the infix: M23AWHIF3068', /M23A
 await open('2/3 Lite Iron Grille');
 await pick('Glass','Clear Low E'); await pick('Size',"3'0\" x 8'0\"");
 const ld=await optionsOf('Grille design');
-ok('the 2/3 Lite offers Avignon, Barcelona, Cordoba and Santiago', ld.length===4 && ['Avignon','Barcelona','Cordoba','Santiago'].every(n=>ld.some(o=>o.startsWith(n))), ld.join('|'));
+ok('the 2/3 Lite offers Avignon, Barcelona, Cordoba, Santiago, Sienna and Whitney', ld.length===6 && ['Avignon','Barcelona','Cordoba','Santiago','Sienna','Whitney'].every(n=>ld.some(o=>o.startsWith(n))), ld.join('|'));
 await pick('Size',"2'8\" x 8'0\""); await pick('Grille design','Avignon'); await pick('Finish','Unfinished'); await pick('Opening','Single + 1 sidelite');
 const sl=await optionsOf('Sidelite');
 ok('and is offered the 2/3 grille sidelite only', sl.length>0 && sl.every(o=>/^2\/3 Lite Sidelite Iron Grille/.test(o)), sl.join(' | '));
@@ -144,13 +163,37 @@ const d3=await orderDoc('Lite Avignon');
 ok('the door prints M23AVIC2880 — no A, as page 36 prints it', /M23AVIC2880/.test(d3) && !/M23AAVIC/.test(d3), numbers(d3).join(', '));
 ok('and the matching sidelite by the same grammar, M23SLAVIC1280', /M23SLAVIC1280/.test(d3) && !/still holds a placeholder/i.test(d3), numbers(d3).join(', '));
 
-/* a mahogany grille door whose page is not yet walked keeps its gap */
+/* the 3/4 Lite, pages 38-39 */
 await open('3/4 Lite Iron Grille');
 await pick('Glass','Clear Low E');
-ok('the 3/4 Lite grille, its page not yet walked, offers no design', !(await steps()).includes('Grille design'), (await steps()).join(' > '));
-await pick('Size',"3'0\" x 6'8\""); await finishSingle();
-const d4=await orderDoc('3/4 grille');
-ok('and its number stays flagged rather than guessed', /M34--3068/.test(d4) && /still holds a placeholder/i.test(d4), numbers(d4).join(', '));
+const sz=await optionsOf('Size');
+ok('the 3/4 Lite grille is made in the four sizes the sheet prices and no 3680', sz.length===4 && !sz.some(o=>/3'6"/.test(o)), sz.join('|'));
+await pick('Size',"3'0\" x 6'8\"");
+const d34=await optionsOf('Grille design');
+ok('the 3/4 Lite offers the eight designs of pages 38-39', d34.length===8 && ['Avignon','Barcelona','Cordoba','Saltillo','Santiago','Sienna','Southampton','Whitney'].every(n=>d34.some(o=>o.replace(/^\[x\] /,'').startsWith(n))), d34.join('|'));
+ok('with Saltillo and Southampton, 8\'0" only, greyed at 6\'8"', d34.filter(o=>/^\[x\] /.test(o)).length===2 && d34.some(o=>/^\[x\] Saltillo/.test(o)) && d34.some(o=>/^\[x\] Southampton/.test(o)), d34.join('|'));
+await pick('Grille design','Avignon'); await pick('Finish','Unfinished'); await pick('Opening','Single + 1 sidelite');
+const sl34=await optionsOf('Sidelite');
+ok('and is offered the 3/4 grille sidelite only', sl34.length>0 && sl34.every(o=>/^3\/4 Lite Sidelite Iron Grille/.test(o)), sl34.join(' | '));
+await pick('Sidelite','3/4 Lite Sidelite Iron Grille');
+await pick('Handing','Left'); await pick('Swing','Inswing'); await pick('Jamb depth','4-9/16');
+const d4=await orderDoc('3/4 Avignon');
+ok('the door prints M34AVIC3068 as page 38 does, nothing flagged', /M34AVIC3068/.test(d4) && !/still holds a placeholder/i.test(d4), numbers(d4).join(', '));
+ok('and its sidelite M34SLAVIC1268', /M34SLAVIC1268/.test(d4), numbers(d4).join(', '));
+
+/* the Full Lite, pages 40-41 */
+await open('Full Lite Iron Grille');
+await pick('Glass','Clear Low E');
+const dfl=await optionsOf('Grille design');
+ok('the Full Lite offers the eight designs of pages 40-41', dfl.length===8 && ['Avignon','Balfour','Cordoba','Hammond','Santiago','Saltillo','Sienna','Southampton'].every(n=>dfl.some(o=>o.startsWith(n))) && !dfl.some(o=>/^\[x\] /.test(o)), dfl.join('|'));
+await pick('Grille design','Balfour'); await pick('Finish','Unfinished'); await pick('Opening','Single + 1 sidelite');
+const slf=await optionsOf('Sidelite');
+ok('and is offered the Full grille sidelite once, not the sheet\'s duplicate', slf.length===1 && /^Full Sidelite Iron Grille/.test(slf[0]), slf.join(' | '));
+await pick('Sidelite','Full Sidelite Iron Grille');
+await pick('Handing','Left'); await pick('Swing','Inswing'); await pick('Jamb depth','4-9/16');
+const d6=await orderDoc('Full Balfour');
+ok('the door prints MFULLBALC3068 as page 40 does, nothing flagged', /MFULLBALC3068/.test(d6) && !/still holds a placeholder/i.test(d6), numbers(d6).join(', '));
+ok('and its sidelite MFULLSLBALC1268', /MFULLSLBALC1268/.test(d6), numbers(d6).join(', '));
 
 /* knotty alder prints the same grammar, pages 55-57 */
 await open('KA 3/4 Lite Iron Grille','Knotty');
