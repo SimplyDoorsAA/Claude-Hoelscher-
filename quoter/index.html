@@ -741,9 +741,9 @@ function glassSwatch(name) {
 /* The price sheet prints a part number with (--) standing in for the glass and
    a legend of codes to fill it with, so a quote can name the part the customer
    actually orders rather than the template. */
-function completeSku(product, glazing, handing) {
+function completeSku(product, glazing, handing, shelf) {
   let sku = String((product && product.sku) || "");
-  if (!sku.includes("-")) return sku;
+  if (!sku.includes("-")) return withShelf(sku, product, shelf);
   // The first placeholder is the glass code, always.
   if (sku.includes("--")) {
     const want = glassKey(glazing);
@@ -762,7 +762,13 @@ function completeSku(product, glazing, handing) {
     const code = r && r.codes && r.codes[handing];
     if (code) sku = sku.replace(/-+$/, code);
   }
-  return sku;
+  return withShelf(sku, product, shelf);
+}
+/* The shelf is the last thing on the number, after the glass and the hand. */
+function withShelf(sku, product, shelf) {
+  if (!shelf) return sku;
+  const r = dentilShelfRuleFor(product);
+  return r && r.suffix ? sku + r.suffix : sku;
 }
 /* Eight rows carry a second placeholder the glass code does not fill — the
    six mahogany "Lite Narrow LH/RH" and the two knotty alder Craftsman. Nobody
@@ -774,10 +780,10 @@ const skuIsIncomplete = sku => /-/.test(String(sku || ""));
    leaves, so a handed door is ordered twice — once left, once right — and the
    handing answer names which of the two operates rather than choosing between
    them. Everything else orders as one number. */
-function orderSkus(product, glazing, handing, config) {
+function orderSkus(product, glazing, handing, config, shelf) {
   if (config === "doublePH" && skuNeedsHanding(product))
-    return [completeSku(product, glazing, "left"), completeSku(product, glazing, "right")];
-  return [completeSku(product, glazing, handing)];
+    return [completeSku(product, glazing, "left", shelf), completeSku(product, glazing, "right", shelf)];
+  return [completeSku(product, glazing, handing, shelf)];
 }
 function glazingOptions(value) {
   if (!value) return [];
@@ -1523,7 +1529,7 @@ function openConfigurator(model) {
     speakeasy: null, insert: null, mask: null,
     grilleChoice: null, grille: null, grilleDesign: null,
     finish: null, stain: null,
-    opening: null, config: null, sidelite: null, sideliteGlazing: null,
+    opening: null, config: null, sidelite: null, sideliteGlazing: null, dentilShelf: null,
     handing: null, swing: null, jambDepth: null,
     qty: 1, accessories: []
   };
@@ -1643,6 +1649,20 @@ function glazingsForProduct(p) {
    rest are not sold beside it, and the collection is not offered with
    simulated divided lites. Jamb DEPTH is a different thing and is still asked:
    the unit is built to a wall thickness and the order has to carry it. */
+/* The dentil shelf. The vendor prices one row per Craftsman size while the
+   catalog prints a Shelf Yes and a Shelf No part number for it, so the shelf
+   costs nothing and only changes the number. A row whose own part number
+   already ends in the suffix is only made that way and is never asked. */
+function dentilShelfRuleFor(product) {
+  const r = state.engine.catalog.dentilShelfRule;
+  if (!r || !product) return null;
+  if (r.appliesToCollection && r.appliesToCollection !== state.collection) return null;
+  if (r.appliesToModelPattern &&
+      !new RegExp(r.appliesToModelPattern, "i").test(modelKeyOf(product))) return null;
+  if (r.excludeSkuPattern && new RegExp(r.excludeSkuPattern).test(String(product.sku || "")))
+    return null;
+  return r;
+}
 function openingExtrasFor(product) {
   if (!product) return null;
   return (state.engine.catalog.openingExtrasRules || []).find(r => {
@@ -1850,6 +1870,11 @@ function stepPlan(d) {
   plan.push({ key: "finish", title: "Finish", value: d.finish && FINISH_LABELS[d.finish] });
   if (d.finish === "prefinished" && stainsApplyTo(m))
     plan.push({ key: "stain", title: "Stain colour", value: d.stain });
+  const chosenRow = m.products.find(x => (x.size && x.size.code) === d.sizeCode) || m.sample;
+  if (dentilShelfRuleFor(chosenRow))
+    plan.push({ key: "dentilShelf", title: "Dentil shelf",
+                value: d.dentilShelf === "yes" ? "With shelf"
+                     : d.dentilShelf === "no" ? "No shelf" : null });
   const opening = openingByKey(d.opening);
   plan.push({ key: "opening", title: "Opening", value: opening && opening.label });
   if (opening && opening.sidelites > 0) {
@@ -1861,8 +1886,7 @@ function stepPlan(d) {
   }
   /* Handing is a property of the part number as often as of the frame, so the
      rail asks about the row this draft has actually landed on. */
-  const chosen = m.products.find(x => (x.size && x.size.code) === d.sizeCode) || m.sample;
-  if (opening && (opening.config !== "slab" || skuNeedsHanding(chosen)))
+  if (opening && (opening.config !== "slab" || skuNeedsHanding(chosenRow)))
     plan.push({ key: "handing", title: "Handing",
                 value: d.handing && handingLabel(d.handing, opening) });
   if (opening && opening.config !== "slab") {
@@ -1876,7 +1900,8 @@ function unanswerFrom(key) {
   const d = state.draft;
   const order = ["glazing", "caming", "size", "speakeasy", "insert", "mask",
                  "grilleDesign", "grille", "finish", "stain",
-                 "opening", "sidelite", "sideliteGlazing", "handing", "swing", "jamb"];
+                 "dentilShelf", "opening", "sidelite", "sideliteGlazing",
+                 "handing", "swing", "jamb"];
   const from = order.indexOf(key);
   const clear = {
     glazing:  () => { d.glazing = null; },
@@ -1892,6 +1917,7 @@ function unanswerFrom(key) {
     opening:  () => { d.opening = null; d.config = null; },
     sidelite: () => { d.sidelite = null; d.sideliteGlazing = null; },
     sideliteGlazing: () => { d.sideliteGlazing = null; },
+    dentilShelf: () => { d.dentilShelf = null; },
     handing:  () => { d.handing = null; },
     swing:    () => { d.swing = null; },
     jamb:     () => { d.jambDepth = null; }
@@ -2206,6 +2232,21 @@ function renderDetail() {
     gate(d.stain);
   }
 
+  /* 5b. the dentil shelf. A property of the door, not of the frame — a slab
+     has one or has not — so it is asked here rather than among the opening
+     questions. The vendor prices one row per size and prints a part number
+     each way, so it changes the number and nothing else. */
+  const shelfRule = dentilShelfRuleFor(product);
+  if (!blocked && shelfRule) {
+    const blk = stepBlock(shelfRule.label || "Dentil shelf", shelfRule.note);
+    [["yes", "With shelf"], ["no", "No shelf"]].forEach(([v, label]) =>
+      blk.row.appendChild(optionButton(label, d.dentilShelf === v, false,
+        () => { d.dentilShelf = v; renderDetail(); }, null,
+        shelfRule.priceImpact === "none" ? "no price difference" : null)));
+    body.appendChild(blk);
+    gate(d.dentilShelf);
+  }
+
   // 6. the opening
   const sidelites = sideliteChoices(product, d.glazing);
   const openable = o => opts && opts.isOffered(d.finish, o.config) &&
@@ -2352,7 +2393,7 @@ function renderDetail() {
                     d.swing && SWING_LABELS[d.swing],
                     d.jambDepth && d.jambDepth + '" jamb',
                     configured ? "configured item — Hoelscher prints no part number"
-                               : completeSku(product, d.glazing, d.handing)].filter(Boolean).join(" · ");
+                               : completeSku(product, d.glazing, d.handing, d.dentilShelf === "yes")].filter(Boolean).join(" · ");
     if (chosen) foot.appendChild(el("p", "mb-3 text-xs text-ink-mute", chosen));
     const misprint = skuCorrection(product);
     if (misprint) foot.appendChild(el("p", "mb-3 rounded-lg bg-brass-pale px-3 py-2 text-[11px] text-brass-deep",
@@ -2403,6 +2444,7 @@ function renderDetail() {
         grilleDesign: d.grilleDesign || null,
         opening: d.opening || null, handing: d.handing || null,
         sideliteGlazing: d.sideliteGlazing || null,
+        dentilShelf: d.dentilShelf || null,
         swing: d.swing || null, jambDepth: d.jambDepth || null
       });
       saveQuote(); closeDetail(); renderQuote(); openDrawer();
@@ -2978,6 +3020,7 @@ function openingWords(l, spec) {
   if (spec.grilleDesign)  bits.push(spec.grilleDesign + " grille");
   if (spec.grilleStyle)   bits.push(spec.grilleStyle + " grille");
   if (spec.stain)         bits.push(spec.stain + " stain");
+  if (spec.dentilShelf)   bits.push(spec.dentilShelf === "yes" ? "with dentil shelf" : "no dentil shelf");
   if (spec.handing)       bits.push(handingLabel(spec.handing, openingByKey(spec.opening)));
   if (spec.swing)         bits.push(SWING_LABELS[spec.swing]);
   if (spec.jambDepth)     bits.push(spec.jambDepth + '" jamb');
@@ -3184,7 +3227,8 @@ function buildOrderDoc(q) {
     const td = el("td", "");
     // Hoelscher's desk cross-checks the number against the description, so the
     // sheet carries both, and the number exactly as Hoelscher prints it.
-    const skus = orderSkus(prod, spec.glazing, spec.handing, l.config);
+    const skus = orderSkus(prod, spec.glazing, spec.handing, l.config,
+                           spec.dentilShelf === "yes");
     skus.forEach(k => td.appendChild(el("span", "pn", k)));
     td.appendChild(el("span", "sub", l.description +
       (skus.length > 1 ? "  \u2014 one of each hand" : "")));
@@ -3224,6 +3268,7 @@ function buildOrderDoc(q) {
        order sheet is the only place it can be said. */
     tr.appendChild(el("td", null, [
       spec.stain && spec.stain + " stain",
+      spec.dentilShelf && (spec.dentilShelf === "yes" ? "with dentil shelf" : "no dentil shelf"),
       spec.handing && handingLabel(spec.handing, openingByKey(spec.opening)),
       spec.swing && SWING_LABELS[spec.swing],
       spec.jambDepth && spec.jambDepth + '" jamb',
@@ -3382,6 +3427,7 @@ function renderQuote() {
     if (spec.glazing) bits.push(spec.glazing);
     if (spec.caming) bits.push(spec.caming + " caming");
     if (spec.stain) bits.push(spec.stain + " stain");
+    if (spec.dentilShelf) bits.push(spec.dentilShelf === "yes" ? "with dentil shelf" : "no dentil shelf");
     if (spec.grilleDesign) bits.push(spec.grilleDesign + " grille");
     if (spec.grilleStyle) bits.push(spec.grilleStyle + " grille");
     if (spec.handing) bits.push(handingLabel(spec.handing, op));

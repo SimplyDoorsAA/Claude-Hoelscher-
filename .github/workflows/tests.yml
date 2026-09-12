@@ -55,6 +55,9 @@ jobs:
       - name: What a Contemporary opening sells beside its door
         run: node tests/contemporary-extras.test.mjs
 
+      - name: True Divided Lite, against the vendor price sheet
+        run: node tests/tdl.test.mjs
+
       - name: Quoter under load
         run: node tests/stress-ui.mjs
 
