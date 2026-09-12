@@ -753,7 +753,10 @@ function completeSku(product, glazing, handing, shelf, caming) {
   if (sku.includes("--")) {
     const cr = caming && ruleFor("caming");
     const code = cr && cr.codes && cr.codes[caming];
+    // A speakeasy kit's glass insert is clear insulated glass only, printed C.
+    const se = ruleFor("speakeasyGlass");
     if (code) sku = sku.replace("--", code);
+    else if (se && se.code) sku = sku.replace("--", se.code);
     else {
       const want = glassKey(glazing);
       const hit = (state.engine.catalog.glassCodes || []).find(c => glassKey(c.name) === want);

@@ -21386,7 +21386,9 @@
       {
         "code": "--",
         "name": "Glass Insert",
-        "label": "Glass"
+        "label": "Clear IG glass",
+        "printedAs": "Clear IG",
+        "printedCode": "C"
       },
       {
         "code": "W",
@@ -21416,7 +21418,7 @@
         "label": "Windsor"
       }
     ],
-    "insertNote": "Hoelscher prices the kit the same with a wood or a glass insert.",
+    "insertNote": "Hoelscher prices the kit the same with a wood or a glass insert. The glass insert is clear insulated glass only: both catalogs print it as C (mahogany page 26, knotty alder page 8), whatever the sheet's glass column says.",
     "extras": [
       {
         "name": "Clavos",
@@ -21542,7 +21544,7 @@
     }
   },
   "skuPlaceholders": {
-    "notes": "A part number on the price sheet can carry more than one placeholder. The first is always the glass code (see glassCodes). A trailing one, or the one after a decorative-glass design infix, is filled at order time from something the configurator already knows. Only patterns confirmed against a real catalog page are listed here — anything else is flagged on the order sheet rather than guessed at.",
+    "notes": "A part number on the price sheet can carry more than one placeholder. The first is always the glass code (see glassCodes) — except after a decorative-glass design infix, where it is the caming letter, and in a speakeasy kit number, where it is the C of the clear insulated-glass insert; both are listed here by pattern. A trailing one is filled at order time from something the configurator already knows. Only patterns confirmed against a real catalog page are listed here — anything else is flagged on the order sheet rather than guessed at.",
     "handing": [
       {
         "id": "mahogany-narrow-lite",
@@ -21567,6 +21569,16 @@
         "confirmedBy": "dealer, 2026-09-12",
         "evidence": "Catalog page 25 lists the numbers in full beside the caming: MCABLAP3068 Patina, MCABLAZ3068 Zinc. The placeholder after the design infix BLA is the caming letter, not a glass code.",
         "example": "MCABLAP3068"
+      }
+    ],
+    "speakeasyGlass": [
+      {
+        "id": "speakeasy-glass-insert",
+        "appliesToSkuPattern": "^(M|KA)[A-Z0-9]*SE[MBW]?--\\d{4}$",
+        "code": "C",
+        "confirmedBy": "dealer, 2026-09-12",
+        "evidence": "Mahogany catalog page 26 prints every speakeasy glass-insert number with C where the sheet prints --: M2PASEC3068, M2PASEBC3068, M2PASEMC3068, M2PASEWC3068 (Clear IG), against W for the wood insert. Knotty alder page 8 prints the same grammar: KA2PASEC3068, KA2PASEBC2880 and so on. The sheet keys these rows to P.22, the ten-glass list; the dealer chose the catalog's reading, so no glass is asked and the number fills with C.",
+        "example": "M2PASEMC3068"
       }
     ]
   }

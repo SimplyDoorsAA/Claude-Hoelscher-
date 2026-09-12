@@ -41,15 +41,24 @@ The rule is deliberately one row wide. The other decorative-glass rows
 (pages 28–31, `M34---3068` and kin) carry a three-dash placeholder for a
 design infix and are a later walkthrough.
 
-## The glass list — held
+## The glass list — half settled by the catalog
 
 Page 22 prints the Legacy & Panel glass options: Clear Low-E, Clear Bevel
 Low-E, Baroque, Flemish, Water, Stippolyte, Rain, Reeded, Small Reeded, Satin,
 with privacy ratings 0–9 — the same ten as page 12. The sheet keys **42 rows**
-to "P.22": the flat-glass Full / 3/4 / 2/3 Lite doors and sidelites (pages
-28–30) and the 2 Panel Arch / Square speakeasy doors, whose `--` is the glass
-in the insert. The dealer is checking the catalog before this becomes a rule;
-until then those rows keep going out flagged, as they have.
+to "P.22", in two families:
+
+- **The speakeasy doors (26 rows on P.22; 70 across both lines).** Page 26
+  prints every glass-insert number with a `C` where the sheet prints `--`:
+  `M2PASEC3068`, `M2PASEBC3068`, `M2PASEMC3068`, `M2PASEWC3068`, captioned
+  *Clear IG*. Knotty alder page 8 prints the same grammar (`KA2PASEC3068`).
+  The catalog and the sheet disagree, and the dealer chose the catalog: the
+  insert is clear insulated glass only, no glass is asked, and
+  `skuPlaceholders.speakeasyGlass` fills the `C`. The configurator calls the
+  insert *Clear IG glass*. Seventy rows stop going out flagged.
+- **The flat-glass Full / 3/4 / 2/3 Lite doors and sidelites (16 rows, pages
+  28–30).** Still held: the dealer is checking those pages. Until then they
+  keep going out flagged, as they have.
 
 ## Verification
 
@@ -57,4 +66,6 @@ until then those rows keep going out flagged, as they have.
 sheet; the Blanco design, its placeholder rule and that the rule reaches no
 other row; then the app: a panel door asked no glass and printing its number,
 the Blanco asked its caming and not its glass, Patina → `MCABLAP3068`, Zinc →
-`MCABLAZ3068`, the same price both ways, the caming in words on the sheet.
+`MCABLAZ3068`, the same price both ways, the caming in words on the sheet; a
+speakeasy door with the glass insert asked no glass and printing
+`M2PASEMC3068`.

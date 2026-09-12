@@ -56,3 +56,12 @@ as printed**, with a note to confirm it before ordering.
 3. The fiberglass 2 Panel Arch V-Grooved, Mahogany Grain Skin prices its masked
    speakeasy variants as CONFIGURED ITEM with no part number. What are they?
 
+
+## The glass insert is Clear IG — added 2026-09-12
+
+The sheet keys every glass-insert row to "P.22" (the ten-glass list) and
+prints the number with `--`. Both catalogs print it with a `C`: mahogany page
+26 (`M2PASEC3068`, *Clear IG*) and knotty alder page 8 (`KA2PASEC3068`). The
+dealer chose the catalog's reading. `skuPlaceholders.speakeasyGlass` names the
+pattern; `completeSku` fills the `C`; no glass is asked. The 70 glass-insert
+rows, 24 mahogany and 46 knotty alder, print complete numbers from here on.

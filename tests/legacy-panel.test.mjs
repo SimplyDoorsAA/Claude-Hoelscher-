@@ -52,6 +52,16 @@ ok('and the placeholder after BLA is listed as a caming letter, P or Z',
 ok('the caming pattern reaches no other row',
    cat.woodProducts.filter(p=>new RegExp(cr.appliesToSkuPattern).test(p.sku)).length===1);
 
+const se=((cat.skuPlaceholders||{}).speakeasyGlass||[])[0];
+const seRows=se?cat.woodProducts.filter(p=>new RegExp(se.appliesToSkuPattern).test(p.sku)):[];
+ok('the speakeasy glass insert is listed as a C, the catalogs\' Clear IG',
+   !!se && se.code==='C' && /M2PASEC3068/.test(se.evidence||'') && /KA2PASEC3068/.test(se.evidence||''));
+ok('and the pattern reaches the 70 glass-insert rows and nothing else',
+   seRows.length===70 && seRows.every(p=>/SE \+ Glass|Glass/.test(p.description)),
+   seRows.length+' rows');
+ok('the insert is named as clear insulated glass on the configurator',
+   (cat.speakeasyOptions.inserts.find(i=>i.name==='Glass Insert')||{}).label==='Clear IG glass');
+
 /* ================= 2. the app, driven =================================== */
 const b=await chromium.launch();
 const page=await (await b.newContext({viewport:{width:1440,height:1000}})).newPage();
@@ -128,6 +138,15 @@ const pZinc=await priceShown();
 const d3=await orderDoc('Blanco Zinc');
 ok('Zinc prints MCABLAZ3068', /MCABLAZ3068/.test(d3) && !/still holds a placeholder/i.test(d3));
 ok('and the caming costs nothing, as the sheet prices one row', pPat===pZinc, pPat+' / '+pZinc);
+
+/* a speakeasy kit with the glass insert: no glass asked, the C filled */
+await open('2 Panel Arch VG');
+await pick('Size',"3'0\" x 6'8\""); await pick('Speakeasy','Speakeasy kit'); await pick('Insert','Clear IG glass'); await pick('Iron mask','Standard');
+ok('a speakeasy door with the glass insert is not asked its glass', !(await steps()).includes('Glass'), (await steps()).join(' > '));
+await finish();
+const d4=await orderDoc('Speakeasy Glass');
+ok('and prints the catalog\'s number with the C', /M2PASEMC3068/.test(d4) && !/still holds a placeholder/i.test(d4),
+   (d4.match(/M2PASE[A-Z-]*3068/)||['none'])[0]);
 
 ok('no console or page errors', errs.length===0, errs.slice(0,2).join(' | '));
 report();
