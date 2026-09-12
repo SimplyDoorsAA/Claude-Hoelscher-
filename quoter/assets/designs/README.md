@@ -16,6 +16,9 @@ sheet does not name.
 - **decorativeGlass / Blanco** — page 25 photographs the Blanco only as the
   Blanco Center Arch door, which is the door card's own picture; it is filed
   here by hand so the glass has a swatch where it is a choice (page 31).
+- **decorativeGlass / Dartmouth** — page 28's "Other Available Decorative Glass
+  Options" strip, leftmost, captioned Dartmouth; the extractor did not place it,
+  so it is filed by hand.
 - **accessories / sdlBar** — the two SDL bar profile drawings (7/8" and
   1-1/4", both 1/2" tall on 1 mm adhesive tape) from the SDL Bars page,
   supplied by the dealer as images rather than extracted from a PDF. Keyed by

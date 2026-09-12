@@ -41,7 +41,7 @@ The rule is deliberately one row wide. The other decorative-glass rows
 (pages 28–31, `M34---3068` and kin) carry a three-dash placeholder for a
 design infix and are a later walkthrough.
 
-## The glass list — half settled by the catalog
+## The glass list — settled by the catalog
 
 Page 22 prints the Legacy & Panel glass options: Clear Low-E, Clear Bevel
 Low-E, Baroque, Flemish, Water, Stippolyte, Rain, Reeded, Small Reeded, Satin,
@@ -57,8 +57,9 @@ to "P.22", in two families:
   `skuPlaceholders.speakeasyGlass` fills the `C`. The configurator calls the
   insert *Clear IG glass*. Seventy rows stop going out flagged.
 - **The flat-glass Full / 3/4 / 2/3 Lite doors and sidelites (16 rows, pages
-  28–30).** Still held: the dealer is checking those pages. Until then they
-  keep going out flagged, as they have.
+  28–30).** Settled by pages 28–29 themselves ("see page 22 for all available
+  flat glass options"): the ten-glass rule now reaches them. See
+  `mahogany-legacy-lites.md`.
 
 ## Verification
 

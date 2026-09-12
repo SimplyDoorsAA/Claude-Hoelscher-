@@ -67,6 +67,9 @@ jobs:
       - name: Legacy & Panel doors, and the Blanco's caming letter
         run: node tests/legacy-panel.test.mjs
 
+      - name: Legacy Full and 3/4 Lite, flat and decorative glass
+        run: node tests/legacy-lites.test.mjs
+
       - name: Quoter under load
         run: node tests/stress-ui.mjs
 

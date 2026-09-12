@@ -70,6 +70,12 @@
       "file": "glass-columbia.webp",
       "source": "f80a4145-HoelscherWood_Doors.pdf p5 /Im0"
     },
+    "Dartmouth": {
+      "basis": "caption",
+      "file": "glass-dartmouth.webp",
+      "source": "79d5f9d9-Compressed.pdf p28 /Im1 (Other Available Decorative Glass Options, leftmost, captioned Dartmouth; filed by hand)",
+      "handFiled": true
+    },
     "Kerrville": {
       "basis": "remainder",
       "file": "glass-kerrville.webp",
