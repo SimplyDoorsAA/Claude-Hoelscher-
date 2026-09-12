@@ -20195,8 +20195,8 @@
     {
       "id": "92c08b9bfe",
       "category": "Simulated Divided Lite",
-      "partNumber": "SDL-LITE",
-      "description": "Simulated Divided Lite, per lite — applied at the factory",
+      "partNumber": "SDL-LITE-78",
+      "description": "Simulated Divided Lite, per lite, 7/8\" bar — applied at the factory",
       "unit": "each",
       "line": "wood",
       "priceBasis": "list",
@@ -20204,7 +20204,21 @@
       "priceVariantsCents": null,
       "freightUnitsPerPiece": 0,
       "sourcePage": null,
-      "notes": "Hoelscher applies the grid at the factory and bills per lite. Confirmed by the dealer 2026-09-10. The 8' lineal bars in this section are the other way of doing it, for a grid applied in-house."
+      "notes": "Hoelscher applies the grid at the factory and bills per lite; the Dealer Wood Pricing sheet prints it on the MSDLBAR7880 row as +35 per lite. Confirmed by the dealer 2026-09-10; bar width added 2026-09-12. The 8' lineal bars in this section are the other way of doing it, for a grid applied in-house. SDL-LITE-78 is our own number: the sheet prints none."
+    },
+    {
+      "id": "1a230b3664",
+      "category": "Simulated Divided Lite",
+      "partNumber": "SDL-LITE-114",
+      "description": "Simulated Divided Lite, per lite, 1-1/4\" bar — applied at the factory",
+      "unit": "each",
+      "line": "wood",
+      "priceBasis": "list",
+      "priceCents": 4000,
+      "priceVariantsCents": null,
+      "freightUnitsPerPiece": 0,
+      "sourcePage": null,
+      "notes": "The Dealer Wood Pricing sheet prints the factory grid with the 1-1/4\" bar on the MSDLBAR11480 row as +40 per lite. Added 2026-09-12 with the dealer. SDL-LITE-114 is our own number: the sheet prints none."
     }
   ],
   "hardware": [
@@ -21256,6 +21270,14 @@
       "appliesToModelPattern": null,
       "allowSkuPattern": "^M1LCSL",
       "notes": "Mahogany catalog pages 8-11 show the Contemporary range with the Contemporary Full Lite Sidelite and no other. Height pairing falls out of the sizes: a 6'8\" door takes the 1269 (M1LCSL--1268), an 8'0\" door the 1281 (M1LCSL--1280). The dealer confirmed on 2026-09-11 that this holds for the narrow-profile doors and for the solid 7 Panel as well."
+    },
+    {
+      "id": "c2202329e2",
+      "appliesToCollection": "wood",
+      "appliesToPriceSheetPage": null,
+      "appliesToModelPattern": "^3/4 Lite 1 Panel NRM$",
+      "allowSkuPattern": "^M34SL--1P\\d+$",
+      "notes": "Mahogany catalog page 21 (Simulated Divided Lite Doors) shows the 3/4 Lite 1 Panel for SDL with the 3/4 Lite 1 Panel Sidelite for SDL, M34SLLE1P1068 / 1080, and no other. Height still breaks the tie between the sidelite's two sizes. Confirmed with the dealer 2026-09-12."
     }
   ],
   "glassCodes": [
@@ -21485,11 +21507,26 @@
     "slabNote": "A slab is not hung, so it takes no prehang adder."
   },
   "sdlRule": {
-    "notes": "Hoelscher applies simulated divided lites at the factory and bills per lite, so the count is a question on the door rather than bar stock off a shelf. The lineal bars in the components sections remain, for a grid applied in-house. Confirmed by the dealer 2026-09-10.",
+    "notes": "Hoelscher applies simulated divided lites at the factory and bills per lite, so the count is a question on the door rather than bar stock off a shelf. The Dealer Wood Pricing sheet prices it +35 per lite with the 7/8\" bar and +40 with the 1-1/4\", so the bar is asked. Mahogany catalog page 21 offers the grid on one door, the 3/4 Lite 1 Panel for SDL, so on wood it is offered there and nowhere else; the lineal bars in the components sections remain, for a grid applied in-house. Confirmed by the dealer 2026-09-10 and 2026-09-12.",
     "matchDescription": "Simulated Divided Lite, per lite",
     "label": "Simulated divided lites",
     "unit": "per lite",
-    "maxLites": 48
+    "maxLites": 48,
+    "bars": [
+      {
+        "label": "7/8\" bar",
+        "matchDescription": "per lite, 7/8",
+        "barPartNumber": "MSDLBAR7880"
+      },
+      {
+        "label": "1-1/4\" bar",
+        "matchDescription": "per lite, 1-1/4",
+        "barPartNumber": "MSDLBAR11480"
+      }
+    ],
+    "appliesToModelPattern": {
+      "wood": "^3/4 Lite 1 Panel NRM$"
+    }
   },
   "skuPlaceholders": {
     "notes": "A part number on the price sheet can carry more than one placeholder. The first is always the glass code (see glassCodes). A trailing one is filled at order time from something the configurator already knows. Only patterns confirmed against a real catalog page are listed here — anything else is flagged on the order sheet rather than guessed at.",

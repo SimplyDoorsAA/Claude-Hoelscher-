@@ -1529,7 +1529,7 @@ function openConfigurator(model) {
     speakeasy: null, insert: null, mask: null,
     grilleChoice: null, grille: null, grilleDesign: null,
     finish: null, stain: null,
-    opening: null, config: null, sidelite: null, sideliteGlazing: null, dentilShelf: null,
+    opening: null, config: null, sidelite: null, sideliteGlazing: null, dentilShelf: null, sdlBar: null,
     handing: null, swing: null, jambDepth: null,
     qty: 1, accessories: []
   };
@@ -2436,11 +2436,7 @@ function renderDetail() {
         glazing: d.glazing || null, caming: d.caming || null,
         insert: d.speakeasy === "yes" ? d.insert : null,
         mask: d.speakeasy === "yes" ? d.mask : null,
-        sdlLites: (() => {
-          const row = sdlRow();
-          const a = row && d.accessories.find(x => x.kind === "component" && x.id === row.id);
-          return a ? a.qty : null;
-        })(),
+        sdlLites: sdlLitesOf(d) || null,
         grilleDesign: d.grilleDesign || null,
         opening: d.opening || null, handing: d.handing || null,
         sideliteGlazing: d.sideliteGlazing || null,
@@ -2498,33 +2494,88 @@ function accessoryPhoto(label) {
    stay in the picker for a grid applied in-house. */
 
 const sdlRule = () => state.engine.catalog.sdlRule || null;
-/** The per-lite row for the collection on screen, or null. */
-function sdlRow() {
+/** The per-lite rows for the collection on screen: one per bar the rule
+    names (the sheet prices the 7/8" and the 1-1/4" bar differently), or the
+    single row its matchDescription finds where no bars are named. */
+function sdlRows() {
   const r = sdlRule();
-  if (!r) return null;
-  return state.engine.componentsIn(state.collection)
-    .find(c => rxTest(r.matchDescription, c.description)) || null;
+  if (!r) return [];
+  const comps = state.engine.componentsIn(state.collection);
+  const bars = (r.bars || [])
+    .map(b => ({ bar: b, row: comps.find(c => rxTest(b.matchDescription, c.description)) || null }))
+    .filter(x => x.row);
+  if (bars.length) return bars;
+  const row = comps.find(c => rxTest(r.matchDescription, c.description));
+  return row ? [{ bar: null, row }] : [];
+}
+/** Which of those rows a draft is counting on, or the first if none yet. */
+function sdlCurrent(draft) {
+  const rows = sdlRows();
+  return rows.find(x => x.row.id === draft.sdlBar) ||
+         rows.find(x => draft.accessories.some(a => a.kind === "component" && a.id === x.row.id)) ||
+         rows[0] || null;
+}
+/** The lites a draft carries, whichever bar they are on. */
+function sdlLitesOf(draft) {
+  return sdlRows().reduce((n, x) => {
+    const a = draft.accessories.find(y => y.kind === "component" && y.id === x.row.id);
+    return n + (a ? a.qty : 0);
+  }, 0);
+}
+/* The catalog offers the factory grid on named doors only (on wood, the 3/4
+   Lite 1 Panel for SDL); a collection the rule does not name keeps offering it
+   on every door, as before. */
+function sdlOffered(product) {
+  const r = sdlRule();
+  if (!r || !product) return false;
+  const pats = r.appliesToModelPattern;
+  if (!pats || typeof pats !== "object") return true;
+  const pat = pats[state.collection];
+  if (pat === undefined || pat === null) return true;
+  return rxTest(pat, modelKeyOf(product));
 }
 function sdlBlock(product, draft) {
-  const r = sdlRule(), row = sdlRow();
-  if (!r || !row) return null;
+  const r = sdlRule(), rows = sdlRows();
+  if (!r || !rows.length || !sdlOffered(product)) return null;
   const extras = openingExtrasFor(product);
   if (extras && extras.simulatedDividedLites === false) return null;
+  const current = sdlCurrent(draft), row = current.row;
   const at = draft.accessories.findIndex(a => a.kind === "component" && a.id === row.id);
   const lites = at >= 0 ? draft.accessories[at].qty : 0;
-  const priced = state.engine.priceLine({
-    productId: product.id, finish: draft.finish, config: draft.config, qty: 1,
-    accessories: [{ kind: "component", id: row.id, qty: 1 }]
-  }).accessories[0];
-  const each = priced.costCents === null ? null
-    : (isCost() ? priced.costCents : applyMargin(priced.costCents, curMargin()));
+  const perLite = x => {
+    const priced = state.engine.priceLine({
+      productId: product.id, finish: draft.finish, config: draft.config, qty: 1,
+      accessories: [{ kind: "component", id: x.row.id, qty: 1 }]
+    }).accessories[0];
+    return priced.costCents === null ? null
+      : (isCost() ? priced.costCents : applyMargin(priced.costCents, curMargin()));
+  };
+  const each = perLite(current);
 
   const block = el("div", "");
   block.appendChild(el("p", "mb-2 text-[11px] uppercase tracking-widest text-ink-mute",
     r.label || "Simulated divided lites"));
+  /* The bar first, since the sheet prices the lite by it. Switching bars
+     carries the count across, so the number is never typed twice. */
+  if (rows.length > 1) {
+    const bars = el("div", "steprow mb-2 flex flex-wrap gap-2");
+    rows.forEach(x => {
+      const e = perLite(x);
+      bars.appendChild(optionButton(x.bar.label, x === current, e === null, () => {
+        const i = draft.accessories.findIndex(a => a.kind === "component" && a.id === row.id);
+        const q = i >= 0 ? draft.accessories[i].qty : 0;
+        if (i >= 0) draft.accessories.splice(i, 1);
+        if (q > 0) draft.accessories.push({ kind: "component", id: x.row.id, qty: q });
+        draft.sdlBar = x.row.id;
+        renderDetail();
+      }, x.row.description, e === null ? "not priced" : formatCents(e) + " " + (r.unit || "per lite")));
+    });
+    block.appendChild(bars);
+  }
   const line = el("div", "flex items-center gap-3 rounded-lg border border-paper-line bg-paper-card px-3 py-2");
   const words = el("div", "min-w-0 flex-1");
-  words.appendChild(el("p", "text-sm", "Grid applied at the factory"));
+  words.appendChild(el("p", "text-sm", "Grid applied at the factory" +
+    (current.bar ? " \u00b7 " + current.bar.label : "")));
   words.appendChild(el("p", "tnum text-[11px] text-ink-faint",
     (each === null ? "not priced" : formatCents(each)) + " " + (r.unit || "per lite") +
     (lites ? "  \u00b7  " + formatCents(each * lites) + " for " + lites : "")));
