@@ -741,8 +741,12 @@ function glassSwatch(name) {
 /* The price sheet prints a part number with (--) standing in for the glass and
    a legend of codes to fill it with, so a quote can name the part the customer
    actually orders rather than the template. */
-function completeSku(product, glazing, handing, shelf, caming) {
-  let sku = String((product && product.sku) || "");
+function completeSku(product, glazing, handing, shelf, caming, grille) {
+  /* A correction that says so is written into the number (the sheet's stem
+     for the 2/3 Lite grille); the speakeasy misprints keep the number as
+     printed and say their doubt on the sheet instead. */
+  const corr = product && skuCorrection(product);
+  let sku = String((corr && corr.appliesToNumber && corr.resolvesAs) || (product && product.sku) || "");
   if (!sku.includes("-")) return withShelf(sku, product, shelf);
   const raw = sku;
   const placeholderRules = key => ((state.engine.catalog.skuPlaceholders || {})[key]) || [];
@@ -765,7 +769,17 @@ function completeSku(product, glazing, handing, shelf, caming) {
       .find(x => x.name === glazing && x.partNumberInfix);
     const designCaming = design && (caming || (design.caming && design.caming.length === 1 ? design.caming[0] : null));
     const designCode = design && dd.codes && dd.codes[designCaming];
+    // An iron-grille door is the stem, the grille's infix and a C for Clear
+    // Low-E (M23ACRDC3068), the legend's code for any other glass. Without a
+    // design chosen the gap stays, so the sheet flags it rather than guessing.
+    const ig = (state.engine.catalog.skuPlaceholders || {}).ironGrille;
+    const grilleRow = ig && /Iron Grille/i.test(String((product && product.description) || ""));
+    const gd = grilleRow && grille && (state.engine.catalog.ironGrilleDesigns || []).find(g => g.name === grille && g.code);
+    const grilleGlass = gd && glazing && (glassKey(glazing) === glassKey(ig.clearGlass || "Clear Low E")
+      ? ig.clearCode
+      : ((state.engine.catalog.glassCodes || []).find(c => glassKey(c.name) === glassKey(glazing)) || {}).code);
     if (code) sku = sku.replace(GAP, code);
+    else if (grilleRow) { if (gd && grilleGlass) sku = sku.replace(GAP, gd.code + grilleGlass); }
     else if (design && designCode && !raw.includes(design.partNumberInfix)) sku = sku.replace(GAP, design.partNumberInfix + designCode);
     else if (se && se.code) sku = sku.replace(GAP, se.code);
     else {
@@ -801,10 +815,10 @@ const skuIsIncomplete = sku => /-/.test(String(sku || ""));
    leaves, so a handed door is ordered twice — once left, once right — and the
    handing answer names which of the two operates rather than choosing between
    them. Everything else orders as one number. */
-function orderSkus(product, glazing, handing, config, shelf, caming) {
+function orderSkus(product, glazing, handing, config, shelf, caming, grille) {
   if (config === "doublePH" && skuNeedsHanding(product))
-    return [completeSku(product, glazing, "left", shelf, caming), completeSku(product, glazing, "right", shelf, caming)];
-  return [completeSku(product, glazing, handing, shelf, caming)];
+    return [completeSku(product, glazing, "left", shelf, caming, grille), completeSku(product, glazing, "right", shelf, caming, grille)];
+  return [completeSku(product, glazing, handing, shelf, caming, grille)];
 }
 function glazingOptions(value) {
   if (!value) return [];
@@ -1018,11 +1032,14 @@ const speakeasyOptions = () => state.engine.catalog.speakeasyOptions || null;
    content hash where two rows share one printed number, by the number itself
    where it is unique. */
 function skuCorrection(product) {
+  if (!product) return null;
   const opt = speakeasyOptions();
-  if (!product || !opt || !opt.skuCorrections) return null;
-  return opt.skuCorrections.find(c => c.productId
-    ? c.productId === product.id
-    : c.printed === product.sku) || null;
+  const lists = [(opt && opt.skuCorrections) || [], state.engine.catalog.skuCorrections || []];
+  for (const list of lists) {
+    const hit = list.find(c => c.productId ? c.productId === product.id : c.printed === product.sku);
+    if (hit) return hit;
+  }
+  return null;
 }
 /** Where a row belongs in the part-number grammar, misprints corrected. */
 function resolvedSku(product) {
@@ -2421,7 +2438,7 @@ function renderDetail() {
                     d.swing && SWING_LABELS[d.swing],
                     d.jambDepth && d.jambDepth + '" jamb',
                     configured ? "configured item — Hoelscher prints no part number"
-                               : completeSku(product, d.glazing, d.handing, d.dentilShelf === "yes", d.caming)].filter(Boolean).join(" · ");
+                               : completeSku(product, d.glazing, d.handing, d.dentilShelf === "yes", d.caming, d.grilleDesign)].filter(Boolean).join(" · ");
     if (chosen) foot.appendChild(el("p", "mb-3 text-xs text-ink-mute", chosen));
     const misprint = skuCorrection(product);
     if (misprint) foot.appendChild(el("p", "mb-3 rounded-lg bg-brass-pale px-3 py-2 text-[11px] text-brass-deep",
@@ -3308,7 +3325,7 @@ function buildOrderDoc(q) {
     // Hoelscher's desk cross-checks the number against the description, so the
     // sheet carries both, and the number exactly as Hoelscher prints it.
     const skus = orderSkus(prod, spec.glazing, spec.handing, l.config,
-                           spec.dentilShelf === "yes", spec.caming);
+                           spec.dentilShelf === "yes", spec.caming, spec.grilleDesign);
     skus.forEach(k => td.appendChild(el("span", "pn", k)));
     td.appendChild(el("span", "sub", l.description +
       (skus.length > 1 ? "  \u2014 one of each hand" : "")));
@@ -3332,7 +3349,7 @@ function buildOrderDoc(q) {
       if (a.kind === "product") {
         // A decorative sidelite is leaded like its door, so the door's caming
         // reaches its number too.
-        const slSku = completeSku(state.engine.productById(a.id), sp && sp.glazing, null, false, spec.caming);
+        const slSku = completeSku(state.engine.productById(a.id), sp && sp.glazing, null, false, spec.caming, spec.grilleDesign);
         if (slSku) {
           head = slSku + " \u2014 ";
           if (skuIsIncomplete(slSku)) incomplete.push(slSku);
@@ -3350,6 +3367,7 @@ function buildOrderDoc(q) {
        order sheet is the only place it can be said. */
     tr.appendChild(el("td", null, [
       spec.stain && spec.stain + " stain",
+      spec.grilleDesign && spec.grilleDesign + " grille",
       spec.caming && spec.caming + " caming",
       spec.dentilShelf && (spec.dentilShelf === "yes" ? "with dentil shelf" : "no dentil shelf"),
       spec.handing && handingLabel(spec.handing, openingByKey(spec.opening)),
