@@ -53,12 +53,47 @@
       "source": "f80a4145-HoelscherWood_Doors.pdf p7 /Im4"
     }
   },
+  "caming": {
+    "Patina": {
+      "file": "caming-patina.webp",
+      "handFiled": true,
+      "source": "dealer upload e21c7062-image.jpg crop [1480, 108, 1934, 569] (filed by hand: the dealer supplied Hoelscher's \"Caming Options\" strip 2026-09-13: two swatches captioned Patina and Zinc, matched by caption)"
+    },
+    "Zinc": {
+      "file": "caming-zinc.webp",
+      "handFiled": true,
+      "source": "dealer upload e21c7062-image.jpg crop [2017, 108, 2471, 569] (filed by hand: the dealer supplied Hoelscher's \"Caming Options\" strip 2026-09-13: two swatches captioned Patina and Zinc, matched by caption)"
+    }
+  },
   "decorativeGlass": {
+    "Austin": {
+      "handFiled": true,
+      "sideliteSource": {
+        "Full": "dealer upload afc8c533-image.jpg crop [13, 419, 237, 1322] (filed by hand: the dealer supplied Hoelscher's \"Austin Full Oval with Sidelites\" picture 2026-09-13: door in the middle, its sidelites either side; the left sidelite is cut out)"
+      },
+      "sidelites": {
+        "Full": "glass-austin-full-sidelite.webp"
+      },
+      "unpriced": {
+        "Full": "the sheet prices no Austin glass and no oval door; on file for the dealer, offered nowhere"
+      }
+    },
     "Blanco": {
       "basis": "caption",
       "file": "glass-blanco.webp",
       "handFiled": true,
-      "source": "79d5f9d9-Compressed.pdf p25 /Im1 (the same photograph as the door card, filed by hand)"
+      "sideliteSource": {
+        "2/3": "dealer upload 4b51144e-image.jpg crop [27, 506, 287, 1500] (filed by hand: the dealer supplied Hoelscher's \"Blanco 2/3 Arch with Sidelites\" picture 2026-09-13: door in the middle, its sidelites either side; the left sidelite is cut out)",
+        "3/4": "dealer upload eeeac908-image.jpg crop [31, 576, 275, 1771] (filed by hand: the dealer supplied Hoelscher's \"Blanco Deluxe Oval with Blanco 3/4 Sidelites\" picture 2026-09-13: door in the middle, its sidelites either side; the left sidelite is cut out)"
+      },
+      "sidelites": {
+        "2/3": "glass-blanco-2-3-sidelite.webp",
+        "3/4": "glass-blanco-3-4-sidelite.webp"
+      },
+      "source": "79d5f9d9-Compressed.pdf p25 /Im1 (the same photograph as the door card, filed by hand)",
+      "unpriced": {
+        "3/4": "the sheet lists Columbia, Medina, Pecos and San Jacinto on the 3/4 sidelite, not Blanco; on file for the dealer, offered nowhere"
+      }
     },
     "Bowie": {
       "basis": "caption",
@@ -82,6 +117,18 @@
       "handFiled": true,
       "source": "79d5f9d9-Compressed.pdf p28 /Im1 (Other Available Decorative Glass Options, leftmost, captioned Dartmouth; filed by hand)"
     },
+    "Imperial": {
+      "handFiled": true,
+      "sideliteSource": {
+        "2/3": "dealer upload 763157cb-image.jpg crop [2, 462, 231, 1336] (filed by hand: the dealer supplied Hoelscher's \"Imperial 2/3 Oval with Sidelites\" picture 2026-09-13: door in the middle, its sidelites either side; the left sidelite is cut out)"
+      },
+      "sidelites": {
+        "2/3": "glass-imperial-2-3-sidelite.webp"
+      },
+      "unpriced": {
+        "2/3": "the sheet prices no Imperial glass and no oval door; on file for the dealer, offered nowhere"
+      }
+    },
     "Kerrville": {
       "basis": "remainder",
       "file": "glass-kerrville.webp",
@@ -100,6 +147,12 @@
     "Pecos": {
       "basis": "column",
       "file": "glass-pecos.webp",
+      "sideliteSource": {
+        "2/3": "dealer upload 250008ac-image.jpg crop [0, 492, 255, 1451] (filed by hand: the dealer supplied Hoelscher's \"Pecos 2/3 Arch with Sidelites\" picture 2026-09-13: door in the middle, its sidelites either side; the left sidelite is cut out)"
+      },
+      "sidelites": {
+        "2/3": "glass-pecos-2-3-sidelite.webp"
+      },
       "source": "f80a4145-HoelscherWood_Doors.pdf p5 /Im2"
     },
     "San Jacinto": {
@@ -341,6 +394,8 @@
       "handFiled": true,
       "line": "mahogany",
       "name": "Avignon",
+      "sideliteFile": "grille-mahogany-2-3-lite-avignon-sidelite.webp",
+      "sideliteSource": "dealer upload caeccbb9-image.jpg crop [63, 432, 257, 1320] (filed by hand: the dealer supplied Hoelscher's \"Avignon 2/3 Lite with Sidelites\" picture 2026-09-13: door in the middle, its matching sidelites either side; the left sidelite is cut out)",
       "sizes": [
         "2880",
         "3080"
@@ -499,6 +554,8 @@
       "handFiled": true,
       "line": "mahogany",
       "name": "Santiago",
+      "sideliteFile": "grille-mahogany-3-4-lite-santiago-sidelite.webp",
+      "sideliteSource": "dealer upload c08669c9-image.jpg crop [47, 452, 274, 1340] (filed by hand: the dealer supplied Hoelscher's \"Santiago 3/4 Lite with Sidelites\" picture 2026-09-13: door in the middle, its matching sidelites either side; the left sidelite is cut out)",
       "sizes": [
         "2868",
         "3068",
@@ -516,6 +573,8 @@
       "handFiled": true,
       "line": "mahogany",
       "name": "Sienna",
+      "sideliteFile": "grille-mahogany-3-4-lite-sienna-sidelite.webp",
+      "sideliteSource": "dealer upload 1acd40fd-image.jpg crop [48, 441, 273, 1321] (filed by hand: the dealer supplied Hoelscher's \"Sienna 3/4 Lite with Sidelites\" picture 2026-09-13: door in the middle, its matching sidelites either side; the left sidelite is cut out)",
       "sizes": [
         "2868",
         "3068",
@@ -550,6 +609,8 @@
       "handFiled": true,
       "line": "mahogany",
       "name": "Whitney",
+      "sideliteFile": "grille-mahogany-3-4-lite-whitney-sidelite.webp",
+      "sideliteSource": "dealer upload 1a7f3613-image.jpg crop [6, 372, 200, 1340] (filed by hand: the dealer supplied Hoelscher's \"Whitney 3/4 Lite with Sidelites\" picture 2026-09-13: door in the middle, its matching sidelites either side; the left sidelite is cut out; a second Whitney picture on reeded glass was supplied too and is not filed, the water-glass one being the cleaner cut)",
       "sizes": [
         "2868",
         "3068",
@@ -596,6 +657,8 @@
       "handFiled": true,
       "line": "mahogany",
       "name": "Cordoba",
+      "sideliteFile": "grille-mahogany-full-lite-cordoba-sidelite.webp",
+      "sideliteSource": "dealer upload b54bca66-image.jpg crop [10, 461, 238, 1358] (filed by hand: the dealer supplied Hoelscher's \"Cordoba Full Lite with Sidelites\" picture 2026-09-13: door in the middle, its matching sidelites either side; the left sidelite is cut out)",
       "sizes": [
         "3068"
       ],

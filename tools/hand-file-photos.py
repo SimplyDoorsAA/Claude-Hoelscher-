@@ -15,6 +15,12 @@ these entries when it rewrites the manifest.
 UPLOAD_DIR is where the catalog PDFs named in the list are found (default: the
 directory given by $CATALOG_PDFS, else the current directory). Needs pypdf +
 Pillow. Stain swatches (kind "stain") land in quoter/assets/stains/.
+
+An entry may name a picture file the dealer supplied ("upload") instead of a
+PDF page; it is found in the same folders. Kinds "grilleSidelite" (the sidelite
+that matches a grille design), "decorativeSidelite" (a sidelite glazed with a
+decorative glass, by lite style) and "caming" (a leading swatch) land in
+quoter/assets/designs/ and are read by the quoter beside the design pictures.
 """
 import sys, os, json, importlib.util
 from collections import deque
@@ -80,9 +86,12 @@ def find_pdf(name, folders):
     raise SystemExit(f'cannot find {name} in {folders}')
 
 
-def picture(reader, entry):
-    page = reader.pages[entry['page'] - 1]
-    im = extract.load_image(page, entry['image'])
+def picture(reader, entry, folders=()):
+    if entry.get('upload'):
+        im = Image.open(find_pdf(entry['upload'], folders)).convert('RGB')
+    else:
+        page = reader.pages[entry['page'] - 1]
+        im = extract.load_image(page, entry['image'])
     if im is None:
         raise SystemExit(f"cannot decode p{entry['page']} {entry['image']}")
     if entry.get('crop'):
@@ -107,13 +116,69 @@ def main(argv):
                       'Filed by tools/hand-file-photos.py from quoter/assets/doors/hand-filed.json; '
                       'source says which page and image each came off.',
               'stains': {}, 'source': {}}
+    designs.setdefault('decorativeGlass', {})
+    designs.setdefault('caming', {})
+    NEW_KINDS = ('grille', 'grilleSidelite', 'decorativeSidelite', 'caming')
+
+    def save_design(im, fn):
+        if dry:
+            return
+        im = extract.trim(im)
+        if im.height > extract.MAX_PX_H:
+            im = im.resize((max(1, round(im.width * extract.MAX_PX_H / im.height)), extract.MAX_PX_H), Image.LANCZOS)
+        im.save(os.path.join(DESIGNS, fn), 'WEBP', quality=extract.WEBP_QUALITY, method=6)
+
     for e in entries:
-        pdf = e['pdf']
-        if pdf not in readers:
-            readers[pdf] = PdfReader(find_pdf(pdf, folders))
-        im = picture(readers[pdf], e)
-        src = (f"{pdf} p{e['page']} {e['image']}" + (f" crop {e['crop']}" if e.get('crop') else '')
-               + (' whitened' if e.get('whiten') else '') + ' (filed by hand: ' + e['why'] + ')')
+        if e.get('upload'):
+            im = picture(None, e, folders)
+            src = (f"dealer upload {e['upload']}" + (f" crop {e['crop']}" if e.get('crop') else '')
+                   + ' (filed by hand: ' + e['why'] + ')')
+        else:
+            pdf = e['pdf']
+            if pdf not in readers:
+                readers[pdf] = PdfReader(find_pdf(pdf, folders))
+            im = picture(readers[pdf], e)
+            src = (f"{pdf} p{e['page']} {e['image']}" + (f" crop {e['crop']}" if e.get('crop') else '')
+                   + (' whitened' if e.get('whiten') else '') + ' (filed by hand: ' + e['why'] + ')')
+        if e.get('kind') == 'grilleSidelite':
+            # The sidelite made to match a grille design. Filed beside the
+            # design's door picture; the catalog entry's sidelitePhoto points
+            # at it, and a grille sidelite's gallery shows it instead of the
+            # door.
+            key = f"{e['line']}-{e['style']}-{e['name']}"
+            fn = extract.slug(f"grille {e['line']} {e['style']} {e['name']} sidelite") + '.webp'
+            hits = [g for g in catalog.get('ironGrilleDesigns', [])
+                    if g.get('line') == e['line'] and g.get('style') == e['style'] and g.get('name') == e['name']]
+            if len(hits) != 1:
+                raise SystemExit(f'{key}: {len(hits)} catalog designs match')
+            rec = designs['grilles'].setdefault(key, {'line': e['line'], 'name': e['name'], 'style': e['style']})
+            rec['sideliteFile'] = fn; rec['sideliteSource'] = src; rec['handFiled'] = True
+            if hits[0].get('sidelitePhoto') != fn:
+                hits[0]['sidelitePhoto'] = fn; catalog_touched = True
+            save_design(im, fn)
+            print('grille sidelite', key, '->', fn)
+            continue
+        if e.get('kind') == 'decorativeSidelite':
+            # A sidelite glazed with a decorative glass, by lite style ("2/3",
+            # "3/4", "Full"). A glass the sheet does not price on that sidelite
+            # is still filed, marked so, and the quoter offers nothing from it.
+            fn = extract.slug(f"glass {e['name']} {e['style']} sidelite") + '.webp'
+            rec = designs['decorativeGlass'].setdefault(e['name'], {'handFiled': True})
+            rec.setdefault('sidelites', {})[e['style']] = fn
+            rec.setdefault('sideliteSource', {})[e['style']] = src
+            if e.get('unpriced'):
+                rec.setdefault('unpriced', {})[e['style']] = e['unpriced']
+            save_design(im, fn)
+            print('decorative sidelite', e['name'], e['style'], '->', fn)
+            continue
+        if e.get('kind') == 'caming':
+            fn = extract.slug('caming ' + e['name']) + '.webp'
+            designs['caming'][e['name']] = {'file': fn, 'source': src, 'handFiled': True}
+            if not dry:
+                extract.trim(im).convert('RGB').resize((240, 240), Image.LANCZOS).save(
+                    os.path.join(DESIGNS, fn), 'WEBP', quality=extract.WEBP_QUALITY, method=6)
+            print('caming', e['name'], '->', fn)
+            continue
         if e.get('kind') == 'grille':
             # An iron grille design: the picture goes beside the design in the
             # configurator and stands in for the grille door's card, so it is
@@ -165,7 +230,7 @@ def main(argv):
         if stains['stains']:
             with open(os.path.join(STAINS, 'manifest.json'), 'w') as f:
                 json.dump(stains, f, indent=2, sort_keys=True); f.write('\n')
-        if any(e.get('kind') == 'grille' for e in entries):
+        if any(e.get('kind') in NEW_KINDS for e in entries):
             with open(os.path.join(DESIGNS, 'manifest.json'), 'w') as f:
                 json.dump(designs, f, indent=2, sort_keys=True); f.write('\n')
         if catalog_touched:

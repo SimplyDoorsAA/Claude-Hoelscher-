@@ -431,7 +431,7 @@ const state = {
   engine: null,
   photos: {},                             // model name -> file, from the manifest
   glass: { glass: {}, privacy: {} },      // glass name -> swatch and privacy rating
-  designs: { decorativeGlass: {}, accessories: {} },
+  designs: { decorativeGlass: {}, accessories: {}, caming: {} },
   stains: {},                             // line -> stain name -> swatch file
   lightboxOpen: false,                    // a design picture shown full size
   estimate: null,                         // company, document copy and terms
@@ -629,9 +629,10 @@ async function loadData() {
     // sections the app looks up by name are kept.
     const dz = await fetchJson(CONFIG.designManifest);
     state.designs = { decorativeGlass: (dz && dz.decorativeGlass) || {},
-                      accessories: (dz && dz.accessories) || {} };
+                      accessories: (dz && dz.accessories) || {},
+                      caming: (dz && dz.caming) || {} };
   } catch (e) {
-    state.designs = { decorativeGlass: {}, accessories: {} };
+    state.designs = { decorativeGlass: {}, accessories: {}, caming: {} };
   }
   try {
     const st = await fetchJson(CONFIG.stainManifest);
@@ -674,7 +675,7 @@ function glassSwatch(name) {
   };
   // The decorative glasses have no flat swatch in the catalogs; they are shown
   // as a door glazed with them, which serves the same purpose here.
-  const dec = Object.keys(state.designs.decorativeGlass);
+  const dec = Object.keys(state.designs.decorativeGlass).filter(n => state.designs.decorativeGlass[n].file);
   const d = dec.find(n => glassKey(n) === want);
   if (!d) return null;
   return {
@@ -859,11 +860,11 @@ function basePhoto(modelName) {
    of its glasses. Either is a true picture of the model, so it stands in. */
 function standInPhoto(model) {
   if (!model) return null;
-  const g = (model.grilleDesigns || []).find(x => x.photo);
-  if (g) return CONFIG.designBase + encodeURIComponent(g.photo);
+  const g = (model.grilleDesigns || []).find(x => grilleArt(x, model.name));
+  if (g) return grilleArt(g, model.name);
   for (const name of model.glazings || []) {
-    const dec = state.designs.decorativeGlass[name];
-    if (dec) return CONFIG.designBase + encodeURIComponent(dec.file);
+    const src = decorativeArt(name, model.name);
+    if (src) return src;
   }
   return null;
 }
@@ -875,24 +876,50 @@ function standInPhoto(model) {
    the size of the sheet's preview rather than a row of thumbnails, and the
    catalogue card shows the door with clear glass so it never looks as if one
    design had been chosen already. Walked with the dealer 2026-09-13. */
+/* The dealer supplied Hoelscher's "door with sidelites" pictures for a few
+   grille designs and decorative glasses (2026-09-13), so a sidelite can show
+   the sidelite rather than the door it matches. A sidelite is one of three
+   lite styles, read off its name. */
+const isSideliteName = name => /\bsidelite\b/i.test(String(name || ""));
+function liteStyleOf(name) {
+  const n = String(name || "");
+  return /2\/3/.test(n) ? "2/3" : /3\/4/.test(n) ? "3/4" : /\bfull\b/i.test(n) ? "Full" : null;
+}
+/* The picture of a grille design for a model: the matching sidelite's when
+   the model is a sidelite and one is on file, else the door's. */
+function grilleArt(g, modelName) {
+  const file = (isSideliteName(modelName) && g.sidelitePhoto) || g.photo;
+  return file ? CONFIG.designBase + encodeURIComponent(file) : null;
+}
+/* The picture of a decorative glass for a model: the sidelite of its lite
+   style glazed with it when on file, else the glass's own picture. Null for
+   a glass the sheet does not name. */
+function decorativeArt(name, modelName) {
+  const dec = name && state.designs.decorativeGlass[name];
+  if (!dec) return null;
+  const style = isSideliteName(modelName) ? liteStyleOf(modelName) : null;
+  const file = (style && dec.sidelites && dec.sidelites[style]) || dec.file;
+  return file ? CONFIG.designBase + encodeURIComponent(file) : null;
+}
+
 function designGalleryOf(model) {
   if (!model) return null;
   if ((model.grilleDesigns || []).length) {
     return { kind: "grille", label: "grille design", plural: "grille designs",
       designs: model.grilleDesigns.map(g => ({
         name: g.name,
-        src: g.photo ? CONFIG.designBase + encodeURIComponent(g.photo) : null,
+        src: grilleArt(g, model.name),
         sizeCodes: g.sizeCodes || [],
         title: [g.stainShown && "Shown in " + g.stainShown,
                 g.glassShown && "with " + g.glassShown].filter(Boolean).join(" ") || null
       })) };
   }
   const gl = model.glazings || [];
-  if (gl.length > 1 && gl.every(g => state.designs.decorativeGlass[g])) {
+  if (gl.length > 1 && gl.every(g => decorativeArt(g, model.name))) {
     return { kind: "decorative", label: "decorative glass", plural: "decorative glasses",
       designs: gl.map(g => ({
         name: g,
-        src: CONFIG.designBase + encodeURIComponent(state.designs.decorativeGlass[g].file),
+        src: decorativeArt(g, model.name),
         sizeCodes: Array.from(new Set(model.products.filter(p => glazingOffers(p, g))
           .map(p => p.size && p.size.code).filter(Boolean))),
         title: null
@@ -989,13 +1016,19 @@ function lineArtSrc(product, spec) {
   const pseudo = { name, line: product.line, glazings: glazingOptions(product.glazing) };
   pseudo.grilleDesigns = grilleDesignsFor(pseudo);
   if (spec.grilleDesign) {
-    const g = pseudo.grilleDesigns.find(x => x.name === spec.grilleDesign && x.photo);
-    if (g) return CONFIG.designBase + encodeURIComponent(g.photo);
+    const g = pseudo.grilleDesigns.find(x => x.name === spec.grilleDesign && grilleArt(x, name));
+    if (g) return grilleArt(g, name);
   }
+  // A sidelite photographed glazed with the chosen glass is a truer picture
+  // of that sidelite than its generic catalog photograph.
+  const sideliteGlazed = isSideliteName(name) && spec.glazing &&
+    liteStyleOf(name) && (state.designs.decorativeGlass[spec.glazing] || {}).sidelites &&
+    state.designs.decorativeGlass[spec.glazing].sidelites[liteStyleOf(name)];
+  if (sideliteGlazed) return CONFIG.designBase + encodeURIComponent(sideliteGlazed);
   const own = photoFor(name);
   if (own) return own;
-  const dec = spec.glazing && state.designs.decorativeGlass[spec.glazing];
-  if (dec) return CONFIG.designBase + encodeURIComponent(dec.file);
+  const dec = spec.glazing && decorativeArt(spec.glazing, name);
+  if (dec) return dec;
   return artFor(name, pseudo).src || null;
 }
 /* An <img> of that picture, or the silhouette when there is none. */
@@ -1615,6 +1648,23 @@ function optionButton(label, pressed, disabled, onClick, title, sub, art) {
   return b;
 }
 
+/* The two leadings off Hoelscher's "Caming Options" strip, supplied by the
+   dealer. A caming with no swatch on file simply shows its name. */
+function camingSwatch(name) {
+  const rec = state.designs.caming[name];
+  if (!rec || !rec.file) return null;
+  const box = el("span", "camingswatch h-14 w-14 block shrink-0 overflow-hidden rounded border border-paper-line bg-paper-rail");
+  const im = document.createElement("img");
+  im.src = CONFIG.designBase + encodeURIComponent(rec.file);
+  im.alt = ""; im.loading = "lazy"; im.decoding = "async";
+  im.className = "h-full w-full object-cover";
+  im.addEventListener("error", function onE() {
+    im.removeEventListener("error", onE); box.remove();
+  }, { once: true });
+  box.appendChild(im);
+  return box;
+}
+
 /* The stain chart off the catalog's stain-options page, one chart per wood
    line. A line or a stain with no swatch on file simply shows its name. */
 function stainSwatch(line, name) {
@@ -2143,7 +2193,7 @@ function renderDetail() {
   const shown = draftProduct() || model.sample;
   const previewSrc = !gallery ? null
     : gallery.kind === "decorative" && d.glazing
-      ? CONFIG.designBase + encodeURIComponent(state.designs.decorativeGlass[d.glazing].file)
+      ? decorativeArt(d.glazing, model.name)
       : lineArtSrc(shown, { grilleDesign: d.grilleDesign, glazing: d.glazing });
   fillArt(holder, shown, model.name, null, model, previewSrc ? { src: previewSrc } : null);
   if (previewSrc) holder.appendChild(zoomButton(previewSrc,
@@ -2231,7 +2281,8 @@ function renderDetail() {
     if (caming.length > 1) {
       const blk = stepBlock("Caming", "the leading around the glass");
       caming.forEach(c => blk.row.appendChild(
-        optionButton(c, d.caming === c, false, () => { d.caming = c; renderDetail(); })));
+        optionButton(c, d.caming === c, false, () => { d.caming = c; renderDetail(); },
+                     null, null, camingSwatch(c))));
       body.appendChild(blk);
       gate(d.caming);
     } else if (caming.length === 1) {

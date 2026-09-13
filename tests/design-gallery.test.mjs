@@ -54,6 +54,7 @@ page.on('console',m=>{if(m.type()==='error'&&!/favicon|Failed to load resource/i
 page.on('requestfailed',q=>{ if(!/ERR_ABORTED/.test((q.failure()||{}).errorText||'')) errs.push('REQFAIL '+q.url()); });
 page.on('response',r=>{ if(r.status()>=400) errs.push(r.status()+' '+r.url()); });
 
+await page.addInitScript(()=>{window.print=()=>{};});
 await page.goto(BASE+'/quoter/'); await page.evaluate(()=>{try{localStorage.clear();}catch(e){}});
 await page.goto(BASE+'/quoter/');
 await page.waitForSelector('#lineGate:not(.hidden)',{timeout:30000});
@@ -204,6 +205,60 @@ const ph=await page.$eval('#detail .gallery',n=>({cols:getComputedStyle(n).gridT
 ok('two across on a phone, and no sideways scroll', ph.cols===2 && !ph.over, JSON.stringify(ph));
 ok('each still a real picture, not a thumbnail', ph.w>=150 && ph.h>=250, Math.round(ph.w)+'x'+Math.round(ph.h));
 await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+/* --- the sidelite pictures the dealer supplied, 2026-09-13 ----------------- */
+await page.setViewportSize({width:1024,height:1100}); await page.waitForTimeout(200);
+const dz=JSON.parse(fs.readFileSync(ROOT+'/quoter/assets/designs/manifest.json','utf8'));
+const slDesigns=grille.filter(g=>g.sidelitePhoto);
+ok('five mahogany grille designs carry the matching sidelite\'s picture: Cordoba Full, Whitney, Santiago and Sienna 3/4, Avignon 2/3',
+   slDesigns.length===5 && slDesigns.every(g=>g.line==='mahogany' && fs.existsSync(ROOT+'/quoter/assets/designs/'+g.sidelitePhoto)) &&
+   ['Full Lite-Cordoba','3/4 Lite-Whitney','3/4 Lite-Santiago','3/4 Lite-Sienna','2/3 Lite-Avignon'].every(k=>slDesigns.some(g=>g.style+'-'+g.name===k)),
+   slDesigns.map(g=>g.style+' '+g.name).join(' | '));
+ok('and the designs manifest records each beside the design, filed by hand',
+   slDesigns.every(g=>(dz.grilles['mahogany-'+g.style+'-'+g.name]||{}).sideliteFile===g.sidelitePhoto && dz.grilles['mahogany-'+g.style+'-'+g.name].handFiled));
+ok('Blanco and Pecos carry a 2/3 sidelite picture', ['Blanco','Pecos'].every(n=>(dz.decorativeGlass[n].sidelites||{})['2/3'] && fs.existsSync(ROOT+'/quoter/assets/designs/'+dz.decorativeGlass[n].sidelites['2/3'])));
+ok('Imperial, Austin and Blanco 3/4 are on file but marked unpriced, and neither Imperial nor Austin is a glass the sheet names',
+   dz.decorativeGlass.Imperial && dz.decorativeGlass.Imperial.unpriced['2/3'] && !dz.decorativeGlass.Imperial.file &&
+   dz.decorativeGlass.Austin && dz.decorativeGlass.Austin.unpriced.Full && !dz.decorativeGlass.Austin.file &&
+   dz.decorativeGlass.Blanco.unpriced['3/4'] && !(cat.decorativeGlassDesigns||[]).some(d=>/^(Imperial|Austin)$/.test(d.name)));
+ok('the two caming swatches are on file', ['Patina','Zinc'].every(n=>dz.caming[n] && fs.existsSync(ROOT+'/quoter/assets/designs/'+dz.caming[n].file)));
+
+const tileSrcs=()=>page.$$eval('#detail .gallery .tile',ns=>ns.map(t=>[t.querySelector('.optlabel').textContent, decodeURIComponent((t.querySelector('.ph img')||{}).getAttribute?.('src')||'')]));
+await open('Full Lite Sidelite Iron Grille');
+const fsl=Object.fromEntries(await tileSrcs());
+ok('a grille sidelite\'s gallery shows the sidelite itself where one is on file: Cordoba', /grille-mahogany-full-lite-cordoba-sidelite\.webp$/.test(fsl.Cordoba||''), fsl.Cordoba);
+ok('and the door for the designs with no sidelite picture yet', /grille-mahogany-full-lite-avignon\.webp$/.test(fsl.Avignon||''), fsl.Avignon);
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await open('3/4 Lite Sidelite Iron Grille');
+const s34=Object.fromEntries(await tileSrcs());
+ok('the 3/4 grille sidelite shows Whitney, Santiago and Sienna as sidelites', ['whitney','santiago','sienna'].every(n=>new RegExp('grille-mahogany-3-4-lite-'+n+'-sidelite\\.webp$').test(s34[n[0].toUpperCase()+n.slice(1)]||'')), JSON.stringify(s34));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await open('3/4 Lite Iron Grille');
+const d34=Object.fromEntries(await tileSrcs());
+ok('while the door\'s own gallery still shows the doors', /grille-mahogany-3-4-lite-whitney\.webp$/.test(d34.Whitney||''), d34.Whitney);
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+await open('2/3 Sidelite - Decorative Glass');
+const dsl=Object.fromEntries(await tileSrcs());
+ok('the 2/3 decorative sidelite shows the Pecos sidelite, and Brazos as before', /glass-pecos-2-3-sidelite\.webp$/.test(dsl.Pecos||'') && /glass-brazos\.webp$/.test(dsl.Brazos||''), JSON.stringify(dsl));
+await pick('Glass','Pecos');
+const pv=await page.$eval('#detail .preview img',n=>decodeURIComponent(n.getAttribute('src')));
+ok('choosing Pecos previews that sidelite', /glass-pecos-2-3-sidelite\.webp$/.test(pv), pv);
+const cam=await page.$$eval('#detail .steprow .opt .camingswatch img',ns=>ns.map(i=>decodeURIComponent(i.getAttribute('src'))));
+ok('and the caming question shows the two swatches, Patina and Zinc', cam.length===2 && /caming-patina\.webp$/.test(cam[0]) && /caming-zinc\.webp$/.test(cam[1]), cam.join(' '));
+ok('the gallery never offers Imperial, Austin or a Blanco 3/4 sidelite', Object.keys(dsl).join()==='Brazos,Pecos');
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+/* a door and its grille sidelite on the order sheet */
+await open('3/4 Lite Iron Grille');
+await pick('Grille design','Whitney'); await pick('Size',"3'0\" x 6'8\""); await pick('Glass','Clear Low E'); await pick('Finish','Unfinished'); await pick('Opening','Single + 1 sidelite');
+await pick('Sidelite','3/4 Lite Sidelite Iron Grille'); await pick('Handing','Left'); await pick('Swing','Inswing'); await pick('Jamb depth','4-9/16');
+await page.$eval('#detail button.bg-forest',n=>n.click()); await page.waitForTimeout(500);
+await page.fill('#job_customer','Sidelite pictures'); await page.waitForTimeout(150);
+await page.click('#printOrder'); await page.waitForTimeout(800);
+const docImgs=await page.$$eval('#printDoc img',ns=>ns.map(i=>i.className+' '+decodeURIComponent(i.getAttribute('src'))));
+ok('the order sheet shows the Whitney door and, beside it, the Whitney sidelite',
+   docImgs.some(s=>/^pd-artimg .*grille-mahogany-3-4-lite-whitney\.webp$/.test(s)) && docImgs.some(s=>/^pd-miniimg .*grille-mahogany-3-4-lite-whitney-sidelite\.webp$/.test(s)), docImgs.join(' | '));
 
 ok('no console, page or request errors', errs.length===0, errs.slice(0,3).join(' | '));
 report();
