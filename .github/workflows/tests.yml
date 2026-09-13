@@ -26,6 +26,9 @@ jobs:
           npm install --no-audit --no-fund
           npx playwright install --with-deps chromium
 
+      - name: Compiled stylesheet is current
+        run: sh tools/build-css.sh && git diff --exit-code -- quoter/assets/tw.css
+
       - name: Audit the catalog data
         run: node tools/audit-catalog.mjs
 

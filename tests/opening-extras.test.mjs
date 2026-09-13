@@ -9,8 +9,8 @@ import path from 'node:path'; import url from 'node:url';
 import { createEngine, formatCents, applyMargin, roundCents } from '../packages/pricing-engine/index.js';
 
 const ROOT=path.resolve(url.fileURLToPath(import.meta.url),'../..');
-const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json',
-            '.webp':'image/webp','.png':'image/png','.css':'text/css'};
+const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json','.woff2':'font/woff2','.css':'text/css',
+            '.webp':'image/webp','.png':'image/png'};
 const srv=http.createServer((q,r)=>{
   const p=decodeURIComponent(q.url.split('?')[0]);
   const f=ROOT+(p.endsWith('/')?p+'index.html':p);
@@ -41,8 +41,6 @@ const page=await (await b.newContext({viewport:{width:1440,height:1000}})).newPa
 const errs=[];
 page.on('pageerror',e=>errs.push('PAGEERROR: '+e.message));
 page.on('console',m=>{if(m.type()==='error'&&!/favicon|Failed to load resource/i.test(m.text()))errs.push(m.text());});
-await page.route('https://cdn.tailwindcss.com*',r=>r.abort());
-await page.route('https://fonts.googleapis.com/**',r=>r.abort());
 await page.addInitScript(()=>{window.__printed=0;window.print=()=>{window.__printed++;};});
 
 const steps=()=>page.$$eval('#detail .steprow',ns=>ns.map(r=>{

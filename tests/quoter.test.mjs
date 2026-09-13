@@ -5,7 +5,7 @@ import path from 'node:path'; import url from 'node:url';
 import { createEngine, applyMargin, formatCents } from '../packages/pricing-engine/index.js';
 
 const ROOT=path.resolve(url.fileURLToPath(import.meta.url),'../..');
-const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json','.webp':'image/webp'};
+const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json','.woff2':'font/woff2','.css':'text/css','.webp':'image/webp'};
 const srv=http.createServer((q,r)=>{
   const p=decodeURIComponent(q.url.split('?')[0]);
   const f=ROOT+(p.endsWith('/')?p+'index.html':p);
@@ -118,12 +118,6 @@ const errs=[]; const req404=[];
 page.on('console',m=>{if(m.type()==='error'&&!/favicon|404|Failed to load resource/i.test(m.text()))errs.push(m.text());});
 page.on('pageerror',e=>errs.push('PAGEERROR: '+e.message));
 page.on('response',r=>{ if(r.status()===404) req404.push(r.url().split('/').pop()); });
-/* Block the Tailwind CDN outright rather than hoping it is unreachable. This
-   suite's layout assertions were all written against the fallback stylesheet,
-   and on a machine with internet the CDN would load and quietly test something
-   else — which is exactly what happened the first time CI ran. */
-await page.route('https://cdn.tailwindcss.com*', r=>r.abort());
-await page.route('https://fonts.googleapis.com/**', r=>r.fulfill({status:200,contentType:'text/css',body:''}));
 
 const openModel=async name=>{
   await page.click('#clearFilters'); await page.waitForTimeout(200);
@@ -224,17 +218,19 @@ ok('no smooth-skin door leaks into the woodgrain catalogue',
    leaked.every(h=>!/Smooth/i.test(h)), leaked.filter(h=>/Smooth/i.test(h)).join(' | '));
 ok('imports the pricing engine module', !req404.some(u=>u==='index.js'), req404.slice(0,3).join(','));
 
-/* The CDN is blocked above, so this suite exercises the built-in fallback
-   stylesheet throughout — the state a customer lands in when the CDN is
-   blocked or down. The styled path is covered separately by the screenshot
-   harness, which serves a locally compiled Tailwind. */
-ok('runs against the no-Tailwind fallback stylesheet',
-   await page.evaluate(()=>document.documentElement.classList.contains('no-tw')));
+/* The stylesheet is compiled into the repo and the typefaces ship with the
+   app, so this is the styling every customer sees: nothing is fetched from a
+   CDN and nothing depends on the network. */
+ok('runs against the compiled stylesheet, served from the app itself',
+   await page.evaluate(()=>{const l=document.querySelector('link[rel="stylesheet"][href$="assets/tw.css"]');
+     return !!l && [...document.styleSheets].some(s=>s.href&&/assets\/tw\.css$/.test(s.href)&&s.cssRules.length>50);}));
+ok('and the display and text faces are the app\'s own files, not a font service',
+   !req404.some(u=>/woff2$/.test(u)) && await page.evaluate(()=>document.fonts.check('16px "Cormorant Garamond"') && document.fonts.check('16px Inter')));
 const fat=await page.$$eval('svg',ns=>ns.map(n=>{const r=n.getBoundingClientRect();
   return {w:Math.round(r.width),h:Math.round(r.height),c:n.getAttribute('class')||''};})
   .filter(x=>x.w>320||x.h>420));
-ok('no icon balloons to fill the page without Tailwind', fat.length===0, JSON.stringify(fat.slice(0,3)));
-ok('the fallback never scrolls the page sideways',
+ok('no icon balloons to fill the page', fat.length===0, JSON.stringify(fat.slice(0,3)));
+ok('the page never scrolls sideways',
    await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1));
 
 /* ---------------- one card per door model, not per part number ----------- */
@@ -293,6 +289,8 @@ ok('a borrowed photograph says whose it is',
      === FG.filter(m=>!manifest.models[m.name]&&hasArt(m)).length,
    String(FG.filter(m=>!manifest.models[m.name]&&hasArt(m)).length)+' borrowed');
 ok('no photograph is broken', broken===0, String(broken));
+ok('a photograph fades up once it has decoded, and never stays invisible',
+   await page.$$eval('#catalog article img',ns=>ns.every(i=>!i.complete||i.naturalWidth===0||i.classList.contains('img-ready'))));
 ok('no drawn silhouette carries a borrowed caption',
    (await page.$$eval('#catalog article',
       ns => ns.filter(a => a.querySelector('.borrowed') && !a.querySelector('img')).length)) === 0);

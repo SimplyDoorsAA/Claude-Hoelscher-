@@ -161,7 +161,7 @@ you commit anything.
 | `tools/audit-catalog.mjs` | Structural audit of the published data |
 | `tools/audit-prices.mjs` | Recomputes every price from the rules file alone and compares it to the engine |
 | `quoter/assets/brand/` | The SimplyDoors letterhead mark, taken from the dealer's own estimate |
-| `docs/audit-2026-09-12.md` | The latest full audit: every wood price reconciled, every card priced, what is still open |
+| `docs/audit-2026-09-12.md` | The audit before it: every wood price reconciled, every card priced, what was still open |
 | `docs/fiberglass-price-reconciliation.md` | Every fiberglass price against the 2026 sheet, and what moved since the 2025 list |
 | `docs/mahogany-sdl.md` | Catalog page 21: the SDL door, its own sidelite, and the grid priced per lite by bar width |
 | `docs/mahogany-legacy-panel.md` | Catalog pages 22–27: the panel doors, the Blanco's caming, the speakeasy insert's C |
@@ -170,7 +170,10 @@ you commit anything.
 | `docs/audit-2026-09-10.md` | The audit before it: pricing verified, and the three things blocking office use |
 | `docs/audit-2026-09-09.md` | The first audit, and what it left open |
 | `quoter/assets/doors/` | Door photography extracted from the catalogs, plus `manifest.json`; `hand-filed.json` lists the pictures matched by eye |
-| `tools/hand-file-photos.py` | Files the hand-matched photographs and the stain swatches from that list |
+| `tools/hand-file-photos.py` | Files the hand-matched photographs, the grille pictures and the stain swatches from that list |
+| `tools/build-css.sh`, `tools/tailwind.config.cjs` | Compile `quoter/assets/tw.css` from the quoter's markup; the theme lives in the config |
+| `quoter/assets/fonts/` | The two typefaces the quoter ships (Inter, Cormorant Garamond), latin subsets |
+| `docs/audit-2026-09-13.md` | The audit after the mahogany line: ghost code, what was optimized, the printed pictures, the fresh look |
 | `quoter/assets/stains/` | The stain charts off catalog page 5, one per wood line |
 | `docs/photography.md` | Which models have a picture, which borrow one, which were matched by eye, and what is still missing |
 | `quoter/assets/glass/` | Glass swatches with Hoelscher's privacy ratings |
@@ -190,10 +193,10 @@ you commit anything.
 npm install && npx playwright install chromium   # once
 npm test                             # both audits and all seventeen suites, ~10 minutes
 npm run audit                        # data contracts and cross-references only
-TAILWIND_CSS=/path/to/tw.css ./tests/run.sh   # faithful screenshots
+sh tools/build-css.sh                # recompile quoter/assets/tw.css after editing quoter/index.html
 ```
 
-626 checks, and the same set CI runs on every pull request. The browser suites
+633 checks, and the same set CI runs on every pull request. The browser suites
 drive real Chromium through Playwright, found in `node_modules`, image-wide, or
 wherever `PLAYWRIGHT_MODULE` points — whichever exists. Each serves the repo on
 a port the OS picks, so a killed run cannot block the next one. Screenshots land
@@ -201,9 +204,9 @@ in `.test-output/` (override with `SHOT_DIR`), and CI keeps them as an artifact.
 
 Every expected figure is recomputed inside the test from `data/catalog.json`
 and the printed shipping schedule rather than asked of the engine, so a bug
-shared by both sides cannot make them agree. The App B suites run with
-`cdn.tailwindcss.com` unreachable, which is also how the fallback stylesheet
-gets exercised.
+shared by both sides cannot make them agree. The App B suites run against the
+compiled stylesheet and the self-hosted typefaces the app ships, so they test
+exactly what a customer sees, and no suite touches the network.
 
 ## The catalog
 
@@ -615,7 +618,10 @@ slab — and because the manifest says which models have one, the page never
 fires a request that can only 404. A missing or unreadable manifest is not
 fatal: the catalogue still reads as a catalogue.
 
-**CDN resilience.** If `cdn.tailwindcss.com` is unreachable — a locked-down job
-site network, a CDN outage — the page flags itself and a structural fallback
-stylesheet keeps the catalogue, drawer and totals usable. Scrim inert state is
-plain CSS rather than a Tailwind utility, so the app never becomes unclickable.
+**No third party at run time.** The stylesheet is compiled ahead of time
+(`tools/build-css.sh`, theme in `tools/tailwind.config.cjs`, output
+`quoter/assets/tw.css`) and the two typefaces ship in `quoter/assets/fonts/`,
+so the page paints styled on its first frame and works on a job site with no
+network at all. Edit `quoter/index.html`, run the build, commit both; CI checks
+the compiled sheet is current. Scrim inert state is plain CSS, so the app can
+never become unclickable.

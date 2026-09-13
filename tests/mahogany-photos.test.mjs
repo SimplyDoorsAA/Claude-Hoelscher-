@@ -11,8 +11,8 @@ import http from 'node:http'; import fs from 'node:fs';
 import path from 'node:path'; import url from 'node:url';
 
 const ROOT=path.resolve(url.fileURLToPath(import.meta.url),'../..');
-const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json',
-            '.webp':'image/webp','.png':'image/png','.css':'text/css'};
+const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json','.woff2':'font/woff2','.css':'text/css',
+            '.webp':'image/webp','.png':'image/png'};
 const srv=http.createServer((q,r)=>{
   const p=decodeURIComponent(q.url.split('?')[0]);
   const f=ROOT+(p.endsWith('/')?p+'index.html':p);
@@ -84,8 +84,6 @@ const errs=[];
 page.on('pageerror',e=>errs.push('PAGEERROR: '+e.message));
 page.on('console',m=>{if(m.type()==='error'&&!/favicon|Failed to load resource/i.test(m.text()))errs.push(m.text());});
 page.on('response',r=>{ if(r.status()>=400 && !/favicon/.test(r.url())) errs.push('HTTP '+r.status()+' '+r.url()); });
-await page.route('https://cdn.tailwindcss.com*',r=>r.abort());
-await page.route('https://fonts.googleapis.com/**',r=>r.abort());
 
 const steps=()=>page.$$eval('#detail .steprow',ns=>ns.map(r=>{
   const h=r.parentElement.querySelector('p');return h?h.textContent.trim():'';}).filter(Boolean));
