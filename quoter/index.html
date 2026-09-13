@@ -98,6 +98,8 @@ tailwind.config = {
   .no-tw .glassswatch { display:block; width:36px; height:36px; flex:0 0 auto;
                         border:1px solid #e4e0d9; border-radius:6px; overflow:hidden; }
   .no-tw .glassswatch img { width:100%; height:100%; object-fit:cover; }
+  .no-tw .stainswatch { display:block; width:48px; height:36px; flex:0 0 auto; overflow:hidden; border-radius:4px; }
+  .no-tw .stainswatch img { width:100%; height:100%; object-fit:cover; }
   .no-tw .opt:has(.grilleshot) { display:inline-flex; align-items:center; gap:.5rem; text-align:left; }
   .no-tw .grilleshot { display:block; width:40px; height:80px; flex:0 0 auto;
                        border:1px solid #e4e0d9; border-radius:6px; overflow:hidden; }
@@ -449,6 +451,8 @@ const CONFIG = {
   glassManifest:"./assets/glass/manifest.json",
   designBase:   "./assets/designs/",
   designManifest:"./assets/designs/manifest.json",
+  stainBase:    "./assets/stains/",
+  stainManifest:"./assets/stains/manifest.json",
   pageSize:   48                     // cards rendered per chunk while scrolling
 };
 
@@ -488,6 +492,7 @@ const state = {
   photos: {},                             // model name -> file, from the manifest
   glass: { glass: {}, privacy: {} },      // glass name -> swatch and privacy rating
   designs: { decorativeGlass: {}, accessories: {} },
+  stains: {},                             // line -> stain name -> swatch file
   estimate: null,                         // company, document copy and terms
   job: null,                              // who the quote is for; see JOB_FIELDS
   ready: false,
@@ -686,6 +691,12 @@ async function loadData() {
                       accessories: (dz && dz.accessories) || {} };
   } catch (e) {
     state.designs = { decorativeGlass: {}, accessories: {} };
+  }
+  try {
+    const st = await fetchJson(CONFIG.stainManifest);
+    state.stains = (st && st.stains) || {};
+  } catch (e) {
+    state.stains = {};
   }
   state.ready = true;
   return state.engine;
@@ -1176,9 +1187,12 @@ function grilleDesignsFor(model) {
   if (!/Iron Grille/i.test(model.name)) return [];
   // A design is offered on one lite style as well as one line: the catalog
   // prints separate 2/3, 3/4 and Full Lite grille pages.
+  // The sheet names one grille sidelite "Full Sidelite" and its twin "Full
+  // Lite Sidelite"; both are the Full Lite's sidelite.
+  const name = model.name.replace(/^(Full|3\/4|2\/3|2\/3 Arch) Sidelite\b/, "$1 Lite Sidelite");
   return (state.engine.catalog.ironGrilleDesigns || []).filter(g =>
     (!g.line || g.line === model.line) &&
-    (!g.style || model.name.indexOf(g.style) >= 0));
+    (!g.style || name.indexOf(g.style) >= 0));
 }
 /* Stains come from two different sheets and mean two different things.
    Fiberglass stains a grained skin, never the Smooth Collection, and the skin
@@ -1536,6 +1550,23 @@ function optionButton(label, pressed, disabled, onClick, title, sub, art) {
   if (title) b.title = title;
   if (!disabled) b.addEventListener("click", onClick);
   return b;
+}
+
+/* The stain chart off the catalog's stain-options page, one chart per wood
+   line. A line or a stain with no swatch on file simply shows its name. */
+function stainSwatch(line, name) {
+  const file = (state.stains[line] || {})[name];
+  if (!file) return null;
+  const box = el("span", "stainswatch h-9 w-12 block shrink-0 overflow-hidden rounded border border-paper-line bg-paper-rail");
+  const im = document.createElement("img");
+  im.src = CONFIG.stainBase + encodeURIComponent(file);
+  im.alt = ""; im.loading = "lazy"; im.decoding = "async";
+  im.className = "h-full w-full object-cover";
+  im.addEventListener("error", function onE() {
+    im.removeEventListener("error", onE); box.remove();
+  }, { once: true });
+  box.appendChild(im);
+  return box;
 }
 
 /* A picture of the part beside its name. The manifest is keyed by the
@@ -2194,7 +2225,11 @@ function renderDetail() {
 
   // 2b. which iron grille design, where the model is a grille door
   if (!blocked && model.grilleDesigns.length) {
-    const fits = g => !d.sizeCode || (g.sizeCodes || []).indexOf(d.sizeCode) >= 0;
+    // A design's sizes are door sizes. A grille sidelite quoted on its own
+    // (the sheet prices them alone) takes any design of its lite style; beside
+    // a door it takes the door's.
+    const isSidelite = model.products.every(p => p.type === "sidelite");
+    const fits = g => isSidelite || !d.sizeCode || (g.sizeCodes || []).indexOf(d.sizeCode) >= 0;
     const offered = model.grilleDesigns.filter(fits);
     const blk = stepBlock("Grille design",
       offered.length < model.grilleDesigns.length
@@ -2271,7 +2306,7 @@ function renderDetail() {
     stains.forEach(sc => {
       blk.row.appendChild(optionButton(sc.name, d.stain === sc.name, false, () => {
         d.stain = sc.name; renderDetail();
-      }, sc.appliesTo));
+      }, sc.appliesTo, null, stainSwatch(model.line, sc.name)));
     });
     body.appendChild(blk);
     gate(d.stain);

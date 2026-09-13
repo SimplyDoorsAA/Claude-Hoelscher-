@@ -1,0 +1,341 @@
+{
+  "note": "Photographs matched to a model by eye where tools/extract-door-images.py could not tie them to a part number. tools/hand-file-photos.py files them; \"why\" says what settled each match so it can be checked against the page.",
+  "entries": [
+    {
+      "model": "Full Lite Sidelite",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 9,
+      "image": "/Im3",
+      "why": "the sidelite photograph is too narrow for the extractor and its numbers sit under the door beside it"
+    },
+    {
+      "model": "3 Lite Circle Lite RM",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 14,
+      "image": "/Im0",
+      "why": "the page prints its part numbers away from the photograph"
+    },
+    {
+      "model": "3 Lite 1 Panel RM",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 14,
+      "image": "/Im1",
+      "why": "the page prints its part numbers away from the photograph"
+    },
+    {
+      "model": "4 Lite Arch Top Double Doors RM *(Knockdown Kit Components)*",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 14,
+      "image": "/Im2",
+      "why": "a double-door photograph is wider than the extractor allows for a door"
+    },
+    {
+      "model": "2 Lite 1 Panel Sidelite RM",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 15,
+      "image": "/Im2",
+      "why": "sidelite photograph, matched by the Aged Barrel stain the page names for the raised-moulding sidelite"
+    },
+    {
+      "model": "2 Lite 1 Panel Sidelite NRM",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 15,
+      "image": "/Im3",
+      "why": "sidelite photograph, matched by the Red Oak stain the page names for the no-raised-moulding sidelite"
+    },
+    {
+      "model": "3 Lite 1 Panel Sidelite RM",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 17,
+      "image": "/Im1",
+      "why": "sidelite photograph, matched by the Special Walnut stain the page names for the raised-moulding sidelite; cut out of its black background",
+      "crop": [
+        56,
+        0,
+        136,
+        520
+      ]
+    },
+    {
+      "model": "3 Lite 1 Panel Sidelite NRM",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 17,
+      "image": "/Im3",
+      "why": "sidelite photograph, matched by the Red Oak stain the page names for the no-raised-moulding sidelite"
+    },
+    {
+      "model": "Craftsman 4 Lite Arch Lite",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 18,
+      "image": "/Im0",
+      "why": "the page prints its numbers in a shelf table away from the photograph; the arched top row of lites is the arch lite"
+    },
+    {
+      "model": "6 Lite Arch Top Double Doors RM *(Knockdown Kit Components)*",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 18,
+      "image": "/Im2",
+      "why": "a double-door photograph is wider than the extractor allows; straight muntins under the arch"
+    },
+    {
+      "model": "6 Lite Curved RM *(Knockdown Kit Components)*",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 18,
+      "image": "/Im3",
+      "why": "a double-door photograph is wider than the extractor allows; the curved muntins are the curved panel door"
+    },
+    {
+      "model": "7 Lite 2 Panel RM",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 19,
+      "image": "/Im2",
+      "why": "the page prints its part numbers away from the photograph; the X-pattern lites over two panels"
+    },
+    {
+      "model": "Marginal 9 Lite 1 Panel",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 20,
+      "image": "/Im2",
+      "why": "the page prints one number column for the two marginal doors; the one with a bottom panel"
+    },
+    {
+      "model": "3/4 Lite 1 Panel NRM",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 21,
+      "image": "/Im1",
+      "why": "the page photographs the 6'8\" and 8'0\" SDL doors separately under one number each; the 8'0\" one"
+    },
+    {
+      "model": "3/4 Lite 1 Panel Sidelite NRM",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 21,
+      "image": "/Im2",
+      "why": "the SDL sidelite photograph, too narrow for the extractor"
+    },
+    {
+      "model": "Full Lite - Decorative Glass",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 28,
+      "image": "/Im0",
+      "why": "the page prints the decorative numbers under a strip of glass swatches; the door is shown with Pecos"
+    },
+    {
+      "model": "Full Lite - Flat Glass",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 28,
+      "image": "/Im4",
+      "why": "the flat-glass door, open for glass, its number printed below the sidelite column"
+    },
+    {
+      "model": "Full Sidelite - Flat Glass",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 28,
+      "image": "/Im5",
+      "why": "the Full sidelite, open for glass; the page shows one sidelite for flat and decorative both"
+    },
+    {
+      "model": "Full Sidelite - Decorative Glass",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 28,
+      "image": "/Im5",
+      "why": "the same sidelite photograph the page shows beside \"Available Decorative Glass\""
+    },
+    {
+      "model": "3/4 Lite - Decorative Glass",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 29,
+      "image": "/Im0",
+      "why": "the page prints the decorative numbers in four columns beside a strip of swatches; the door is shown with Columbia"
+    },
+    {
+      "model": "3/4 Lite - Flat Glass",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 29,
+      "image": "/Im4",
+      "why": "the flat-glass door, open for glass; the sheet prints one number for it and the grille door"
+    },
+    {
+      "model": "3/4 Sidelite - Flat Glass",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 29,
+      "image": "/Im5",
+      "why": "the 3/4 sidelite, open for glass; one sidelite photograph for flat and decorative"
+    },
+    {
+      "model": "3/4 Sidelite - Decorative Glass",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 29,
+      "image": "/Im5",
+      "why": "the same sidelite photograph the page shows beside \"Available Decorative Glass\""
+    },
+    {
+      "model": "2/3 Lite - Flat Glass",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 30,
+      "image": "/Im2",
+      "why": "the flat-glass door, open for glass; its number is printed across the page"
+    },
+    {
+      "model": "2/3 Sidelite - Flat Glass",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 30,
+      "image": "/Im3",
+      "why": "the 2/3 sidelite, open for glass; one sidelite photograph for flat and decorative"
+    },
+    {
+      "model": "2/3 Sidelite - Decorative Glass",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 30,
+      "image": "/Im3",
+      "why": "the same sidelite photograph the page shows beside \"Available Decorative Glass\""
+    },
+    {
+      "model": "2/3 Arch Lite - Decorative Glass",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 31,
+      "image": "/Im1",
+      "why": "the page prints one number for the flat, decorative and grille arch doors; shown with Pecos"
+    },
+    {
+      "model": "2/3 Arch Lite - Flat Glass",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 31,
+      "image": "/Im2",
+      "why": "the page prints one number for the flat, decorative and grille arch doors; open for glass"
+    },
+    {
+      "model": "3/4 Lite Iron Grille",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 32,
+      "image": "/Im1",
+      "why": "page 32 photographs the 3/4 Lite with the Whitney grille and matching sidelites; the door cut out of that picture",
+      "crop": [
+        110,
+        0,
+        270,
+        518
+      ]
+    },
+    {
+      "model": "3/4 Lite Sidelite Iron Grille",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 32,
+      "image": "/Im1",
+      "why": "the left sidelite cut out of the same page-32 photograph",
+      "crop": [
+        4,
+        0,
+        68,
+        518
+      ]
+    },
+    {
+      "kind": "stain",
+      "line": "mahogany",
+      "name": "Jacobean",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 5,
+      "image": "/Im0",
+      "why": "the swatch sits directly above its caption on the stain-options page; matched by position"
+    },
+    {
+      "kind": "stain",
+      "line": "mahogany",
+      "name": "Aged Barrel",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 5,
+      "image": "/Im1",
+      "why": "the swatch sits directly above its caption on the stain-options page; matched by position"
+    },
+    {
+      "kind": "stain",
+      "line": "mahogany",
+      "name": "Special Walnut",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 5,
+      "image": "/Im2",
+      "why": "the swatch sits directly above its caption on the stain-options page; matched by position"
+    },
+    {
+      "kind": "stain",
+      "line": "mahogany",
+      "name": "English Chestnut",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 5,
+      "image": "/Im3",
+      "why": "the swatch sits directly above its caption on the stain-options page; matched by position"
+    },
+    {
+      "kind": "stain",
+      "line": "mahogany",
+      "name": "Ebony",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 5,
+      "image": "/Im4",
+      "why": "the swatch sits directly above its caption on the stain-options page; matched by position"
+    },
+    {
+      "kind": "stain",
+      "line": "mahogany",
+      "name": "Red Oak",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 5,
+      "image": "/Im5",
+      "why": "the swatch sits directly above its caption on the stain-options page; matched by position"
+    },
+    {
+      "kind": "stain",
+      "line": "knotty_alder",
+      "name": "Jacobean",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 5,
+      "image": "/Im6",
+      "why": "the swatch sits directly above its caption on the stain-options page; matched by position"
+    },
+    {
+      "kind": "stain",
+      "line": "knotty_alder",
+      "name": "Aged Barrel",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 5,
+      "image": "/Im11",
+      "why": "the swatch sits directly above its caption on the stain-options page; matched by position"
+    },
+    {
+      "kind": "stain",
+      "line": "knotty_alder",
+      "name": "Special Walnut",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 5,
+      "image": "/Im7",
+      "why": "the swatch sits directly above its caption on the stain-options page; matched by position"
+    },
+    {
+      "kind": "stain",
+      "line": "knotty_alder",
+      "name": "English Chestnut",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 5,
+      "image": "/Im8",
+      "why": "the swatch sits directly above its caption on the stain-options page; matched by position"
+    },
+    {
+      "kind": "stain",
+      "line": "knotty_alder",
+      "name": "Ebony",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 5,
+      "image": "/Im9",
+      "why": "the swatch sits directly above its caption on the stain-options page; matched by position"
+    },
+    {
+      "kind": "stain",
+      "line": "knotty_alder",
+      "name": "Red Oak",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 5,
+      "image": "/Im10",
+      "why": "the swatch sits directly above its caption on the stain-options page; matched by position"
+    }
+  ]
+}

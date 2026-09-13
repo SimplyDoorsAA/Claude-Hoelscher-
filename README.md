@@ -157,6 +157,7 @@ you commit anything.
 | `tests/legacy-panel.test.mjs` | The ten panel doors and the Blanco Center Arch, whose placeholder is a caming letter |
 | `tests/legacy-lites.test.mjs` | The Full and 3/4 Lite doors: the page-22 glass list, the design-infix numbers, the sidelite pairings |
 | `tests/legacy-grilles.test.mjs` | The mahogany iron grilles: designs per lite style, and the grille number grammar both catalogs print |
+| `tests/mahogany-photos.test.mjs` | Every mahogany card shows a catalog photograph, and the stain step its swatches |
 | `tools/audit-catalog.mjs` | Structural audit of the published data |
 | `tools/audit-prices.mjs` | Recomputes every price from the rules file alone and compares it to the engine |
 | `quoter/assets/brand/` | The SimplyDoors letterhead mark, taken from the dealer's own estimate |
@@ -168,8 +169,10 @@ you commit anything.
 | `docs/mahogany-iron-grilles.md` | Catalog pages 34–41: the grille designs per door, and how a grille door's number is written |
 | `docs/audit-2026-09-10.md` | The audit before it: pricing verified, and the three things blocking office use |
 | `docs/audit-2026-09-09.md` | The first audit, and what it left open |
-| `quoter/assets/doors/` | Door photography extracted from the catalogs, plus `manifest.json` |
-| `docs/photography.md` | Which models have a picture, which borrow one, and what is still missing |
+| `quoter/assets/doors/` | Door photography extracted from the catalogs, plus `manifest.json`; `hand-filed.json` lists the pictures matched by eye |
+| `tools/hand-file-photos.py` | Files the hand-matched photographs and the stain swatches from that list |
+| `quoter/assets/stains/` | The stain charts off catalog page 5, one per wood line |
+| `docs/photography.md` | Which models have a picture, which borrow one, which were matched by eye, and what is still missing |
 | `quoter/assets/glass/` | Glass swatches with Hoelscher's privacy ratings |
 | `quoter/assets/designs/` | Iron grille designs, decorative glass and mask photography |
 | `docs/knotty-alder-deep-dive-2026-09-09.md` | Catalog pages 42-57 read in full: what was added, what is still open |
@@ -185,12 +188,12 @@ you commit anything.
 
 ```sh
 npm install && npx playwright install chromium   # once
-npm test                             # both audits and all sixteen suites, ~10 minutes
+npm test                             # both audits and all seventeen suites, ~10 minutes
 npm run audit                        # data contracts and cross-references only
 TAILWIND_CSS=/path/to/tw.css ./tests/run.sh   # faithful screenshots
 ```
 
-595 checks, and the same set CI runs on every pull request. The browser suites
+621 checks, and the same set CI runs on every pull request. The browser suites
 drive real Chromium through Playwright, found in `node_modules`, image-wide, or
 wherever `PLAYWRIGHT_MODULE` points — whichever exists. Each serves the repo on
 a port the OS picks, so a killed run cannot block the next one. Screenshots land

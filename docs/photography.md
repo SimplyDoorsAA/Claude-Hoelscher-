@@ -2,18 +2,23 @@
 
 `tools/extract-door-images.py` reads the catalog PDFs and files each photo
 under the model its part numbers name. Nothing is guessed: a photo whose part
-numbers do not resolve to exactly one model is reported and skipped.
+numbers do not resolve to exactly one model is reported and skipped. The
+photographs it skips are matched by eye instead and written into
+`quoter/assets/doors/hand-filed.json`, which `tools/hand-file-photos.py` turns
+into files and manifest entries; see *Filed by hand* below.
 
 ## Coverage
 
-Of 207 models in the published catalog:
+Of 208 models in the published catalog (2026-09-13):
 
 | | count |
 | --- | --- |
-| Photographed in a catalog, filed under that model | 82 |
+| Photographed in a catalog, filed under that model | 112 |
 | Shown by a picture that is genuinely of that door | 10 |
 | Borrows the photograph of the door it is a variation of | 68 |
-| Nothing to show — falls back to the drawn silhouette | 47 |
+| Nothing to show — falls back to the drawn silhouette | 18 |
+
+None of the 18 is mahogany: 14 are knotty alder, 4 fiberglass.
 
 **Shown by another picture of the same door.** An iron-grille door is
 photographed once per grille design and a decorative-glass door once per glass,
@@ -26,25 +31,69 @@ glazed plainly. Those cards show the base door's photograph with a caption
 naming it — "KA 2 Panel Square VG shown" — so nobody reads it as a picture of
 the variant.
 
+## Filed by hand — the mahogany line, 2026-09-13
+
+The dealer asked for every mahogany option to carry its picture. Of the 68
+mahogany doors and sidelites, 23 drew a silhouette and 13 showed a knotty alder
+stand-in. The catalog PDF on file has the photographs for all 23, on pages 9,
+14, 15, 17–21 and 28–32; the extractor had skipped them because their part
+numbers sit away from the picture (the double-door and Craftsman pages), are
+printed once for two doors (the flat and decorative Legacy pages), or belong to
+a sidelite too narrow for its door-photo rule.
+
+Each was matched by eye against the page and written into `hand-filed.json`
+with the PDF, page, image name, an optional crop and the reason that settled
+the match — the stain the page names for a sidelite, the curved muntins of the
+curved-panel door, the shelf table beside the Craftsman. Thirty entries: the
+23, the five decorative doors and sidelites whose own page photographs them
+(they had shown a knotty alder door glazed with the same glass), and the 3/4
+Lite Iron Grille door and sidelite, cut out of page 32's photograph of the door
+with the Whitney grille and matching sidelites. The manifest marks these
+`handFiled`, and the extractor keeps them when it rewrites the manifest; a hand
+match was checked against the page, so it outranks a part-number match for the
+same model.
+
+With that, every mahogany card shows a catalog photograph: 62 the model's own,
+6 (the other grille doors and sidelites) a grille-design picture, which is a
+true picture of that door. Nothing in the mahogany line draws a silhouette.
+
+**Stains.** Page 5 prints the six stains as swatches, one chart for mahogany
+and one for knotty alder. Both charts are filed the same way (matched by
+position: each swatch sits above its caption) into `quoter/assets/stains/`,
+and the Stain colour step shows the swatch beside each name for the line being
+quoted. No price or part-number change.
+
+**Grille sidelites on their own.** Checking the cards turned up that a grille
+sidelite quoted alone dead-ended: its Grille design step greyed every design
+"not this size", because a design's sizes are door sizes. A sidelite now takes
+any design of its lite style (beside a door it takes the door's, as before),
+and the sheet's "Full Sidelite Iron Grille", named without "Lite", is read as
+the Full Lite's sidelite like its twin, so it shows the same picture and asks
+the same designs.
+
+`tests/mahogany-photos.test.mjs` pins all of it: the thirty entries and their
+files, the 68 cards with no silhouette, the page-32 cut, the six swatches on a
+prefinished door of each line, and the grille sidelite reaching a price.
+
 ## What the catalogs we hold cannot supply
 
 Catalog pages held: wood 5-41 and 42-59, plus the 2025 fiberglass catalog.
 Missing: nothing needed for the doors we price.
 
-Of the 47 with no picture, 18 are sidelites and 29 are doors. The reasons:
+Of the 18 with no picture, 5 are sidelites and 13 are doors. The reasons:
 
-- **Mahogany iron-grille pages (34-41) are laid out differently** from the
-  knotty alder ones, and their captions come out paired to the wrong design.
-  Rather than file a guess, `--designs` refuses any grille page that is not the
-  knotty alder layout, so the mahogany grille models have no picture yet. This
-  is fixable by reading those pages properly.
+- **Mahogany iron-grille pages (34-41)** are not in the compressed catalog PDF
+  on file (it stops at page 33), so the mahogany grille designs carry their
+  knotty alder namesake's photograph — the grille pattern is the same. The 3/4
+  Lite grille door and sidelite have a mahogany picture, cut from page 32.
 - **Circle Top 2 Panel V-Grooved** is photographed on catalog page 52 but the
   page prints no part numbers for it, so nothing ties the photo to the model.
 - **Knotty alder page 51's speakeasy photographs** cannot be filed because that
   page's part numbers contradict each other: `KA2PASEBW2880` (a Balfour number)
   is printed in the Windsor panel.
 - **Sidelites** are photographed beside their doors at a size the matcher reads
-  as part of the door panel; most resolve to the door, not the sidelite.
+  as part of the door panel; most resolve to the door, not the sidelite. The
+  mahogany ones are now filed by hand; the knotty alder ones are not yet.
 
 ## How a photo is tied to a model
 

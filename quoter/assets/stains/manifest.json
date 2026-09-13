@@ -1,0 +1,35 @@
+{
+  "note": "Stain swatches off the catalogs' stain-options page, one chart per line. Filed by tools/hand-file-photos.py from quoter/assets/doors/hand-filed.json; source says which page and image each came off.",
+  "source": {
+    "knotty_alder / Aged Barrel": "79d5f9d9-Compressed.pdf p5 /Im11 (filed by hand: the swatch sits directly above its caption on the stain-options page; matched by position)",
+    "knotty_alder / Ebony": "79d5f9d9-Compressed.pdf p5 /Im9 (filed by hand: the swatch sits directly above its caption on the stain-options page; matched by position)",
+    "knotty_alder / English Chestnut": "79d5f9d9-Compressed.pdf p5 /Im8 (filed by hand: the swatch sits directly above its caption on the stain-options page; matched by position)",
+    "knotty_alder / Jacobean": "79d5f9d9-Compressed.pdf p5 /Im6 (filed by hand: the swatch sits directly above its caption on the stain-options page; matched by position)",
+    "knotty_alder / Red Oak": "79d5f9d9-Compressed.pdf p5 /Im10 (filed by hand: the swatch sits directly above its caption on the stain-options page; matched by position)",
+    "knotty_alder / Special Walnut": "79d5f9d9-Compressed.pdf p5 /Im7 (filed by hand: the swatch sits directly above its caption on the stain-options page; matched by position)",
+    "mahogany / Aged Barrel": "79d5f9d9-Compressed.pdf p5 /Im1 (filed by hand: the swatch sits directly above its caption on the stain-options page; matched by position)",
+    "mahogany / Ebony": "79d5f9d9-Compressed.pdf p5 /Im4 (filed by hand: the swatch sits directly above its caption on the stain-options page; matched by position)",
+    "mahogany / English Chestnut": "79d5f9d9-Compressed.pdf p5 /Im3 (filed by hand: the swatch sits directly above its caption on the stain-options page; matched by position)",
+    "mahogany / Jacobean": "79d5f9d9-Compressed.pdf p5 /Im0 (filed by hand: the swatch sits directly above its caption on the stain-options page; matched by position)",
+    "mahogany / Red Oak": "79d5f9d9-Compressed.pdf p5 /Im5 (filed by hand: the swatch sits directly above its caption on the stain-options page; matched by position)",
+    "mahogany / Special Walnut": "79d5f9d9-Compressed.pdf p5 /Im2 (filed by hand: the swatch sits directly above its caption on the stain-options page; matched by position)"
+  },
+  "stains": {
+    "knotty_alder": {
+      "Aged Barrel": "knotty-alder-aged-barrel.webp",
+      "Ebony": "knotty-alder-ebony.webp",
+      "English Chestnut": "knotty-alder-english-chestnut.webp",
+      "Jacobean": "knotty-alder-jacobean.webp",
+      "Red Oak": "knotty-alder-red-oak.webp",
+      "Special Walnut": "knotty-alder-special-walnut.webp"
+    },
+    "mahogany": {
+      "Aged Barrel": "mahogany-aged-barrel.webp",
+      "Ebony": "mahogany-ebony.webp",
+      "English Chestnut": "mahogany-english-chestnut.webp",
+      "Jacobean": "mahogany-jacobean.webp",
+      "Red Oak": "mahogany-red-oak.webp",
+      "Special Walnut": "mahogany-special-walnut.webp"
+    }
+  }
+}
