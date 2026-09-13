@@ -174,6 +174,8 @@ you commit anything.
 | `tools/build-css.sh`, `tools/tailwind.config.cjs` | Compile `quoter/assets/tw.css` from the quoter's markup; the theme lives in the config |
 | `quoter/assets/fonts/` | The two typefaces the quoter ships (Inter, Cormorant Garamond), latin subsets |
 | `docs/audit-2026-09-13.md` | The audit after the mahogany line: ghost code, what was optimized, the printed pictures, the fresh look |
+| `docs/quoter-design-gallery.md` | The design gallery: plain-glass cards, the design asked first as full-size pictures, the lightbox |
+| `tests/design-gallery.test.mjs` | Drives the gallery: the card rule, the tiles, the lightbox, the sheet after the choice, the phone layout |
 | `quoter/assets/stains/` | The stain charts off catalog page 5, one per wood line |
 | `docs/photography.md` | Which models have a picture, which borrow one, which were matched by eye, and what is still missing |
 | `quoter/assets/glass/` | Glass swatches with Hoelscher's privacy ratings |
@@ -191,12 +193,12 @@ you commit anything.
 
 ```sh
 npm install && npx playwright install chromium   # once
-npm test                             # both audits and all seventeen suites, ~10 minutes
+npm test                             # both audits and all eighteen suites, ~11 minutes
 npm run audit                        # data contracts and cross-references only
 sh tools/build-css.sh                # recompile quoter/assets/tw.css after editing quoter/index.html
 ```
 
-633 checks, and the same set CI runs on every pull request. The browser suites
+677 checks, and the same set CI runs on every pull request. The browser suites
 drive real Chromium through Playwright, found in `node_modules`, image-wide, or
 wherever `PLAYWRIGHT_MODULE` points — whichever exists. Each serves the repo on
 a port the OS picks, so a killed run cannot block the next one. Screenshots land

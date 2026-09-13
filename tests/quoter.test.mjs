@@ -818,30 +818,32 @@ await page.click('#groupChip'); await page.waitForTimeout(500);
 await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/^Knotty Alder/.test(n.textContent.trim())).click();});
 await page.waitForSelector('#catalog article',{timeout:30000});
 await openModel('KA 3/4 Lite Iron Grille');
+const rowOf=title=>page.$$eval('#detail .steprow',(ns,t)=>{
+  const row=ns.find(r=>{const h=r.parentElement.querySelector('p');
+    return h&&h.textContent.trim()===t;});
+  return row?[...row.querySelectorAll('.opt')].map(n=>({t:n.textContent.trim(),off:n.disabled})):[];},title);
+const designOpts=await rowOf('Grille design');
+ok('a grille door asks its design first, all eleven shown as a gallery', designOpts.length===11 && (await steps()).join()==='Grille design', String(designOpts.length)+' :: '+(await steps()).join(' > '));
+ok('and none greyed, since no size has been chosen yet', designOpts.every(o=>!o.off), designOpts.filter(o=>o.off).map(o=>o.t).join(' | '));
+const notIn3680=grilleDesigns.find(g=>g.line==='knotty_alder'&&!g.sizeCodes.includes('3680'));
+await pick(notIn3680.name);
+const sizeOpts=await rowOf('Size');
+ok('the grille door is offered its four sizes', sizeOpts.length===4, sizeOpts.map(o=>o.t).join(' | '));
+ok('and the sizes the chosen design is not made in are shown but disabled, 3\'6" among them',
+   sizeOpts.filter(o=>!o.off).length===notIn3680.sizeCodes.length && sizeOpts.filter(o=>o.off).some(o=>/3'6"/.test(o.t)),
+   notIn3680.name+' :: '+sizeOpts.map(o=>(o.off?'[x] ':'')+o.t).join(' | '));
+ok('a disabled size is one the catalogue does not list for that design',
+   sizeOpts.filter(o=>o.off).every(o=>/not this design/.test(o.t)),
+   sizeOpts.filter(o=>o.off).map(o=>o.t).join(' | '));
+await pick(sizeOpts.find(o=>!o.off).t.split('"')[0]+'"');
 const grilleGlass=await optionsOf('Glass');
 const ruleOpts=(catalog.glassRules||[]).find(r=>/Iron Grille/i.test(r.appliesToModelPattern)).options;
-ok('a grille door offers exactly the five glasses the grille page lists',
+ok('a grille door then offers exactly the five glasses the grille page lists',
    grilleGlass.length===ruleOpts.length &&
    ruleOpts.every(o=>grilleGlass.some(g=>g.startsWith(o))),
    grilleGlass.join(' | '));
 ok('and not the wider Legacy list',
    !grilleGlass.some(g=>/Baroque|Small Reeded|Satin|Bevel/i.test(g)), grilleGlass.join(' | '));
-await pick(ruleOpts[0]);
-const grilleSizes=await optionsOf('Size');
-ok('the grille door is offered its four sizes', grilleSizes.length===4, grilleSizes.join(' | '));
-await pick('3\'6"');
-const designOpts=await page.$$eval('#detail .steprow',ns=>{
-  const row=ns.find(r=>{const h=r.parentElement.querySelector('p');
-    return h&&h.textContent.trim()==='Grille design';});
-  return row?[...row.querySelectorAll('.opt')].map(n=>({t:n.textContent.trim(),off:n.disabled})):[];});
-ok('all eleven grille designs are shown', designOpts.length===11, String(designOpts.length));
-const madeIn3680=grilleDesigns.filter(g=>g.line==='knotty_alder'&&g.sizeCodes.includes('3680')).map(g=>g.name);
-ok('and the ones not made in 3\'6" are shown but disabled',
-   designOpts.filter(o=>!o.off).length===madeIn3680.length,
-   designOpts.filter(o=>!o.off).map(o=>o.t.split('\n')[0]).join(' | '));
-ok('a disabled design is one the catalogue does not list in that size',
-   designOpts.filter(o=>o.off).every(o=>!madeIn3680.some(n=>o.t.startsWith(n))),
-   designOpts.filter(o=>o.off).map(o=>o.t.split('\n')[0]).join(' | '));
 await page.keyboard.press('Escape'); await page.waitForTimeout(300);
 
 /* A glazing field that lists several glasses is a list of choices, not one

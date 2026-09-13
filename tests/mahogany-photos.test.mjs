@@ -124,8 +124,8 @@ async function open(name, wood){
   await page.waitForSelector('#detail:not(.hidden)');
 }
 const cardArt=()=>page.$$eval('#catalog article',ns=>ns.map(a=>{
-  const img=a.querySelector('img'); return {name:a.querySelector('h3').textContent.trim(),
-    src:img?decodeURIComponent(img.getAttribute('src')):null, svg:!!a.querySelector('svg[role="img"]'),
+  const img=a.querySelector('img'); const badge=a.querySelector('.designbadge'); return {name:a.querySelector('h3').textContent.trim(),
+    src:img?decodeURIComponent(img.getAttribute('src')):null, svg:!!a.querySelector('svg[role="img"]'), badge:badge?badge.textContent.trim():null,
     broken:!!(img&&img.complete&&img.naturalWidth===0)};}));
 
 /* the whole mahogany catalogue, every card */
@@ -137,13 +137,15 @@ ok('the mahogany catalogue lists all 68 doors and sidelites', cards.length===68,
 ok('every card shows a photograph — no drawn silhouette is left', cards.every(c=>c.src&&!c.svg), cards.filter(c=>!c.src||c.svg).map(c=>c.name).join(' | '));
 ok('and none is broken', cards.every(c=>!c.broken), cards.filter(c=>c.broken).map(c=>c.name).join(' | '));
 const own=cards.filter(c=>c.src&&c.src.startsWith('./assets/doors/'));
-ok('63 of them are the model\'s own catalog photograph', own.length===63, String(own.length));
-const standIns=cards.filter(c=>c.src&&!c.src.startsWith('./assets/doors/'));
-ok('the five left show a mahogany grille-design picture, a true picture of that door: three grille doors and the two Full grille sidelites',
-   standIns.length===5 && standIns.every(c=>/Iron Grille/.test(c.name) && /designs\/grille-mahogany-/.test(c.src)), standIns.map(c=>c.name+' -> '+c.src).join(' | '));
+ok('all 68 are photographs off the door pages: a door chosen by design shows its plain-glass twin on the card', own.length===68, String(own.length));
+const byDesign=cards.filter(c=>c.badge);
+ok('the eight grille doors and sidelites and the seven decorative-glass ones say on the card how many designs they come in',
+   byDesign.length===15 && byDesign.every(c=>/Iron Grille|Decorative Glass/.test(c.name)) && byDesign.filter(c=>/Iron Grille/.test(c.name)).every(c=>/grille designs$/.test(c.badge)) && byDesign.filter(c=>/Decorative/.test(c.name)).every(c=>/decorative glass(es)?$/.test(c.badge)),
+   byDesign.map(c=>c.name+': '+c.badge).join(' | '));
+ok('and no other card carries such a badge', cards.filter(c=>!c.badge).every(c=>!/Iron Grille|Decorative Glass/.test(c.name)));
 const byName=Object.fromEntries(cards.map(c=>[c.name,c.src]));
-ok('the 3/4 Lite Iron Grille shows the mahogany door cut from page 32', /doors\/3-4-lite-iron-grille\.webp/.test(byName['3/4 Lite Iron Grille']||''), byName['3/4 Lite Iron Grille']);
-ok('the Full Sidelite Iron Grille, named without "Lite", shows a grille picture like its twin', /grille-mahogany-full-lite/.test(byName['Full Sidelite Iron Grille']||'') && byName['Full Sidelite Iron Grille']===byName['Full Lite Sidelite Iron Grille'], byName['Full Sidelite Iron Grille']);
+ok('the 3/4 Lite Iron Grille shows the 3/4 Lite flat-glass door of page 32, badged with its eight designs', /doors\/3-4-lite-flat-glass\.webp/.test(byName['3/4 Lite Iron Grille']||'') && (cards.find(c=>c.name==='3/4 Lite Iron Grille')||{}).badge==='8 grille designs', byName['3/4 Lite Iron Grille']);
+ok('the Full Sidelite Iron Grille, named without "Lite", shows the flat Full sidelite like its twin', /doors\/full-sidelite-flat-glass\.webp/.test(byName['Full Sidelite Iron Grille']||'') && byName['Full Sidelite Iron Grille']===byName['Full Lite Sidelite Iron Grille'], byName['Full Sidelite Iron Grille']);
 /* the black "open for glass" panes are gone: the middle of the Full Lite flat door's pane is pale */
 const paneLum=await page.evaluate(async src=>{const im=new Image(); im.src=src; await im.decode(); const c=document.createElement('canvas'); c.width=im.naturalWidth; c.height=im.naturalHeight; const g=c.getContext('2d'); g.drawImage(im,0,0); const d=g.getImageData(Math.floor(c.width/2),Math.floor(c.height*0.35),1,1).data; return Math.max(d[0],d[1],d[2]);}, byName['Full Lite - Flat Glass']);
 ok('the open-for-glass pane reads pale, not black', paneLum>200, String(paneLum));
@@ -171,14 +173,12 @@ ok('a knotty alder door shows the knotty alder chart', ka.length===6 && ka.every
 
 /* a grille sidelite quoted on its own no longer dead-ends on the door sizes */
 await open('Full Lite Sidelite Iron Grille');
-await pick('Glass','Clear Low E');
 const sd=await optionsOf('Grille design');
 ok('a grille sidelite on its own is offered every design of its lite style, none greyed for size', sd.length===8 && sd.every(o=>!/^\[x\]/.test(o)), sd.join(' | '));
-await pick('Grille design','Balfour'); await pick('Finish','Unfinished'); await pick('Opening','Slab only');
+await pick('Grille design','Balfour'); await pick('Glass','Clear Low E'); await pick('Finish','Unfinished'); await pick('Opening','Slab only');
 const slText=await page.$eval('#detail',n=>n.textContent);
 ok('and goes on to a price', /\$[\d,]+\.\d\d/.test(slText) && !/Answer the questions above/.test(slText), (slText.match(/\$[\d,]+\.\d\d/)||[''])[0]);
 await open('Full Sidelite Iron Grille');
-await pick('Glass','Clear Low E');
 ok('its twin named without "Lite" is asked the same designs', (await optionsOf('Grille design')).length===8, (await steps()).join(' > '));
 
 ok('no console, page or request errors', errs.length===0, errs.slice(0,3).join(' | '));
