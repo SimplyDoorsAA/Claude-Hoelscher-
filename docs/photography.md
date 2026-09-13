@@ -58,6 +58,13 @@ With that, every mahogany card shows a catalog photograph: 63 the model's own,
 sidelites) a grille-design picture, which is a true picture of that door.
 Nothing in the mahogany line draws a silhouette.
 
+Since 2026-09-13 the card of a grille or decorative-glass door shows its
+flat-glass twin's photograph instead, with a badge counting the designs, and
+the design pictures are chosen from a full-size gallery
+(`docs/quoter-design-gallery.md`); the grille-door pictures above are still
+the door's own and are used once a design is not the point (the header
+thumbnail, fallbacks).
+
 **The mahogany grille pages.** The compressed catalog PDF stops at page 33,
 but a fuller mahogany PDF the dealer had uploaded (`Joel_mahogany.pdf`)
 carries pages 34–41, and page 32 sharper. Each grille page is a 2×2 of

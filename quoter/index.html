@@ -66,6 +66,17 @@
   .marginin { box-sizing:border-box; font-variant-numeric:tabular-nums; }
   #customWrap:not(.hidden) { display:flex; }
   .opt:disabled { opacity:.32; cursor:not-allowed; text-decoration:line-through; }
+  /* Gallery tiles: a picture the size of the sheet's preview, the name under
+     it. A chosen tile keeps its photograph and takes a green ring; a tile not
+     made in the chosen size is greyed, never struck through the picture. */
+  .opt.tile-btn { padding:0; }
+  .opt.tile-btn[aria-pressed="true"] { background:#fff; color:inherit; border-color:#2f4538; box-shadow:0 0 0 3px #2f4538; }
+  .opt.tile-btn[aria-pressed="true"] .optwords { background:#2f4538; color:#fff; }
+  .opt.tile-btn[aria-pressed="true"] .optsub { opacity:.85; }
+  .opt.tile-btn:disabled { text-decoration:none; }
+  .opt.tile-btn:disabled .ph { filter:grayscale(1); }
+  .zoombtn { opacity:.7; transition:opacity .2s ease; }
+  .tile:hover .zoombtn, .tile:focus-within .zoombtn, .preview:hover .zoombtn, .preview:focus-within .zoombtn, .zoombtn:hover { opacity:1; }
   /* The iron add-ons are photographed on black; a small lift makes the shape
      read at thumbnail size without touching the file. */
   .accshot img { filter: brightness(1.45) contrast(1.15); }
@@ -328,6 +339,19 @@
   class="fixed z-[60] hidden inset-x-0 bottom-0 max-h-[92vh] overflow-y-auto rounded-t-2xl bg-paper-card shadow-lift
          md:inset-0 md:m-auto md:h-fit md:max-h-[90vh] md:w-[min(940px,94vw)] md:rounded-2xl"></section>
 
+<!-- A design picture at full size. Opened from a gallery tile or the sheet's
+     preview; the Choose button is shown only when the picture is a choice. -->
+<div id="lightbox" class="fixed inset-0 z-[70] hidden items-center justify-center bg-ink/90 p-4" role="dialog" aria-modal="true" aria-label="Picture at full size">
+  <button id="lightboxClose" type="button" class="absolute right-3 top-3 rounded-full bg-white/10 p-2 text-white hover:bg-white/20" aria-label="Close">
+    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+  </button>
+  <figure class="flex max-h-full max-w-full flex-col items-center gap-3">
+    <img id="lightboxImg" class="max-h-[78vh] max-w-full rounded-lg bg-paper-card object-contain shadow-lift" alt="">
+    <figcaption id="lightboxCap" class="font-display text-xl text-white"></figcaption>
+    <button id="lightboxChoose" type="button" class="hidden rounded-xl bg-forest px-5 py-2.5 text-sm font-medium text-white hover:bg-forest-deep">Choose this design</button>
+  </figure>
+</div>
+
 <!-- =============================== PRINT ===============================
      Built on demand by buildPrintDoc() and hidden on screen. In print media
      it is the only thing on the page, so what comes out of the printer is a
@@ -409,6 +433,7 @@ const state = {
   glass: { glass: {}, privacy: {} },      // glass name -> swatch and privacy rating
   designs: { decorativeGlass: {}, accessories: {} },
   stains: {},                             // line -> stain name -> swatch file
+  lightboxOpen: false,                    // a design picture shown full size
   estimate: null,                         // company, document copy and terms
   job: null,                              // who the quote is for; see JOB_FIELDS
   ready: false,
@@ -843,6 +868,64 @@ function standInPhoto(model) {
   return null;
 }
 
+/* ---- design galleries ---------------------------------------------------
+   An iron-grille door is one price row and eight photographs; a
+   decorative-glass door is one row and four. The design is the whole
+   decision, so it is asked first, as a gallery of the catalog's own pictures
+   the size of the sheet's preview rather than a row of thumbnails, and the
+   catalogue card shows the door with clear glass so it never looks as if one
+   design had been chosen already. Walked with the dealer 2026-09-13. */
+function designGalleryOf(model) {
+  if (!model) return null;
+  if ((model.grilleDesigns || []).length) {
+    return { kind: "grille", label: "grille design", plural: "grille designs",
+      designs: model.grilleDesigns.map(g => ({
+        name: g.name,
+        src: g.photo ? CONFIG.designBase + encodeURIComponent(g.photo) : null,
+        sizeCodes: g.sizeCodes || [],
+        title: [g.stainShown && "Shown in " + g.stainShown,
+                g.glassShown && "with " + g.glassShown].filter(Boolean).join(" ") || null
+      })) };
+  }
+  const gl = model.glazings || [];
+  if (gl.length > 1 && gl.every(g => state.designs.decorativeGlass[g])) {
+    return { kind: "decorative", label: "decorative glass", plural: "decorative glasses",
+      designs: gl.map(g => ({
+        name: g,
+        src: CONFIG.designBase + encodeURIComponent(state.designs.decorativeGlass[g].file),
+        sizeCodes: Array.from(new Set(model.products.filter(p => glazingOffers(p, g))
+          .map(p => p.size && p.size.code).filter(Boolean))),
+        title: null
+      })) };
+  }
+  return null;
+}
+/* The same door glazed plain: "3/4 Lite Iron Grille" is photographed as
+   "3/4 Lite - Flat Glass", "KA 3/4 Lite RM - Decorative Glass" as
+   "KA 3/4 Lite RM - Flat Glass". The sheet names the grille sidelites with
+   "Lite" and the flat ones without, and the knotty alder flat door carries
+   its moulding code where the grille door does not, so a few spellings are
+   tried. Null when no such photograph is on file. */
+function clearGlassPhoto(model) {
+  const name = String((model && model.name) || "");
+  const stem = name.replace(/\s*-?\s*(Decorative Glass|Iron Grille)\s*$/i, "").trim();
+  if (!stem || stem === name) return null;
+  const cands = [stem, stem.replace(/\bLite Sidelite\b/, "Sidelite"),
+                 stem.replace(/\b(NRM|RM)\b/, "").replace(/\s+/g, " ").trim()];
+  if (!/\bRM\b/.test(stem)) cands.push(stem + " RM");
+  for (const c of cands) {
+    const hit = photoByFingerprint(modelFingerprint(c + " - Flat Glass"));
+    if (hit) return photoFor(hit);
+  }
+  return null;
+}
+/* The picture on the catalogue card: the plain-glass door for a model whose
+   design is chosen in a gallery, otherwise the truest picture there is. */
+function cardArt(model) {
+  const clear = designGalleryOf(model) && clearGlassPhoto(model);
+  return clear ? { src: clear } : artFor(model.name, model);
+}
+
 /* What to show for a door, in order of how true it is: the model's own
    photograph, another catalog picture of the same door, the photograph of the
    door it is a variation of, and failing all three a drawn silhouette. */
@@ -854,9 +937,9 @@ function artFor(name, model) {
   return basePhoto(name) || {};
 }
 
-function fillArt(holder, product, modelName, cls, model) {
+function fillArt(holder, product, modelName, cls, model, art) {
   const name = modelName || (product && modelKeyOf(product));
-  const { src, of: borrowedFrom } = artFor(name, model);
+  const { src, of: borrowedFrom } = (art && art.src) ? art : artFor(name, model);
   if (!src) {
     const svg = doorSilhouette(product);
     if (cls) svg.classList.add(...cls.split(" "));
@@ -1347,13 +1430,31 @@ function productCard(model) {
 
   const frame = el("div", "door-frame relative w-full overflow-hidden bg-paper-rail");
   fillArt(frame, product, model.name,
-          "transition-transform duration-500 group-hover:scale-[1.03]", model);
+          "transition-transform duration-500 group-hover:scale-[1.03]", model, cardArt(model));
 
   if (product.type !== "door") {
     const tag = el("span",
       "absolute left-2 top-2 rounded-full bg-ink/75 px-2 py-0.5 text-[10px] uppercase tracking-widest text-white",
       product.type === "sidelite" ? "Sidelite" : "Barn");
     frame.appendChild(tag);
+  }
+  // A door chosen by design says how many there are, and shows three of
+  // them small, over its plain-glass picture.
+  const gallery = designGalleryOf(model);
+  if (gallery) {
+    const n = gallery.designs.length;
+    frame.appendChild(el("span",
+      "designbadge absolute bottom-2 left-2 rounded-full bg-ink/75 px-2 py-0.5 text-[10px] uppercase tracking-widest text-white",
+      n + " " + (n === 1 ? gallery.label : gallery.plural)));
+    const strip = el("span", "designstrip absolute bottom-2 right-2 flex gap-1");
+    gallery.designs.filter(g => g.src).slice(0, 3).forEach(g => {
+      const im = document.createElement("img");
+      im.src = g.src; im.alt = g.name; im.loading = "lazy"; im.decoding = "async";
+      im.className = "h-12 w-7 rounded border border-white/80 bg-paper-card object-cover shadow-card";
+      im.addEventListener("error", function onE() { im.removeEventListener("error", onE); im.remove(); }, { once: true });
+      strip.appendChild(im);
+    });
+    if (strip.childElementCount) frame.appendChild(strip);
   }
   btn.appendChild(frame);
 
@@ -1890,9 +1991,19 @@ function stepPlan(d) {
     return (p && p.size.label) || code;
   };
   const plan = [];
-  if (m.glazings.length > 1) plan.push({ key: "glazing", title: "Glass", value: d.glazing });
-  if (camingFor(d.glazing).length > 1) plan.push({ key: "caming", title: "Caming", value: d.caming });
-  if (m.sizes.length > 1) plan.push({ key: "size", title: "Size", value: d.sizeCode && sizeLabel(d.sizeCode) });
+  const glass = () => {
+    if (m.glazings.length > 1) plan.push({ key: "glazing", title: "Glass", value: d.glazing });
+    if (camingFor(d.glazing).length > 1) plan.push({ key: "caming", title: "Caming", value: d.caming });
+  };
+  const size = () => {
+    if (m.sizes.length > 1) plan.push({ key: "size", title: "Size", value: d.sizeCode && sizeLabel(d.sizeCode) });
+  };
+  // A grille door is chosen by its design, then its size, then the glass
+  // behind the grille; every other door by its glass first.
+  if (m.grilleDesigns.length) {
+    plan.push({ key: "grilleDesign", title: "Grille design", value: d.grilleDesign });
+    size(); glass();
+  } else { glass(); size(); }
   if (m.speakeasy) {
     plan.push({ key: "speakeasy", title: "Speakeasy",
       value: d.speakeasy === "no" ? "No speakeasy" : d.speakeasy === "yes" ? "Speakeasy kit" : null });
@@ -1902,7 +2013,6 @@ function stepPlan(d) {
         value: d.mask === MASK_NONE ? "No iron mask" : d.mask });
     }
   }
-  if (m.grilleDesigns.length) plan.push({ key: "grilleDesign", title: "Grille design", value: d.grilleDesign });
   if (m.grilles.length) plan.push({ key: "grille", title: "Iron grille",
     value: d.grilleChoice === "none" ? "No grille" : (d.grille && d.grille.style) || null });
   plan.push({ key: "finish", title: "Finish", value: d.finish && FINISH_LABELS[d.finish] });
@@ -1936,10 +2046,14 @@ function stepPlan(d) {
 /** Take back one answer, and every answer that depended on it. */
 function unanswerFrom(key) {
   const d = state.draft;
-  const order = ["glazing", "caming", "size", "speakeasy", "insert", "mask",
-                 "grilleDesign", "grille", "finish", "stain",
-                 "dentilShelf", "opening", "sidelite", "sideliteGlazing",
-                 "handing", "swing", "jamb"];
+  const rest = ["speakeasy", "insert", "mask", "grille", "finish", "stain",
+                "dentilShelf", "opening", "sidelite", "sideliteGlazing",
+                "handing", "swing", "jamb"];
+  // The same order the sheet asks in, so taking back an answer clears only
+  // what came after it.
+  const order = d.model.grilleDesigns.length
+    ? ["grilleDesign", "size", "glazing", "caming"].concat(rest)
+    : ["glazing", "caming", "size", "grilleDesign"].concat(rest);
   const from = order.indexOf(key);
   const clear = {
     glazing:  () => { d.glazing = null; },
@@ -2011,21 +2125,42 @@ function renderDetail() {
   const root = $("#detail");
   root.textContent = "";
 
+  /* A door chosen by design opens on its gallery, full width, with the
+     preview column put away until a design is chosen; then the two-column
+     sheet returns with the chosen design in the preview. */
+  const gallery = designGalleryOf(model);
+  const galleryOpen = !!gallery && !(gallery.kind === "grille" ? d.grilleDesign : d.glazing);
+
   // minmax(0,...) on both tracks, and min-w-0 on the column below, so a long
   // row of options can never widen the grid instead of wrapping.
-  const wrap = el("div", "grid grid-cols-[minmax(0,1fr)] md:grid-cols-[minmax(0,320px)_minmax(0,1fr)]");
+  const wrap = el("div", galleryOpen
+    ? "grid grid-cols-[minmax(0,1fr)]"
+    : "grid grid-cols-[minmax(0,1fr)] md:grid-cols-[minmax(0,320px)_minmax(0,1fr)]");
 
   /* image column */
   const imgCol = el("div", "relative bg-paper-rail p-6 hidden md:flex items-start justify-center");
-  const holder = el("div", "door-frame w-full max-w-[240px] overflow-hidden rounded-lg bg-paper-card shadow-card");
+  const holder = el("div", "preview door-frame relative w-full max-w-[240px] overflow-hidden rounded-lg bg-paper-card shadow-card");
   const shown = draftProduct() || model.sample;
-  fillArt(holder, shown, model.name, null, model);
+  const previewSrc = !gallery ? null
+    : gallery.kind === "decorative" && d.glazing
+      ? CONFIG.designBase + encodeURIComponent(state.designs.decorativeGlass[d.glazing].file)
+      : lineArtSrc(shown, { grilleDesign: d.grilleDesign, glazing: d.glazing });
+  fillArt(holder, shown, model.name, null, model, previewSrc ? { src: previewSrc } : null);
+  if (previewSrc) holder.appendChild(zoomButton(previewSrc,
+    (gallery.kind === "grille" ? d.grilleDesign : d.glazing) + " · " + model.name, null));
   imgCol.appendChild(holder);
 
   const body = el("div", "min-w-0 p-5 sm:p-6 flex flex-col gap-5");
 
   /* heading */
   const head = el("div", "flex items-start gap-3");
+  if (galleryOpen) {
+    // The plain-glass door, small, so the gallery is read as designs for it.
+    const thumb = el("div", "door-frame relative h-[72px] w-[44px] shrink-0 overflow-hidden rounded bg-paper-rail");
+    const ca = cardArt(model);
+    fillArt(thumb, model.sample, model.name, null, model, ca.src ? { src: ca.src } : null);
+    head.appendChild(thumb);
+  }
   const ht = el("div", "min-w-0 flex-1");
   // On wood the family repeats the line ("Mahogany · Mahogany"), so say it once.
   const lineName = LINE_LABELS[model.line] || titleize(model.line);
@@ -2050,7 +2185,7 @@ function renderDetail() {
   const gate = answered => { if (blocked) return false; if (!answered) { blocked = true; return true; } return true; };
 
   // 1. glass
-  if (model.glazings.length > 1) {
+  const glassStep = () => { if (blocked || model.glazings.length <= 1) return;
     const base = Math.min(...model.glazings.map(g => glazingFrom(model, g, d.sizeCode)).filter(v => v !== null));
     const anySwatch = model.glazings.some(g => glassSwatch(g));
     const blk = stepBlock("Glass", anySwatch ? "privacy rated 0-9 by Hoelscher" : null);
@@ -2063,7 +2198,7 @@ function renderDetail() {
       const delta = bits.length ? bits.join(" · ") : null;
       let art = null;
       if (sw) {
-        art = el("span", "glassswatch block h-9 w-9 shrink-0 overflow-hidden rounded border border-paper-line bg-paper-rail");
+        art = el("span", "glassswatch block h-14 w-14 shrink-0 overflow-hidden rounded border border-paper-line bg-paper-rail");
         const im = document.createElement("img");
         im.src = sw.src; im.alt = ""; im.loading = "lazy"; im.decoding = "async";
         im.className = "h-full w-full object-cover";
@@ -2087,11 +2222,11 @@ function renderDetail() {
       }, sw ? "Printed in the catalog as " + sw.printedAs : null, delta, art));
     });
     body.appendChild(blk);
-    if (!gate(d.glazing)) { /* stop here */ }
-  }
+    gate(d.glazing);
+  };
 
   // 1b. caming, where the decorative glass is made with either lead
-  if (!blocked) {
+  const camingStep = () => { if (blocked) return;
     const caming = camingFor(d.glazing);
     if (caming.length > 1) {
       const blk = stepBlock("Caming", "the leading around the glass");
@@ -2104,23 +2239,44 @@ function renderDetail() {
     } else {
       d.caming = null;
     }
-  }
+  };
 
-  // 2. size
-  if (!blocked && model.sizes.length > 1) {
-    const blk = stepBlock("Size");
+  // 2. size. A grille design is made in some of the door's sizes: the
+  // catalog page lists them, and the sizes it leaves out are greyed with the
+  // reason rather than hidden.
+  const sizeStep = () => { if (blocked || model.sizes.length <= 1) return;
+    const design = gallery && gallery.kind === "grille" && d.grilleDesign
+      ? gallery.designs.find(g => g.name === d.grilleDesign) : null;
+    const isSidelite = model.products.every(p => p.type === "sidelite");
+    const madeIn = code => !design || isSidelite || !design.sizeCodes.length || design.sizeCodes.indexOf(code) >= 0;
+    const left = model.sizes.filter(c => !madeIn(c)).length;
+    const blk = stepBlock("Size", left ? left + " not made with " + design.name : null);
     model.sizes.forEach(code => {
       const p = model.products.find(x => (x.size && x.size.code) === code &&
         (model.glassRule ? true : glazingOffers(x, d.glazing)));
-      blk.row.appendChild(optionButton((p && p.size.label) || code, d.sizeCode === code, !p, () => {
+      const why = !p ? "Not offered in this glass" : !madeIn(code) ? "Not made with " + design.name : null;
+      blk.row.appendChild(optionButton((p && p.size.label) || code, d.sizeCode === code, !!why, () => {
         d.sizeCode = code;
         if (d.grille && d.grille.sizeCode !== code) { d.grille = null; d.grilleChoice = null; }
         reconcileSpeakeasy(d);
         renderDetail();
-      }, p ? null : "Not offered in this glass"));
+      }, why, why && !madeIn(code) ? "not this design" : null));
     });
     body.appendChild(blk);
     gate(d.sizeCode);
+  };
+
+  // The first question, and the order of the next two, depend on the door.
+  if (galleryOpen) {
+    body.appendChild(designGallery(model, gallery, d));
+    blocked = true;
+  } else if (gallery && gallery.kind === "grille") {
+    sizeStep(); glassStep(); camingStep();
+  } else if (gallery) {
+    // The glass was the gallery; its chip on the rail takes it back.
+    camingStep(); sizeStep();
+  } else {
+    glassStep(); camingStep(); sizeStep();
   }
 
   /* 2c. the speakeasy programme. Hoelscher prices the door, its kit and its
@@ -2183,42 +2339,6 @@ function renderDetail() {
       body.appendChild(mb);
       gate(d.mask);
     }
-  }
-
-  // 2b. which iron grille design, where the model is a grille door
-  if (!blocked && model.grilleDesigns.length) {
-    // A design's sizes are door sizes. A grille sidelite quoted on its own
-    // (the sheet prices them alone) takes any design of its lite style; beside
-    // a door it takes the door's.
-    const isSidelite = model.products.every(p => p.type === "sidelite");
-    const fits = g => isSidelite || !d.sizeCode || (g.sizeCodes || []).indexOf(d.sizeCode) >= 0;
-    const offered = model.grilleDesigns.filter(fits);
-    const blk = stepBlock("Grille design",
-      offered.length < model.grilleDesigns.length
-        ? (model.grilleDesigns.length - offered.length) + " not made in this size"
-        : null);
-    model.grilleDesigns.forEach(g => {
-      const ok = fits(g);
-      let art = null;
-      if (g.photo) {
-        art = el("span", "grilleshot block h-20 w-10 shrink-0 overflow-hidden rounded border border-paper-line bg-paper-rail");
-        const im = document.createElement("img");
-        im.src = CONFIG.designBase + encodeURIComponent(g.photo);
-        im.alt = ""; im.loading = "lazy"; im.decoding = "async";
-        im.className = "h-full w-full object-cover";
-        im.addEventListener("error", function onE() {
-          im.removeEventListener("error", onE); art.remove();
-        }, { once: true });
-        art.appendChild(im);
-      }
-      blk.row.appendChild(optionButton(g.name, d.grilleDesign === g.name, !ok, () => {
-        d.grilleDesign = g.name; renderDetail();
-      }, ok ? (g.stainShown ? "Shown in " + g.stainShown : null)
-            : "Not made in this size",
-        ok ? null : "not this size", art));
-    });
-    body.appendChild(blk);
-    gate(d.grilleDesign);
   }
 
   // 3. iron grille
@@ -2498,8 +2618,112 @@ function renderDetail() {
       "Answer the questions above to see pricing."));
   }
 
-  wrap.append(imgCol, body);
+  if (!galleryOpen) wrap.appendChild(imgCol);
+  wrap.appendChild(body);
   root.appendChild(wrap);
+}
+
+/* --- 5d-ii. the design gallery ------------------------------------------
+   Two tiles across on a phone, three on a tablet, each photograph about the
+   size of the sheet's preview so a grille or a leaded glass can actually be
+   told from the next. The name and the sizes it is made in sit under each;
+   a magnifier opens the picture at full size. */
+function designGallery(model, gallery, d) {
+  const isSidelite = model.products.every(p => p.type === "sidelite");
+  const sizeLabel = code => {
+    const p = model.products.find(x => (x.size && x.size.code) === code);
+    return (p && p.size.label) || code;
+  };
+  const fits = g => isSidelite || !d.sizeCode || !g.sizeCodes.length || g.sizeCodes.indexOf(d.sizeCode) >= 0;
+  const chosen = gallery.kind === "grille" ? d.grilleDesign : d.glazing;
+  const choose = g => {
+    if (gallery.kind === "grille") d.grilleDesign = g.name;
+    else {
+      d.glazing = g.name;
+      if (d.sizeCode && !model.glassRule &&
+          !model.products.some(p => (p.size && p.size.code) === d.sizeCode && glazingOffers(p, g.name))) {
+        d.sizeCode = null; d.grille = null;
+        if (model.grilles.length) d.grilleChoice = null;
+        reconcileSpeakeasy(d);
+      }
+    }
+    renderDetail();
+  };
+  // "All 4 sizes", or the sizes it is made in when that is fewer. A grille
+  // sidelite's designs are sized by the door, so it says nothing.
+  const sizesNote = g => {
+    if (isSidelite || model.sizes.length <= 1) return null;
+    const made = model.sizes.filter(c => !g.sizeCodes.length || g.sizeCodes.indexOf(c) >= 0);
+    if (made.length === model.sizes.length) return "All " + made.length + " sizes";
+    return made.map(sizeLabel).join(" · ") + (made.length === 1 ? " only" : "");
+  };
+  const blk = stepBlock(gallery.kind === "grille" ? "Grille design" : "Glass",
+    "tap the magnifier to see one full size");
+  blk.row.className = "steprow gallery grid grid-cols-2 gap-3 sm:grid-cols-3";
+  gallery.designs.forEach(g => {
+    const ok = fits(g);
+    const tile = el("div", "tile relative min-w-0");
+    const b = el("button",
+      "opt tile-btn block w-full overflow-hidden rounded-xl border border-paper-line bg-paper-card text-left transition-shadow hover:border-brass hover:shadow-lift");
+    b.type = "button";
+    const ph = el("span", "ph door-frame block w-full overflow-hidden bg-paper-rail");
+    if (g.src) {
+      const im = document.createElement("img");
+      im.src = g.src; im.alt = g.name; im.loading = "lazy"; im.decoding = "async";
+      im.className = "h-full w-full object-contain img-in";
+      const arrived = () => im.classList.add("img-ready");
+      if (im.complete && im.naturalWidth) arrived();
+      else im.addEventListener("load", arrived, { once: true });
+      im.addEventListener("error", function onE() {
+        im.removeEventListener("error", onE); im.replaceWith(doorSilhouette(model.sample));
+      }, { once: true });
+      ph.appendChild(im);
+    } else ph.appendChild(doorSilhouette(model.sample));
+    b.appendChild(ph);
+    const words = el("span", "optwords block px-3 py-2.5");
+    words.appendChild(el("span", "optlabel block font-display text-lg leading-tight", g.name));
+    const note = sizesNote(g);
+    if (note) words.appendChild(el("span", "optsub block text-[11px] opacity-70", note));
+    b.appendChild(words);
+    b.setAttribute("aria-pressed", String(chosen === g.name));
+    b.disabled = !ok;
+    if (g.title) b.title = g.title;
+    if (!ok) b.title = "Not made in this size";
+    if (ok) b.addEventListener("click", () => choose(g));
+    tile.appendChild(b);
+    if (g.src) tile.appendChild(zoomButton(g.src, g.name + " · " + model.name, ok ? () => choose(g) : null));
+    blk.row.appendChild(tile);
+  });
+  return blk;
+}
+
+/* A small magnifier over a picture; opens it in the lightbox. */
+function zoomButton(src, caption, onChoose) {
+  const z = el("button",
+    "zoombtn absolute right-2 top-2 rounded-full bg-ink/70 p-1.5 text-white hover:bg-ink");
+  z.type = "button";
+  z.setAttribute("aria-label", "See " + caption + " full size");
+  z.innerHTML = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6"/><path d="M16 16l4 4M11 8v6M8 11h6" stroke-linecap="round"/></svg>';
+  z.addEventListener("click", e => { e.stopPropagation(); openLightbox(src, caption, onChoose); });
+  return z;
+}
+function openLightbox(src, caption, onChoose) {
+  const box = $("#lightbox");
+  const img = $("#lightboxImg");
+  img.src = src; img.alt = caption || "";
+  $("#lightboxCap").textContent = caption || "";
+  const choose = $("#lightboxChoose");
+  choose.classList.toggle("hidden", !onChoose);
+  choose.onclick = onChoose ? () => { closeLightbox(); onChoose(); } : null;
+  box.classList.remove("hidden"); box.classList.add("flex");
+  state.lightboxOpen = true;
+  $("#lightboxClose").focus();
+}
+function closeLightbox() {
+  const box = $("#lightbox");
+  box.classList.add("hidden"); box.classList.remove("flex");
+  $("#lightboxImg").removeAttribute("src");
+  state.lightboxOpen = false;
 }
 
 /* --- 5e. accessories ----------------------------------------------------- */
@@ -4010,9 +4234,12 @@ function wire() {
   $("#detailScrim").addEventListener("click", closeDetail);
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
-    if (state.draft) closeDetail();
+    if (state.lightboxOpen) closeLightbox();
+    else if (state.draft) closeDetail();
     else if (state.drawerOpen) closeDrawer();
   });
+  $("#lightboxClose").addEventListener("click", closeLightbox);
+  $("#lightbox").addEventListener("click", e => { if (e.target === e.currentTarget) closeLightbox(); });
 
   // infinite scroll for the catalog
   const io = new IntersectionObserver(entries => {
