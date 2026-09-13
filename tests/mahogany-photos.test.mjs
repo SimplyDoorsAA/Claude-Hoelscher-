@@ -41,9 +41,22 @@ const keyOf=p=>{const d=String(p.description||'').trim(); const c=p.size&&p.size
   if(c){const rx=new RegExp('(^|\\s)'+c+'(?=\\s|$)'); if(rx.test(d)) return d.replace(rx,'$1').replace(/\s+/g,' ').trim();}
   return d.replace(SIZE_PREFIX,'').trim();};
 const models=[...new Set(cat.woodProducts.filter(p=>p.line==='mahogany').map(keyOf))];
-const photoDoors=hand.entries.filter(e=>e.kind!=='stain');
-ok('thirty mahogany photographs are matched by eye, each with the page, the image and why',
-   photoDoors.length===30 && photoDoors.every(e=>e.pdf&&e.page&&e.image&&e.why&&e.model), String(photoDoors.length));
+const photoDoors=hand.entries.filter(e=>!e.kind);
+const grilles=hand.entries.filter(e=>e.kind==='grille');
+ok('thirty-one mahogany photographs are matched by eye, each with the page, the image and why',
+   photoDoors.length===31 && photoDoors.every(e=>e.pdf&&e.page&&e.image&&e.why&&e.model), String(photoDoors.length));
+ok('and the twenty-six mahogany grille designs, each from its own catalog page',
+   grilles.length===26 && grilles.every(e=>e.line==='mahogany'&&e.pdf&&e.page&&e.image&&e.why), String(grilles.length));
+const designs=JSON.parse(fs.readFileSync(ROOT+'/quoter/assets/designs/manifest.json','utf8'));
+const mg=(cat.ironGrilleDesigns||[]).filter(g=>g.line==='mahogany');
+ok('every mahogany design in the catalogue now carries a mahogany photograph on disk, not its knotty alder namesake\'s',
+   mg.length===26 && mg.every(g=>/^grille-mahogany-/.test(g.photo||'') && fs.existsSync(ROOT+'/quoter/assets/designs/'+g.photo)),
+   mg.filter(g=>!/^grille-mahogany-/.test(g.photo||'')).map(g=>g.style+' '+g.name).join(' | '));
+ok('and the designs manifest records each as hand-filed with its source page',
+   mg.every(g=>{const r=designs.grilles['mahogany-'+g.style+'-'+g.name]; return r && r.handFiled && r.file===g.photo && /Joel_mahogany\.pdf p\d+/.test(r.source);}));
+const whitened=photoDoors.filter(e=>e.whiten);
+ok('fourteen open-for-glass and black-ground photographs are whitened, and the manifest says so',
+   whitened.length===14 && whitened.every(e=>/whitened/.test(doors.source[e.model]||'')), String(whitened.length));
 ok('every one names a mahogany model the catalogue holds',
    photoDoors.every(e=>models.includes(e.model)), photoDoors.filter(e=>!models.includes(e.model)).map(e=>e.model).join(' | '));
 ok('and is in the manifest, marked hand-filed, with its file on disk',
@@ -55,8 +68,9 @@ const standsIn=m=>/Iron Grille|Decorative Glass/.test(m) || /, SE \+/.test(m);
 ok('so every mahogany model has a photograph of its own, or a true stand-in, or a base door to borrow from',
    models.every(m=>doors.models[m] || standsIn(m)),
    models.filter(m=>!doors.models[m] && !standsIn(m)).join(' | '));
-ok('the 3/4 Lite grille door and sidelite are cut from the page-32 photograph, not borrowed from knotty alder',
-   /p32 .* crop/.test(doors.source['3/4 Lite Iron Grille']||'') && /p32 .* crop/.test(doors.source['3/4 Lite Sidelite Iron Grille']||''));
+ok('the 3/4 Lite grille door and sidelite are cut from the page-32 photograph, and the 2/3 grille sidelite from page 37',
+   /p25 .* crop/.test(doors.source['3/4 Lite Iron Grille']||'') && /p25 .* crop/.test(doors.source['3/4 Lite Sidelite Iron Grille']||'')
+   && /p29 .* crop/.test(doors.source['2/3 Lite Sidelite Iron Grille']||''));
 const sixStains=(cat.woodStainColors||[]).map(s=>s.name);
 ok('the six wood stains each have a mahogany swatch and a knotty alder swatch on disk',
    sixStains.length===6 && ['mahogany','knotty_alder'].every(l=>sixStains.every(n=>stains.stains[l]&&stains.stains[l][n]&&fs.existsSync(ROOT+'/quoter/assets/stains/'+stains.stains[l][n]))),
@@ -125,13 +139,16 @@ ok('the mahogany catalogue lists all 68 doors and sidelites', cards.length===68,
 ok('every card shows a photograph — no drawn silhouette is left', cards.every(c=>c.src&&!c.svg), cards.filter(c=>!c.src||c.svg).map(c=>c.name).join(' | '));
 ok('and none is broken', cards.every(c=>!c.broken), cards.filter(c=>c.broken).map(c=>c.name).join(' | '));
 const own=cards.filter(c=>c.src&&c.src.startsWith('./assets/doors/'));
-ok('62 of them are the model\'s own catalog photograph', own.length===62, String(own.length));
+ok('63 of them are the model\'s own catalog photograph', own.length===63, String(own.length));
 const standIns=cards.filter(c=>c.src&&!c.src.startsWith('./assets/doors/'));
-ok('the six left show a true picture of the door from another page: grille designs on the grille doors and sidelites',
-   standIns.length===6 && standIns.every(c=>/Iron Grille/.test(c.name) && /designs\/grille-/.test(c.src)), standIns.map(c=>c.name).join(' | '));
+ok('the five left show a mahogany grille-design picture, a true picture of that door: three grille doors and the two Full grille sidelites',
+   standIns.length===5 && standIns.every(c=>/Iron Grille/.test(c.name) && /designs\/grille-mahogany-/.test(c.src)), standIns.map(c=>c.name+' -> '+c.src).join(' | '));
 const byName=Object.fromEntries(cards.map(c=>[c.name,c.src]));
 ok('the 3/4 Lite Iron Grille shows the mahogany door cut from page 32', /doors\/3-4-lite-iron-grille\.webp/.test(byName['3/4 Lite Iron Grille']||''), byName['3/4 Lite Iron Grille']);
-ok('the Full Sidelite Iron Grille, named without "Lite", shows a grille picture like its twin', /grille-/.test(byName['Full Sidelite Iron Grille']||''), byName['Full Sidelite Iron Grille']);
+ok('the Full Sidelite Iron Grille, named without "Lite", shows a grille picture like its twin', /grille-mahogany-full-lite/.test(byName['Full Sidelite Iron Grille']||'') && byName['Full Sidelite Iron Grille']===byName['Full Lite Sidelite Iron Grille'], byName['Full Sidelite Iron Grille']);
+/* the black "open for glass" panes are gone: the middle of the Full Lite flat door's pane is pale */
+const paneLum=await page.evaluate(async src=>{const im=new Image(); im.src=src; await im.decode(); const c=document.createElement('canvas'); c.width=im.naturalWidth; c.height=im.naturalHeight; const g=c.getContext('2d'); g.drawImage(im,0,0); const d=g.getImageData(Math.floor(c.width/2),Math.floor(c.height*0.35),1,1).data; return Math.max(d[0],d[1],d[2]);}, byName['Full Lite - Flat Glass']);
+ok('the open-for-glass pane reads pale, not black', paneLum>200, String(paneLum));
 ok('the Full Lite flat-glass door shows its own page-28 photograph, not the decorative door\'s', /doors\/full-lite-flat-glass\.webp/.test(byName['Full Lite - Flat Glass']||''), byName['Full Lite - Flat Glass']);
 ok('the SDL door and its sidelite show page 21', /doors\/3-4-lite-1-panel-nrm\.webp/.test(byName['3/4 Lite 1 Panel NRM']||'') && /doors\/3-4-lite-1-panel-sidelite-nrm\.webp/.test(byName['3/4 Lite 1 Panel Sidelite NRM']||''));
 
