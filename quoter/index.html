@@ -883,22 +883,54 @@ function standInPhoto(model) {
 const isSideliteName = name => /\bsidelite\b/i.test(String(name || ""));
 function liteStyleOf(name) {
   const n = String(name || "");
-  return /2\/3/.test(n) ? "2/3" : /3\/4/.test(n) ? "3/4" : /\bfull\b/i.test(n) ? "Full" : null;
+  return /2\/3 Arch/.test(n) ? "2/3 Arch" : /2\/3/.test(n) ? "2/3" : /3\/4/.test(n) ? "3/4" : /\bfull\b/i.test(n) ? "Full" : null;
 }
+/* The sidelite pictures are keyed by the three sidelite styles; an arch
+   door's sidelite is the 2/3 one. */
+const sideliteStyleOf = name => { const s = liteStyleOf(name); return s === "2/3 Arch" ? "2/3" : s; };
 /* The picture of a grille design for a model: the matching sidelite's when
    the model is a sidelite and one is on file, else the door's. */
 function grilleArt(g, modelName) {
   const file = (isSideliteName(modelName) && g.sidelitePhoto) || g.photo;
   return file ? CONFIG.designBase + encodeURIComponent(file) : null;
 }
-/* The picture of a decorative glass for a model: the sidelite of its lite
-   style glazed with it when on file, else the glass's own picture. Null for
-   a glass the sheet does not name. */
+/* The picture of a decorative glass for a model, as the preview and the
+   quote show it: a sidelite of its style glazed with it when on file, a
+   door of its style glazed with it when on file (the dealer's 2/3 Arch
+   pictures), else the glass's own picture. Null for a glass the sheet does
+   not name. */
 function decorativeArt(name, modelName) {
   const dec = name && state.designs.decorativeGlass[name];
   if (!dec) return null;
-  const style = isSideliteName(modelName) ? liteStyleOf(modelName) : null;
-  const file = (style && dec.sidelites && dec.sidelites[style]) || dec.file;
+  const sl = isSideliteName(modelName);
+  const style = sl ? sideliteStyleOf(modelName) : liteStyleOf(modelName);
+  const file = (sl && style && dec.sidelites && dec.sidelites[style]) ||
+               (!sl && style && dec.doors && dec.doors[style]) || dec.file;
+  return file ? CONFIG.designBase + encodeURIComponent(file) : null;
+}
+/* A picture of this model's kind glazed with the glass, or null: the
+   sidelite of its style, or the door of its style (the dealer's 2/3 Arch
+   pictures). Without one the preview shows the glass itself, as the tile
+   did, rather than a door of another wood glazed with it. */
+function decorativeGlazedArt(name, modelName) {
+  const dec = name && state.designs.decorativeGlass[name];
+  if (!dec) return null;
+  const sl = isSideliteName(modelName);
+  const style = sl ? sideliteStyleOf(modelName) : liteStyleOf(modelName);
+  const file = sl ? (style && dec.sidelites && dec.sidelites[style])
+                  : (style && dec.doors && dec.doors[style]);
+  return file ? CONFIG.designBase + encodeURIComponent(file) : null;
+}
+/* The gallery compares glass to glass (walked with the dealer 2026-09-13):
+   a door's tile is the pane alone, cut from the door photograph where the
+   catalog shows the glass only in a door; a sidelite's tile is the sidelite
+   glazed with it, since those pictures compare like with like. */
+function decorativeTile(name, modelName) {
+  const dec = name && state.designs.decorativeGlass[name];
+  if (!dec) return null;
+  const glazed = isSideliteName(modelName) ? decorativeGlazedArt(name, modelName) : null;
+  if (glazed) return glazed;
+  const file = dec.pane || dec.file;
   return file ? CONFIG.designBase + encodeURIComponent(file) : null;
 }
 
@@ -909,17 +941,19 @@ function designGalleryOf(model) {
       designs: model.grilleDesigns.map(g => ({
         name: g.name,
         src: grilleArt(g, model.name),
+        onDoor: isSideliteName(model.name) && !g.sidelitePhoto && !!g.photo,
         sizeCodes: g.sizeCodes || [],
         title: [g.stainShown && "Shown in " + g.stainShown,
                 g.glassShown && "with " + g.glassShown].filter(Boolean).join(" ") || null
       })) };
   }
   const gl = model.glazings || [];
-  if (gl.length > 1 && gl.every(g => decorativeArt(g, model.name))) {
+  if (gl.length > 1 && gl.every(g => decorativeTile(g, model.name))) {
     return { kind: "decorative", label: "decorative glass", plural: "decorative glasses",
       designs: gl.map(g => ({
         name: g,
-        src: decorativeArt(g, model.name),
+        src: decorativeTile(g, model.name),
+        onDoor: false,
         sizeCodes: Array.from(new Set(model.products.filter(p => glazingOffers(p, g))
           .map(p => p.size && p.size.code).filter(Boolean))),
         title: null
@@ -1022,9 +1056,11 @@ function lineArtSrc(product, spec) {
   // A sidelite photographed glazed with the chosen glass is a truer picture
   // of that sidelite than its generic catalog photograph.
   const sideliteGlazed = isSideliteName(name) && spec.glazing &&
-    liteStyleOf(name) && (state.designs.decorativeGlass[spec.glazing] || {}).sidelites &&
-    state.designs.decorativeGlass[spec.glazing].sidelites[liteStyleOf(name)];
+    sideliteStyleOf(name) && (state.designs.decorativeGlass[spec.glazing] || {}).sidelites &&
+    state.designs.decorativeGlass[spec.glazing].sidelites[sideliteStyleOf(name)];
   if (sideliteGlazed) return CONFIG.designBase + encodeURIComponent(sideliteGlazed);
+  const doorGlazed = !isSideliteName(name) && spec.glazing && decorativeGlazedArt(spec.glazing, name);
+  if (doorGlazed) return doorGlazed;
   const own = photoFor(name);
   if (own) return own;
   const dec = spec.glazing && decorativeArt(spec.glazing, name);
@@ -1477,7 +1513,7 @@ function productCard(model) {
   if (gallery) {
     const n = gallery.designs.length;
     frame.appendChild(el("span",
-      "designbadge absolute bottom-2 left-2 rounded-full bg-ink/75 px-2 py-0.5 text-[10px] uppercase tracking-widest text-white",
+      "designbadge absolute right-2 top-2 rounded-full bg-ink/75 px-2 py-0.5 text-[10px] uppercase tracking-widest text-white",
       n + " " + (n === 1 ? gallery.label : gallery.plural)));
     const strip = el("span", "designstrip absolute bottom-2 right-2 flex gap-1");
     gallery.designs.filter(g => g.src).slice(0, 3).forEach(g => {
@@ -2193,7 +2229,7 @@ function renderDetail() {
   const shown = draftProduct() || model.sample;
   const previewSrc = !gallery ? null
     : gallery.kind === "decorative" && d.glazing
-      ? decorativeArt(d.glazing, model.name)
+      ? (decorativeGlazedArt(d.glazing, model.name) || decorativeTile(d.glazing, model.name))
       : lineArtSrc(shown, { grilleDesign: d.grilleDesign, glazing: d.glazing });
   fillArt(holder, shown, model.name, null, model, previewSrc ? { src: previewSrc } : null);
   if (previewSrc) holder.appendChild(zoomButton(previewSrc,
@@ -2733,7 +2769,7 @@ function designGallery(model, gallery, d) {
     b.appendChild(ph);
     const words = el("span", "optwords block px-3 py-2.5");
     words.appendChild(el("span", "optlabel block font-display text-lg leading-tight", g.name));
-    const note = sizesNote(g);
+    const note = [sizesNote(g), g.onDoor ? "shown on the door" : null].filter(Boolean).join(" · ");
     if (note) words.appendChild(el("span", "optsub block text-[11px] opacity-70", note));
     b.appendChild(words);
     b.setAttribute("aria-pressed", String(chosen === g.name));

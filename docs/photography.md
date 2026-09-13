@@ -128,6 +128,20 @@ is the dealer's upload, named in the entry.
 | Imperial 2/3 Oval, Austin Full Oval | `decorativeGlass` Imperial / Austin, `unpriced` | nowhere: the sheet prices no oval door and no Imperial or Austin glass |
 | Blanco Deluxe Oval with Blanco 3/4 sidelites | Blanco `sidelites["3/4"]`, `unpriced` | nowhere: the sheet lists Columbia, Medina, Pecos and San Jacinto on the 3/4 sidelite, not Blanco |
 
+**Glass to glass.** The decorative galleries had mixed two kinds of picture:
+Pecos, Dartmouth, San Jacinto and Medina are photographed as the glass alone,
+while Columbia is a knotty alder door, and Blanco and Brazos are mahogany
+doors. The dealer chose glass to glass (2026-09-13), so a door's tile is the
+pane alone: cut from the knotty alder Columbia photograph, from the
+page-30 Brazos photograph (the only Brazos picture on file, so it is soft at
+tile size), and from the arch door in the dealer's Blanco composite
+(`pane` on the manifest entry). The doors in the middle of the dealer's
+Blanco and Pecos composites are filed too (`doors["2/3 Arch"]`), so choosing
+either on the 2/3 Arch Lite previews the mahogany door glazed with it; a
+glass with no such door previews the pane, as its tile did, rather than a
+door of another wood. A sidelite's tiles stay sidelite to sidelite, with the
+pane where no sidelite picture exists.
+
 A second Whitney composite, on reeded glass, was supplied too; the water-glass
 one cuts cleaner and is the one filed. The three unpriced pictures are on
 file so the dealer can decide whether to ask Hoelscher for those

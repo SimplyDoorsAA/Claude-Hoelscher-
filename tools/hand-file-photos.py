@@ -21,6 +21,9 @@ PDF page; it is found in the same folders. Kinds "grilleSidelite" (the sidelite
 that matches a grille design), "decorativeSidelite" (a sidelite glazed with a
 decorative glass, by lite style) and "caming" (a leading swatch) land in
 quoter/assets/designs/ and are read by the quoter beside the design pictures.
+So do "decorativePane" (the glass alone, cut from a door photograph, for the
+gallery) and "decorativeDoor" (a door of one lite style glazed with the glass,
+for the preview); either may come from a PDF page or an upload.
 """
 import sys, os, json, importlib.util
 from collections import deque
@@ -118,7 +121,7 @@ def main(argv):
               'stains': {}, 'source': {}}
     designs.setdefault('decorativeGlass', {})
     designs.setdefault('caming', {})
-    NEW_KINDS = ('grille', 'grilleSidelite', 'decorativeSidelite', 'caming')
+    NEW_KINDS = ('grille', 'grilleSidelite', 'decorativeSidelite', 'decorativePane', 'decorativeDoor', 'caming')
 
     def save_design(im, fn):
         if dry:
@@ -170,6 +173,21 @@ def main(argv):
                 rec.setdefault('unpriced', {})[e['style']] = e['unpriced']
             save_design(im, fn)
             print('decorative sidelite', e['name'], e['style'], '->', fn)
+            continue
+        if e.get('kind') in ('decorativePane', 'decorativeDoor'):
+            # The glass alone, cut from a door photograph, so the gallery
+            # compares glass to glass; or a door of one lite style glazed
+            # with the glass, for the preview and the quote.
+            rec = designs['decorativeGlass'].setdefault(e['name'], {'handFiled': True})
+            if e['kind'] == 'decorativePane':
+                fn = extract.slug(f"glass {e['name']} pane") + '.webp'
+                rec['pane'] = fn; rec['paneSource'] = src
+            else:
+                fn = extract.slug(f"glass {e['name']} {e['style']} door") + '.webp'
+                rec.setdefault('doors', {})[e['style']] = fn
+                rec.setdefault('doorSource', {})[e['style']] = src
+            save_design(im, fn)
+            print(e['kind'], e['name'], e.get('style', ''), '->', fn)
             continue
         if e.get('kind') == 'caming':
             fn = extract.slug('caming ' + e['name']) + '.webp'

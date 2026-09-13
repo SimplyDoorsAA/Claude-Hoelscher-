@@ -80,8 +80,16 @@
     },
     "Blanco": {
       "basis": "caption",
+      "doorSource": {
+        "2/3 Arch": "dealer upload 4b51144e-image.jpg crop [292, 224, 874, 1473] (filed by hand: the door in the middle of the dealer's \"Blanco 2/3 Arch with Sidelites\" picture: the mahogany 2/3 Arch Lite glazed with Blanco, for the preview)"
+      },
+      "doors": {
+        "2/3 Arch": "glass-blanco-2-3-arch-door.webp"
+      },
       "file": "glass-blanco.webp",
       "handFiled": true,
+      "pane": "glass-blanco-pane.webp",
+      "paneSource": "dealer upload 4b51144e-image.jpg crop [436, 333, 742, 994] (filed by hand: the arch pane cut out of the door in the dealer's \"Blanco 2/3 Arch with Sidelites\" picture)",
       "sideliteSource": {
         "2/3": "dealer upload 4b51144e-image.jpg crop [27, 506, 287, 1500] (filed by hand: the dealer supplied Hoelscher's \"Blanco 2/3 Arch with Sidelites\" picture 2026-09-13: door in the middle, its sidelites either side; the left sidelite is cut out)",
         "3/4": "dealer upload eeeac908-image.jpg crop [31, 576, 275, 1771] (filed by hand: the dealer supplied Hoelscher's \"Blanco Deluxe Oval with Blanco 3/4 Sidelites\" picture 2026-09-13: door in the middle, its sidelites either side; the left sidelite is cut out)"
@@ -104,11 +112,15 @@
       "basis": "caption",
       "file": "glass-brazos.webp",
       "handFiled": true,
+      "pane": "glass-brazos-pane.webp",
+      "paneSource": "79d5f9d9-Compressed.pdf p30 /Im0 crop [48, 37, 150, 329] (filed by hand: the pane cut out of the page-30 photograph of the 2/3 Lite glazed with Brazos; the only Brazos picture on file, so it is soft at tile size)",
       "source": "79d5f9d9-Compressed.pdf p30 /Im0 (the door card's own photograph, Glass Shown: Brazos; filed by hand)"
     },
     "Columbia": {
       "basis": "remainder",
       "file": "glass-columbia.webp",
+      "pane": "glass-columbia-pane.webp",
+      "paneSource": "f80a4145-HoelscherWood_Doors.pdf p5 /Im0 crop [114, 100, 300, 800] (filed by hand: the gallery compares glass to glass (dealer, 2026-09-13): the pane cut out of the knotty alder door the wood catalog photographs glazed with Columbia)",
       "source": "f80a4145-HoelscherWood_Doors.pdf p5 /Im0"
     },
     "Dartmouth": {
@@ -146,6 +158,12 @@
     },
     "Pecos": {
       "basis": "column",
+      "doorSource": {
+        "2/3 Arch": "dealer upload 250008ac-image.jpg crop [260, 188, 842, 1439] (filed by hand: the door in the middle of the dealer's \"Pecos 2/3 Arch with Sidelites\" picture: the mahogany 2/3 Arch Lite glazed with Pecos, for the preview)"
+      },
+      "doors": {
+        "2/3 Arch": "glass-pecos-2-3-arch-door.webp"
+      },
       "file": "glass-pecos.webp",
       "sideliteSource": {
         "2/3": "dealer upload 250008ac-image.jpg crop [0, 492, 255, 1451] (filed by hand: the dealer supplied Hoelscher's \"Pecos 2/3 Arch with Sidelites\" picture 2026-09-13: door in the middle, its sidelites either side; the left sidelite is cut out)"

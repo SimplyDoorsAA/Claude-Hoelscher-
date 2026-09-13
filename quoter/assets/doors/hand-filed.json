@@ -791,6 +791,72 @@
         569
       ],
       "why": "the dealer supplied Hoelscher's \"Caming Options\" strip 2026-09-13: two swatches captioned Patina and Zinc, matched by caption"
+    },
+    {
+      "kind": "decorativePane",
+      "name": "Columbia",
+      "pdf": "f80a4145-HoelscherWood_Doors.pdf",
+      "page": 5,
+      "image": "/Im0",
+      "crop": [
+        114,
+        100,
+        300,
+        800
+      ],
+      "why": "the gallery compares glass to glass (dealer, 2026-09-13): the pane cut out of the knotty alder door the wood catalog photographs glazed with Columbia"
+    },
+    {
+      "kind": "decorativePane",
+      "name": "Brazos",
+      "pdf": "79d5f9d9-Compressed.pdf",
+      "page": 30,
+      "image": "/Im0",
+      "crop": [
+        48,
+        37,
+        150,
+        329
+      ],
+      "why": "the pane cut out of the page-30 photograph of the 2/3 Lite glazed with Brazos; the only Brazos picture on file, so it is soft at tile size"
+    },
+    {
+      "kind": "decorativePane",
+      "name": "Blanco",
+      "upload": "4b51144e-image.jpg",
+      "crop": [
+        436,
+        333,
+        742,
+        994
+      ],
+      "why": "the arch pane cut out of the door in the dealer's \"Blanco 2/3 Arch with Sidelites\" picture"
+    },
+    {
+      "kind": "decorativeDoor",
+      "name": "Blanco",
+      "style": "2/3 Arch",
+      "upload": "4b51144e-image.jpg",
+      "crop": [
+        292,
+        224,
+        874,
+        1473
+      ],
+      "why": "the door in the middle of the dealer's \"Blanco 2/3 Arch with Sidelites\" picture: the mahogany 2/3 Arch Lite glazed with Blanco, for the preview"
+    },
+    {
+      "kind": "decorativeDoor",
+      "name": "Pecos",
+      "style": "2/3 Arch",
+      "upload": "250008ac-image.jpg",
+      "crop": [
+        260,
+        188,
+        842,
+        1439
+      ],
+      "why": "the door in the middle of the dealer's \"Pecos 2/3 Arch with Sidelites\" picture: the mahogany 2/3 Arch Lite glazed with Pecos, for the preview"
     }
   ]
 }

@@ -198,7 +198,7 @@ npm run audit                        # data contracts and cross-references only
 sh tools/build-css.sh                # recompile quoter/assets/tw.css after editing quoter/index.html
 ```
 
-691 checks, and the same set CI runs on every pull request. The browser suites
+699 checks, and the same set CI runs on every pull request. The browser suites
 drive real Chromium through Playwright, found in `node_modules`, image-wide, or
 wherever `PLAYWRIGHT_MODULE` points — whichever exists. Each serves the repo on
 a port the OS picks, so a killed run cannot block the next one. Screenshots land

@@ -613,7 +613,7 @@ def extract_designs(pdfs, dry):
                 # this extraction rebuilds from the PDF; keep them attached.
                 rec = out.get(group, {}).get(k)
                 if rec is not None and rec is not v:
-                    for f in ('sidelites', 'sideliteSource', 'unpriced', 'sideliteFile'):
+                    for f in ('sidelites', 'sideliteSource', 'unpriced', 'sideliteFile', 'pane', 'paneSource', 'doors', 'doorSource'):
                         if f in v and f not in rec:
                             rec[f] = v[f]
     if not dry:
