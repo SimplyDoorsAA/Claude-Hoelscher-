@@ -7,11 +7,7 @@ import path from 'node:path'; import url from 'node:url';
 const ROOT=path.resolve(url.fileURLToPath(import.meta.url),'../..');
 const OUT=process.env.SHOT_DIR||path.join(ROOT,'.test-output');
 fs.mkdirSync(OUT,{recursive:true});
-// A locally compiled Tailwind sheet makes the screenshots faithful. Without
-// one the assertions still hold; only the pictures look unstyled.
-const TWPATH=process.env.TAILWIND_CSS||path.join(OUT,'twbuild','tw.css');
-const TW=fs.existsSync(TWPATH)?fs.readFileSync(TWPATH,'utf8'):'';
-const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json','.css':'text/css'};
+const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json','.woff2':'font/woff2','.css':'text/css','.css':'text/css','.webp':'image/webp','.woff2':'font/woff2','.png':'image/png'};
 const srv=http.createServer((q,r)=>{const p=decodeURIComponent(q.url.split('?')[0]);
   const f=ROOT+(p.endsWith('/')?p+'index.html':p);
   let b=null; try{b=fs.readFileSync(f);}catch(e){r.writeHead(404);r.end('');return;}
@@ -35,21 +31,6 @@ const b=await chromium.launch();
 const page=await (await b.newContext({viewport:{width:1500,height:1000}})).newPage();
 const errs=[]; page.on('pageerror',e=>errs.push(e.message));
 page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource/.test(m.text()))errs.push(m.text());});
-/* Two states are real: Tailwind loaded, and Tailwind unreachable — where the
-   .no-tw fallback stylesheet takes over. Serving an EMPTY sheet would be a
-   third that exists nowhere, styled by neither, and it is what this suite used
-   to do on any machine without a compiled sheet. So with a sheet, serve it;
-   without one, block the CDN outright and exercise the fallback the app was
-   designed for. Either way the state is one the app really has. */
-if (TW) {
-  await page.route('https://cdn.tailwindcss.com*',r=>r.fulfill({status:200,contentType:'text/javascript',
-    body:'window.tailwind={config:{}};document.addEventListener("DOMContentLoaded",()=>{const s=document.createElement("style");s.textContent=window.__TW__;document.head.appendChild(s);});'}));
-} else {
-  await page.route('https://cdn.tailwindcss.com*',r=>r.abort());
-}
-console.log('# tailwind: ' + (TW ? 'compiled sheet served' : 'CDN blocked, .no-tw fallback'));
-await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
-await page.addInitScript(css=>{window.__TW__=css;},TW);
 
 const total=async()=>(await page.$eval('#quoteTotals .font-display.text-2xl',n=>n.textContent)).trim();
 const totalsText=async()=>(await page.textContent('#quoteTotals'));

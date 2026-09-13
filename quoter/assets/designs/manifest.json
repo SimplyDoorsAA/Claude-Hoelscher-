@@ -2,15 +2,15 @@
   "accessories": {
     "1-1/4\" bar": {
       "file": "acc-sdlbar-1-1-4.webp",
+      "handFiled": true,
       "kind": "sdlBar",
-      "source": "SDL Bars catalog page, profile drawing supplied by the dealer 2026-09-12",
-      "handFiled": true
+      "source": "SDL Bars catalog page, profile drawing supplied by the dealer 2026-09-12"
     },
     "7/8\" bar": {
       "file": "acc-sdlbar-7-8.webp",
+      "handFiled": true,
       "kind": "sdlBar",
-      "source": "SDL Bars catalog page, profile drawing supplied by the dealer 2026-09-12",
-      "handFiled": true
+      "source": "SDL Bars catalog page, profile drawing supplied by the dealer 2026-09-12"
     },
     "Balfour": {
       "file": "acc-ironmask-balfour.webp",
@@ -57,8 +57,8 @@
     "Blanco": {
       "basis": "caption",
       "file": "glass-blanco.webp",
-      "source": "79d5f9d9-Compressed.pdf p25 /Im1 (the same photograph as the door card, filed by hand)",
-      "handFiled": true
+      "handFiled": true,
+      "source": "79d5f9d9-Compressed.pdf p25 /Im1 (the same photograph as the door card, filed by hand)"
     },
     "Bowie": {
       "basis": "caption",
@@ -68,8 +68,8 @@
     "Brazos": {
       "basis": "caption",
       "file": "glass-brazos.webp",
-      "source": "79d5f9d9-Compressed.pdf p30 /Im0 (the door card's own photograph, Glass Shown: Brazos; filed by hand)",
-      "handFiled": true
+      "handFiled": true,
+      "source": "79d5f9d9-Compressed.pdf p30 /Im0 (the door card's own photograph, Glass Shown: Brazos; filed by hand)"
     },
     "Columbia": {
       "basis": "remainder",
@@ -79,8 +79,8 @@
     "Dartmouth": {
       "basis": "caption",
       "file": "glass-dartmouth.webp",
-      "source": "79d5f9d9-Compressed.pdf p28 /Im1 (Other Available Decorative Glass Options, leftmost, captioned Dartmouth; filed by hand)",
-      "handFiled": true
+      "handFiled": true,
+      "source": "79d5f9d9-Compressed.pdf p28 /Im1 (Other Available Decorative Glass Options, leftmost, captioned Dartmouth; filed by hand)"
     },
     "Kerrville": {
       "basis": "remainder",
@@ -277,6 +277,401 @@
       "source": "f80a4145-HoelscherWood_Doors.pdf p14 /Im5",
       "stainShown": "Ebony",
       "style": "3/4 Lite"
+    },
+    "mahogany-2/3 Arch Lite-Cordoba": {
+      "basis": "caption",
+      "code": "CRD",
+      "file": "grille-mahogany-2-3-arch-lite-cordoba.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Cordoba",
+      "sizes": [
+        "3068"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p27 /Im1 (filed by hand: catalog page 35: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "English Chestnut",
+      "style": "2/3 Arch Lite"
+    },
+    "mahogany-2/3 Arch Lite-Santiago": {
+      "basis": "caption",
+      "code": "STG",
+      "file": "grille-mahogany-2-3-arch-lite-santiago.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Santiago",
+      "sizes": [
+        "3068"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p27 /Im2 (filed by hand: catalog page 35: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Special Walnut",
+      "style": "2/3 Arch Lite"
+    },
+    "mahogany-2/3 Arch Lite-Sienna": {
+      "basis": "caption",
+      "code": "SIE",
+      "file": "grille-mahogany-2-3-arch-lite-sienna.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Sienna",
+      "sizes": [
+        "3068"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p27 /Im3 (filed by hand: catalog page 35: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Jacobean",
+      "style": "2/3 Arch Lite"
+    },
+    "mahogany-2/3 Arch Lite-Whitney": {
+      "basis": "caption",
+      "code": "WHI",
+      "file": "grille-mahogany-2-3-arch-lite-whitney.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Whitney",
+      "sizes": [
+        "3068"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p27 /Im4 (filed by hand: catalog page 35: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Aged Barrel",
+      "style": "2/3 Arch Lite"
+    },
+    "mahogany-2/3 Lite-Avignon": {
+      "basis": "caption",
+      "code": "AVI",
+      "file": "grille-mahogany-2-3-lite-avignon.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Avignon",
+      "sizes": [
+        "2880",
+        "3080"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p28 /Im0 (filed by hand: catalog page 36: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Ebony",
+      "style": "2/3 Lite"
+    },
+    "mahogany-2/3 Lite-Barcelona": {
+      "basis": "caption",
+      "code": "BAR",
+      "file": "grille-mahogany-2-3-lite-barcelona.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Barcelona",
+      "sizes": [
+        "2880",
+        "3080"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p28 /Im1 (filed by hand: catalog page 36: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Special Walnut",
+      "style": "2/3 Lite"
+    },
+    "mahogany-2/3 Lite-Cordoba": {
+      "basis": "caption",
+      "code": "CRD",
+      "file": "grille-mahogany-2-3-lite-cordoba.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Cordoba",
+      "sizes": [
+        "2880",
+        "3080"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p28 /Im2 (filed by hand: catalog page 36: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Red Oak",
+      "style": "2/3 Lite"
+    },
+    "mahogany-2/3 Lite-Santiago": {
+      "basis": "caption",
+      "code": "STG",
+      "file": "grille-mahogany-2-3-lite-santiago.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Santiago",
+      "sizes": [
+        "2880",
+        "3080"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p28 /Im3 (filed by hand: catalog page 36: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Jacobean",
+      "style": "2/3 Lite"
+    },
+    "mahogany-2/3 Lite-Sienna": {
+      "basis": "caption",
+      "code": "SIE",
+      "file": "grille-mahogany-2-3-lite-sienna.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Sienna",
+      "sizes": [
+        "2880",
+        "3080"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p29 /Im0 (filed by hand: catalog page 37: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "English Chestnut",
+      "style": "2/3 Lite"
+    },
+    "mahogany-2/3 Lite-Whitney": {
+      "basis": "caption",
+      "code": "WHI",
+      "file": "grille-mahogany-2-3-lite-whitney.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Whitney",
+      "sizes": [
+        "2880",
+        "3080"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p29 /Im1 (filed by hand: catalog page 37: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Aged Barrel",
+      "style": "2/3 Lite"
+    },
+    "mahogany-3/4 Lite-Avignon": {
+      "basis": "caption",
+      "code": "AVI",
+      "file": "grille-mahogany-3-4-lite-avignon.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Avignon",
+      "sizes": [
+        "2868",
+        "3068",
+        "2880",
+        "3080",
+        "3680"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p30 /Im0 (filed by hand: catalog page 38: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Special Walnut",
+      "style": "3/4 Lite"
+    },
+    "mahogany-3/4 Lite-Barcelona": {
+      "basis": "caption",
+      "code": "BAR",
+      "file": "grille-mahogany-3-4-lite-barcelona.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Barcelona",
+      "sizes": [
+        "2868",
+        "3068",
+        "2880",
+        "3080",
+        "3680"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p30 /Im1 (filed by hand: catalog page 38: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "English Chestnut",
+      "style": "3/4 Lite"
+    },
+    "mahogany-3/4 Lite-Cordoba": {
+      "basis": "caption",
+      "code": "CRD",
+      "file": "grille-mahogany-3-4-lite-cordoba.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Cordoba",
+      "sizes": [
+        "2868",
+        "3068",
+        "2880",
+        "3080"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p30 /Im3 (filed by hand: catalog page 38: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Special Walnut",
+      "style": "3/4 Lite"
+    },
+    "mahogany-3/4 Lite-Saltillo": {
+      "basis": "caption",
+      "code": "SLT",
+      "file": "grille-mahogany-3-4-lite-saltillo.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Saltillo",
+      "sizes": [
+        "2880",
+        "3080"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p30 /Im2 (filed by hand: catalog page 38: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Ebony",
+      "style": "3/4 Lite"
+    },
+    "mahogany-3/4 Lite-Santiago": {
+      "basis": "caption",
+      "code": "STG",
+      "file": "grille-mahogany-3-4-lite-santiago.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Santiago",
+      "sizes": [
+        "2868",
+        "3068",
+        "2880",
+        "3080"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p31 /Im0 (filed by hand: catalog page 39: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Red Oak",
+      "style": "3/4 Lite"
+    },
+    "mahogany-3/4 Lite-Sienna": {
+      "basis": "caption",
+      "code": "SIE",
+      "file": "grille-mahogany-3-4-lite-sienna.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Sienna",
+      "sizes": [
+        "2868",
+        "3068",
+        "2880",
+        "3080",
+        "3680"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p31 /Im1 (filed by hand: catalog page 39: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "English Chestnut",
+      "style": "3/4 Lite"
+    },
+    "mahogany-3/4 Lite-Southampton": {
+      "basis": "caption",
+      "code": "SHN",
+      "file": "grille-mahogany-3-4-lite-southampton.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Southampton",
+      "sizes": [
+        "2880",
+        "3080",
+        "3680"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p31 /Im2 (filed by hand: catalog page 39: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Jacobean",
+      "style": "3/4 Lite"
+    },
+    "mahogany-3/4 Lite-Whitney": {
+      "basis": "caption",
+      "code": "WHI",
+      "file": "grille-mahogany-3-4-lite-whitney.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Whitney",
+      "sizes": [
+        "2868",
+        "3068",
+        "2880",
+        "3080",
+        "3680"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p31 /Im3 (filed by hand: catalog page 39: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Special Walnut",
+      "style": "3/4 Lite"
+    },
+    "mahogany-Full Lite-Avignon": {
+      "basis": "caption",
+      "code": "AVI",
+      "file": "grille-mahogany-full-lite-avignon.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Avignon",
+      "sizes": [
+        "3068"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p32 /Im0 (filed by hand: catalog page 40: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Special Walnut",
+      "style": "Full Lite"
+    },
+    "mahogany-Full Lite-Balfour": {
+      "basis": "caption",
+      "code": "BAL",
+      "file": "grille-mahogany-full-lite-balfour.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Balfour",
+      "sizes": [
+        "3068"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p32 /Im1 (filed by hand: catalog page 40: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Red Oak",
+      "style": "Full Lite"
+    },
+    "mahogany-Full Lite-Cordoba": {
+      "basis": "caption",
+      "code": "CRD",
+      "file": "grille-mahogany-full-lite-cordoba.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Cordoba",
+      "sizes": [
+        "3068"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p32 /Im2 (filed by hand: catalog page 40: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "English Chestnut",
+      "style": "Full Lite"
+    },
+    "mahogany-Full Lite-Hammond": {
+      "basis": "caption",
+      "code": "HMM",
+      "file": "grille-mahogany-full-lite-hammond.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Hammond",
+      "sizes": [
+        "3068"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p32 /Im3 (filed by hand: catalog page 40: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Jacobean",
+      "style": "Full Lite"
+    },
+    "mahogany-Full Lite-Saltillo": {
+      "basis": "caption",
+      "code": "SLT",
+      "file": "grille-mahogany-full-lite-saltillo.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Saltillo",
+      "sizes": [
+        "3068"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p33 /Im1 (filed by hand: catalog page 41: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Aged Barrel",
+      "style": "Full Lite"
+    },
+    "mahogany-Full Lite-Santiago": {
+      "basis": "caption",
+      "code": "STG",
+      "file": "grille-mahogany-full-lite-santiago.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Santiago",
+      "sizes": [
+        "3068"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p33 /Im0 (filed by hand: catalog page 41: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "English Chestnut",
+      "style": "Full Lite"
+    },
+    "mahogany-Full Lite-Sienna": {
+      "basis": "caption",
+      "code": "SIE",
+      "file": "grille-mahogany-full-lite-sienna.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Sienna",
+      "sizes": [
+        "3068"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p33 /Im2 (filed by hand: catalog page 41: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Special Walnut",
+      "style": "Full Lite"
+    },
+    "mahogany-Full Lite-Southampton": {
+      "basis": "caption",
+      "code": "SHN",
+      "file": "grille-mahogany-full-lite-southampton.webp",
+      "handFiled": true,
+      "line": "mahogany",
+      "name": "Southampton",
+      "sizes": [
+        "3068"
+      ],
+      "source": "5456e602-Joel_mahogany.pdf p33 /Im3 (filed by hand: catalog page 41: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture)",
+      "stainShown": "Ebony",
+      "style": "Full Lite"
     }
   },
   "note": "Iron grille designs, decorative glass and speakeasy hardware from the Hoelscher catalogs, by the name the catalog prints. basis says how the name was tied to the photo: caption (printed above or beside it), column (aligned with its column of part numbers) or remainder (the only option the page had left)."

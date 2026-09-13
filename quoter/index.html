@@ -6,121 +6,20 @@
 <meta name="color-scheme" content="light">
 <title>SimplyDoors — Quote Builder</title>
 <meta name="description" content="Millwork catalog and quote builder for SimplyDoors sales staff and customers.">
-<script src="https://cdn.tailwindcss.com"
-        onerror="document.documentElement.classList.add('no-tw')"></script>
-<script>
-/* The play CDN is a single point of failure for a tool used in the field, so
-   the page must stay usable when it cannot be reached. Guard the config, and
-   flag the document so the structural fallback stylesheet takes over. */
-if (!window.tailwind) { document.documentElement.classList.add('no-tw'); window.tailwind = {}; }
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        ink:    { DEFAULT:'#1c1917', soft:'#44403c', mute:'#78716c', faint:'#a8a29e' },
-        paper:  { DEFAULT:'#faf9f7', card:'#ffffff', rail:'#f3f1ed', line:'#e4e0d9' },
-        brass:  { DEFAULT:'#9a7b4f', deep:'#7a6039', pale:'#f3ecdf' },
-        forest: { DEFAULT:'#2f4538', deep:'#22332a' }
-      },
-      fontFamily: {
-        display: ['"Cormorant Garamond"','Georgia','Cambria','"Times New Roman"','serif'],
-        sans: ['Inter','system-ui','-apple-system','"Segoe UI"','Roboto','sans-serif'],
-        mono: ['ui-monospace','SFMono-Regular','Menlo','Consolas','monospace']
-      },
-      boxShadow: {
-        card:'0 1px 2px rgba(28,25,23,.04), 0 8px 24px -12px rgba(28,25,23,.18)',
-        lift:'0 2px 6px rgba(28,25,23,.06), 0 24px 48px -20px rgba(28,25,23,.28)',
-        drawer:'-24px 0 60px -30px rgba(28,25,23,.45)'
-      }
-    }
-  }
-};
-</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- The stylesheet is compiled ahead of time (tools/build-css.sh) and the two
+     typefaces ship with the app, so the page paints styled on the first frame,
+     works with no network at all, and depends on no third party at run time. -->
+<link rel="preload" href="./assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="./assets/fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="./assets/tw.css">
 <style>
+  @font-face { font-family:"Inter"; font-style:normal; font-weight:100 900; font-display:swap;
+               src:url(./assets/fonts/inter-latin.woff2) format("woff2"); unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family:"Cormorant Garamond"; font-style:normal; font-weight:300 700; font-display:swap;
+               src:url(./assets/fonts/cormorant-garamond-latin.woff2) format("woff2"); unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
   html { -webkit-text-size-adjust:100%; }
-  /* Scrims are inert until JS opens them. This is functional state, so it must
-     not depend on Tailwind utilities being available. */
+  /* Scrims are inert until JS opens them. */
   #scrim, #detailScrim { opacity:0; pointer-events:none; }
-  /* ---------------------------------------------------------------------
-     Structural fallback: applied only when the Tailwind CDN did not load.
-     Not a reskin — just enough layout that the catalog, drawer and totals
-     remain usable and the page never scrolls sideways.
-     --------------------------------------------------------------------- */
-  .no-tw *, .no-tw *::before, .no-tw *::after { box-sizing:border-box; }
-  .no-tw html, .no-tw body { max-width:100%; overflow-x:hidden; }
-  .no-tw body { margin:0; font:15px/1.45 Inter, system-ui, sans-serif; color:#1c1917; }
-  /* Without Tailwind's responsive utilities the header has no way to shed
-     width, so let it wrap rather than push the page sideways. */
-  .no-tw header .flex { flex-wrap:wrap; row-gap:.5rem; }
-  .no-tw header .flex > * { flex:0 0 auto; }
-  .no-tw img, .no-tw svg { max-width:100%; }
-  /* Every SVG here carries only Tailwind sizing, so without a rule each one
-     grows to fill the page. Icons get a fixed box; the drawn door silhouettes
-     (.sil) size from their frame instead. */
-  .no-tw svg:not(.sil) { width:20px; height:20px; flex:0 0 auto; }
-  .no-tw .door-frame { width:100%; }
-  .no-tw .sil { display:block; width:100%; height:auto; }
-  .no-tw #quoteLines .sil { width:44px; }
-  .no-tw #lineChoices .sil { width:80px; }
-  .no-tw #lineChoices { display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
-  .no-tw #lineChoices button { border:1px solid #e4e0d9; border-radius:12px; background:#fff;
-                               padding:1.25rem; text-align:left; font:inherit; }
-  .no-tw header, .no-tw section, .no-tw main { display:block; width:100%; }
-  .no-tw header > div, .no-tw main, .no-tw section > div { max-width:1600px; margin:0 auto; padding:.75rem 1rem; }
-  .no-tw header { position:sticky; top:0; background:#faf9f7; border-bottom:1px solid #e4e0d9; z-index:30; }
-  .no-tw header .flex { display:flex; align-items:center; gap:.75rem; }
-  .no-tw #catalog article { border:1px solid #e4e0d9; border-radius:10px; overflow:hidden; background:#fff; }
-  .no-tw #catalog article button { display:flex; flex-direction:column; width:100%; text-align:left;
-                                   background:none; border:0; padding:0; font:inherit; cursor:pointer; }
-  .no-tw #catalog article > button > div:last-child { padding:.75rem; }
-  .no-tw #drawer { position:fixed; inset:auto 0 0 0; height:86vh; background:#fff; z-index:50;
-                   display:flex; flex-direction:column; border-top:1px solid #e4e0d9; }
-  .no-tw #quoteLines { flex:1 1 auto; min-height:0; overflow-y:auto; padding:1rem; }
-  .no-tw #quoteTotals { flex:0 0 auto; border-top:1px solid #e4e0d9; padding:1rem; }
-  .no-tw #drawer > div:first-child { flex:0 0 auto; display:flex; align-items:center; gap:.75rem;
-                                     padding:1rem; border-bottom:1px solid #e4e0d9; }
-  .no-tw #quoteLines > div { border:1px solid #e4e0d9; border-radius:10px; padding:.75rem; margin-bottom:.6rem; }
-  .no-tw #detail { position:fixed; inset:auto 0 0 0; max-height:92vh; overflow:auto; background:#fff; z-index:60; }
-  .no-tw #detail.hidden, .no-tw .hidden { display:none !important; }
-  .no-tw #mobileBar { position:fixed; inset:auto 0 0 0; z-index:30; }
-  .no-tw #mobileBar button { width:100%; background:#2f4538; color:#fff; border:0; padding:.9rem 1rem;
-                             display:flex; justify-content:space-between; align-items:center; font:inherit; }
-  .no-tw #scrim, .no-tw #detailScrim { position:fixed; inset:0; background:rgba(28,25,23,.45); z-index:40; }
-  .no-tw select, .no-tw input { font:inherit; padding:.45rem .6rem; border:1px solid #e4e0d9;
-                                border-radius:8px; background:#fff; max-width:100%; }
-  .no-tw .opt { border:1px solid #e4e0d9; border-radius:8px; padding:.45rem .7rem; background:#fff; margin:0 .35rem .35rem 0; }
-  .no-tw .opt[aria-pressed="true"] { background:#2f4538; color:#fff; }
-  .no-tw .opt[disabled] { opacity:.4; }
-  .no-tw .opt:has(.glassswatch) { display:inline-flex; align-items:center; gap:.5rem; text-align:left; }
-  .no-tw .glassswatch { display:block; width:36px; height:36px; flex:0 0 auto;
-                        border:1px solid #e4e0d9; border-radius:6px; overflow:hidden; }
-  .no-tw .glassswatch img { width:100%; height:100%; object-fit:cover; }
-  .no-tw .stainswatch { display:block; width:48px; height:36px; flex:0 0 auto; overflow:hidden; border-radius:4px; }
-  .no-tw .stainswatch img { width:100%; height:100%; object-fit:cover; }
-  .no-tw .opt:has(.grilleshot) { display:inline-flex; align-items:center; gap:.5rem; text-align:left; }
-  .no-tw .grilleshot { display:block; width:40px; height:80px; flex:0 0 auto;
-                       border:1px solid #e4e0d9; border-radius:6px; overflow:hidden; }
-  .no-tw .grilleshot img { width:100%; height:100%; object-fit:cover; }
-  .no-tw .optwords, .no-tw .optlabel { display:block; }
-  .no-tw .optsub { display:block; font-size:10px; opacity:.7; }
-  .no-tw .borrowed { display:block; background:#1c1917; color:#fff; font-size:9px; padding:2px 4px; }
-  .no-tw .accshot { display:block; width:40px; height:40px; flex:0 0 auto;
-                    border:1px solid #e4e0d9; border-radius:6px; overflow:hidden; background:#20241f; }
-  .no-tw .accshot img { width:100%; height:100%; object-fit:contain; }
-  .no-tw #detail > div { display:block; }
-  .no-tw #detail > div > div:last-child { padding:1rem; }
-  .no-tw .railchip, .no-tw .railstep { display:inline-block; border-radius:999px; font-size:11px;
-                                       padding:.2rem .55rem; margin:0 .3rem .3rem 0; }
-  .no-tw .railchip { border:1px solid #d9c9a8; background:#f3ecdf; color:#44403c; }
-  .no-tw .railstep { border:1px dashed #e4e0d9; color:#a8a29e; }
-  .no-tw .railstep-now { border-style:solid; border-color:#78716c; color:#1c1917; font-weight:600; }
-  @media (min-width:768px){
-    .no-tw #drawer { inset:0 0 0 auto; width:420px; height:100%; border-left:1px solid #e4e0d9; border-top:0; }
-    .no-tw #mobileBar { display:none; }
-  }
   body { background:#faf9f7; }
   /* Hairline rules that stay crisp on retina */
   .rule { box-shadow: inset 0 -1px 0 #e4e0d9; }
@@ -134,7 +33,19 @@ tailwind.config = {
   }
   @media (min-width:1600px){ .catalog-grid { grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); } }
   @media (max-width:640px){ .catalog-grid { grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:.75rem; } }
-  .door-frame { aspect-ratio: 3 / 5; }
+  .door-frame { aspect-ratio: 3 / 5; background:linear-gradient(180deg,#f3f1ed,#ebe8e2); }
+  /* A photograph arrives rather than pops: the frame holds its ground tone
+     until the picture has decoded, then the picture fades up over it. */
+  .img-in { opacity:0; transition:opacity .35s ease; }
+  .img-in.img-ready { opacity:1; }
+  /* Cards below the fold cost nothing to lay out until they scroll near. */
+  #catalog article { content-visibility:auto; contain-intrinsic-size:auto 200px auto 470px; }
+  /* The detail sheet settles into place rather than appearing. */
+  @keyframes sheet-in { from { opacity:0; transform:translateY(14px) scale(.985); } to { opacity:1; transform:none; } }
+  #detail:not(.hidden) { animation:sheet-in .24s cubic-bezier(.22,.61,.36,1) both; }
+  /* Keyboard focus is visible everywhere; pointer focus stays quiet. */
+  :focus-visible { outline:2px solid #9a7b4f; outline-offset:2px; border-radius:6px; }
+  html { scroll-behavior:smooth; }
   /* Drawer */
   .drawer { transition: transform .32s cubic-bezier(.22,.61,.36,1); }
   .drawer[data-open="false"] { transform: translateX(101%); }
@@ -145,18 +56,15 @@ tailwind.config = {
   }
   .scrim { transition: opacity .28s ease; }
   /* Respect users who prefer less motion */
-  @media (prefers-reduced-motion: reduce){ .drawer,.scrim{ transition:none; } }
+  @media (prefers-reduced-motion: reduce){
+    .drawer,.scrim,.img-in{ transition:none; } #detail:not(.hidden){ animation:none; } html{ scroll-behavior:auto; }
+  }
   /* Option buttons */
   .opt[aria-pressed="true"] { background:#2f4538; color:#fff; border-color:#2f4538; }
   .tierbtn[aria-pressed="true"] { background:#2f4538; color:#fff; }
   .tierbtn[aria-pressed="false"] { color:#78716c; }
   .marginin { box-sizing:border-box; font-variant-numeric:tabular-nums; }
   #customWrap:not(.hidden) { display:flex; }
-  .no-tw #customWrap:not(.hidden) { display:inline-flex; }
-  /* The tier pill is "hidden sm:flex": Tailwind reveals it from 640px up, and
-     the fallback's blanket .hidden rule would otherwise bury it for good,
-     leaving no way to change margin from the header when the CDN is down. */
-  @media (min-width:640px){ .no-tw #tierWrap { display:flex !important; } }
   .opt:disabled { opacity:.32; cursor:not-allowed; text-decoration:line-through; }
   /* The iron add-ons are photographed on black; a small lift makes the shape
      read at thumbnail size without touching the file. */
@@ -203,6 +111,19 @@ tailwind.config = {
   table.pd-t .sub { display:block; font-size:8pt; color:#444; margin-top:2px; }
   /* a pair puts two part numbers in one cell; they need to read as two */
   table.pd-t .pn { display:block; }
+  /* the picture beside each line, and the small one beside a sidelite */
+  .pd-artrow { display:flex; gap:9px; align-items:flex-start; }
+  .pd-art { flex:0 0 auto; width:0.62in; height:0.98in; background:#f4f3f0; border:1px solid #e3e1dc;
+            border-radius:3px; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .pd-artimg { max-width:100%; max-height:100%; width:auto; height:100%; object-fit:contain; display:block; }
+  .pd-art svg { width:100%; height:100%; }
+  .pd-words { flex:1 1 auto; min-width:0; }
+  .pd-accrow { display:flex; gap:5px; align-items:center; }
+  .pd-mini { flex:0 0 auto; width:0.22in; height:0.42in; background:#f4f3f0; border:1px solid #e3e1dc;
+             border-radius:2px; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .pd-miniimg { max-width:100%; max-height:100%; height:100%; object-fit:contain; display:block; }
+  .pd-mini svg { width:100%; height:100%; }
+  @media print { .pd-art, .pd-mini, .pd-artimg, .pd-miniimg { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
   .pd-cols { display:flex; gap:26px; margin-top:16px; align-items:flex-start; }
   .pd-cols > div { flex:1; }
   .pd-box { border:1px solid #000; padding:9px 11px; }
@@ -240,16 +161,11 @@ tailwind.config = {
      the page sideways with it. */
   .jf label { display:flex; flex-direction:column; gap:2px; min-width:0; font-size:10px;
               letter-spacing:.1em; text-transform:uppercase; color:#78716c; }
-  /* box-sizing is Tailwind preflight's doing, and the app has to hold up when
-     the CDN never answers: without it a 100%-wide field adds its own padding
-     and border on top of the full width and pushes the page sideways. */
-  .jf, .jf * { box-sizing:border-box; }
   .jf input { width:100%; min-width:0; max-width:100%;
               border:1px solid #e4e0d9; border-radius:6px; padding:5px 7px;
               font-size:13px; background:#fff; color:#1c1917; }
   .jf .wide { grid-column:1 / -1; }
   @media (max-width:420px){ .jf { grid-template-columns:1fr; } }
-  .no-tw #jobPanel { display:block; border-top:1px solid #e4e0d9; padding:10px 16px; }
 </style>
 </head>
 <body class="font-sans text-ink antialiased">
@@ -298,10 +214,10 @@ tailwind.config = {
       </div>
 
       <!-- customer tier -->
-      <div id="tierWrap" class="hidden sm:flex items-center rounded-full border border-paper-line bg-paper-card p-0.5">
-        <button id="tierBuilder" type="button" data-tier="builder" aria-pressed="false"
+      <div class="hidden sm:flex items-center rounded-full border border-paper-line bg-paper-card p-0.5">
+        <button type="button" data-tier="builder" aria-pressed="false"
           class="tierbtn rounded-full px-3 py-1 text-xs font-medium transition-colors">Builder</button>
-        <button id="tierRetail" type="button" data-tier="retail" aria-pressed="false"
+        <button type="button" data-tier="retail" aria-pressed="false"
           class="tierbtn rounded-full px-3 py-1 text-xs font-medium transition-colors">Retail</button>
         <button id="tierCustom" type="button" data-tier="custom" aria-pressed="false"
           class="tierbtn rounded-full px-3 py-1 text-xs font-medium transition-colors">Custom</button>
@@ -953,7 +869,10 @@ function fillArt(holder, product, modelName, cls, model) {
                          : (name || product.description || product.sku);
   img.loading = "lazy";
   img.decoding = "async";
-  img.className = "h-full w-full object-contain" + (cls ? " " + cls : "");
+  img.className = "h-full w-full object-contain img-in" + (cls ? " " + cls : "");
+  const arrived = () => img.classList.add("img-ready");
+  if (img.complete && img.naturalWidth) arrived();
+  else img.addEventListener("load", arrived, { once: true });
   let tag = null;
   img.addEventListener("error", function onErr() {
     img.removeEventListener("error", onErr);
@@ -973,6 +892,49 @@ function fillArt(holder, product, modelName, cls, model) {
     tag.textContent = borrowedFrom + " shown";
     holder.appendChild(tag);
   }
+}
+
+/* The picture a quote line shows, on the drawer and on both printed pages:
+   the grille design chosen (a true picture of that door with that grille), else
+   the door's own catalog photograph, else a decorative-glass or grille picture
+   of the same door from another page, else the photograph of the door it is a
+   variation of. Null means the drawn silhouette. */
+function lineArtSrc(product, spec) {
+  if (!product) return null;
+  spec = spec || {};
+  const name = modelKeyOf(product);
+  const pseudo = { name, line: product.line, glazings: glazingOptions(product.glazing) };
+  pseudo.grilleDesigns = grilleDesignsFor(pseudo);
+  if (spec.grilleDesign) {
+    const g = pseudo.grilleDesigns.find(x => x.name === spec.grilleDesign && x.photo);
+    if (g) return CONFIG.designBase + encodeURIComponent(g.photo);
+  }
+  const own = photoFor(name);
+  if (own) return own;
+  const dec = spec.glazing && state.designs.decorativeGlass[spec.glazing];
+  if (dec) return CONFIG.designBase + encodeURIComponent(dec.file);
+  return artFor(name, pseudo).src || null;
+}
+/* An <img> of that picture, or the silhouette when there is none. */
+function lineArt(product, spec, cls) {
+  const src = lineArtSrc(product, spec);
+  if (!src) {
+    const svg = doorSilhouette(product);
+    if (cls) svg.classList.add(...cls.split(" "));
+    return svg;
+  }
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = modelKeyOf(product);
+  img.decoding = "async";
+  if (cls) img.className = cls;
+  img.addEventListener("error", function onErr() {
+    img.removeEventListener("error", onErr);
+    const svg = doorSilhouette(product);
+    if (cls) svg.classList.add(...cls.split(" "));
+    img.replaceWith(svg);
+  }, { once: true });
+  return img;
 }
 
 /* ------------------------------ 4. SELECTORS ----------------------------- */
@@ -3182,6 +3144,31 @@ function metaRow(label, value) {
   return d;
 }
 function money(cents) { return formatCents(cents); }
+/* The description cell of a printed line: the door's picture on the left, the
+   words on the right. Both the customer and Hoelscher's desk see what is being
+   bought, not only a part number. The picture is eager: print waits for it. */
+function pictured(product, spec) {
+  const cell = el("div", "pd-artrow");
+  const art = el("div", "pd-art");
+  if (product) art.appendChild(lineArt(product, spec, "pd-artimg"));
+  cell.appendChild(art);
+  const words = el("div", "pd-words");
+  cell.appendChild(words);
+  return { cell, words };
+}
+function accessoryLine(text, a, sp) {
+  const row = el("span", "sub pd-accrow");
+  if (a && a.kind === "product") {
+    const p = state.engine.productById(a.id);
+    if (p) {
+      const mini = el("span", "pd-mini");
+      mini.appendChild(lineArt(p, sp, "pd-miniimg"));
+      row.appendChild(mini);
+    }
+  }
+  row.appendChild(el("span", null, text));
+  return row;
+}
 
 /** The estimate the customer signs. */
 function buildQuoteDoc(q) {
@@ -3223,8 +3210,9 @@ function buildQuoteDoc(q) {
     const spec = state.quote.lines[i] || {};
     const tr = el("tr", "");
     const td = el("td", "");
-    td.appendChild(el("span", null, l.description));
-    td.appendChild(el("span", "sub", openingWords(l, spec)));
+    const { cell, words } = pictured(l.product, spec);
+    words.appendChild(el("span", null, l.description));
+    words.appendChild(el("span", "sub", openingWords(l, spec)));
     (l.accessories || []).forEach((a, j) => {
       const sp = (spec.accessories || [])[j];
       const shape = sp && sp.shape ? " \u2014 " + sp.shape.replace(/\s*Clavos$/i, "") : "";
@@ -3234,9 +3222,11 @@ function buildQuoteDoc(q) {
       const differs = a.kind === "product" && sp && sp.glazing &&
                       spec.glazing && sp.glazing !== spec.glazing
                     ? " \u2014 " + sp.glazing + " glass" : "";
-      td.appendChild(el("span", "sub",
-        "+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") + accessoryLabel(a) + shape + differs));
+      words.appendChild(accessoryLine(
+        "+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") + accessoryLabel(a) + shape + differs, a,
+        Object.assign({}, spec, sp || {})));
     });
+    td.appendChild(cell);
     tr.appendChild(td);
     tr.appendChild(el("td", "r", String(l.qty)));
     tr.appendChild(el("td", "r", money(l.unitSellCents)));
@@ -3357,22 +3347,23 @@ function buildOrderDoc(q) {
     const prod = l.product;
     const tr = el("tr", "");
     const td = el("td", "");
+    const { cell, words } = pictured(prod, spec);
     // Hoelscher's desk cross-checks the number against the description, so the
     // sheet carries both, and the number exactly as Hoelscher prints it.
     const skus = orderSkus(prod, spec.glazing, spec.handing, l.config,
                            spec.dentilShelf === "yes", spec.caming, spec.grilleDesign);
-    skus.forEach(k => td.appendChild(el("span", "pn", k)));
-    td.appendChild(el("span", "sub", l.description +
+    skus.forEach(k => words.appendChild(el("span", "pn", k)));
+    words.appendChild(el("span", "sub", l.description +
       (skus.length > 1 ? "  \u2014 one of each hand" : "")));
     const mis = skuCorrection(prod);
     if (mis) {
-      td.appendChild(el("span", "sub pd-flag", "\u26a0 " + (o.misprintNote || "Confirm this part number.")));
+      words.appendChild(el("span", "sub pd-flag", "\u26a0 " + (o.misprintNote || "Confirm this part number.")));
       flagged.push(prod.sku);
     }
     if (skus.some(skuIsIncomplete)) {
       const why = (prod && prod.notes) || o.placeholderNote ||
         "This part number still holds a placeholder. Confirm it with Hoelscher before ordering.";
-      td.appendChild(el("span", "sub pd-flag", "\u26a0 " + why));
+      words.appendChild(el("span", "sub pd-flag", "\u26a0 " + why));
       skus.filter(skuIsIncomplete).forEach(k => incomplete.push(k));
     }
     (l.accessories || []).forEach((a, j) => {
@@ -3390,9 +3381,10 @@ function buildOrderDoc(q) {
           if (skuIsIncomplete(slSku)) incomplete.push(slSku);
         }
       }
-      td.appendChild(el("span", "sub", "+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") +
-        head + accessoryLabel(a) + shape));
+      words.appendChild(accessoryLine("+ " + (a.qty > 1 ? a.qty + " \u00d7 " : "") +
+        head + accessoryLabel(a) + shape, a, Object.assign({}, spec, sp || {})));
     });
+    td.appendChild(cell);
     tr.appendChild(td);
     tr.appendChild(el("td", "r", String(l.qty)));
     tr.appendChild(el("td", null,
@@ -3480,7 +3472,9 @@ function printDocument(kind) {
     const t = buildTermsPage();
     if (t) host.appendChild(t);
   }
-  window.print();
+  // A picture still decoding when the dialog opens prints as a blank box.
+  const pics = Array.from(host.querySelectorAll("img"));
+  Promise.all(pics.map(im => im.decode().catch(() => {}))).then(() => window.print());
 }
 
 /** Who the quote is for. Printed on both documents; kept on this device. */
@@ -3551,7 +3545,7 @@ function renderQuote() {
     const top = el("div", "flex gap-3");
 
     const thumb = el("div", "h-16 w-11 shrink-0 overflow-hidden rounded bg-paper-rail");
-    if (l.product) fillArt(thumb, l.product, modelKeyOf(l.product));
+    if (l.product) thumb.appendChild(lineArt(l.product, spec, "h-full w-full object-contain"));
     top.appendChild(thumb);
 
     const info = el("div", "min-w-0 flex-1");
@@ -3763,8 +3757,10 @@ function renderLineGate() {
   state.engine.collections().forEach(c => {
     const look = LINE_LOOK[c] || { title: titleize(c), blurb: "" };
     const t = tally(state.engine.productsIn(c));
-    const sample = state.engine.productsIn(c).find(p => p.type === "door") ||
-                   state.engine.productsIn(c)[0];
+    // A real photograph on the first screen: the first door of the line that
+    // has one, rather than whichever door the sheet happens to list first.
+    const doors = state.engine.productsIn(c).filter(p => p.type === "door");
+    const sample = doors.find(p => photoFor(modelKeyOf(p))) || doors[0] || state.engine.productsIn(c)[0];
     host.appendChild(gateCard(look.title, look.blurb, t.count, t.noun, sample, () => chooseLine(c)));
   });
   showGate("What are you building?",
@@ -3783,8 +3779,8 @@ function renderGroupGate() {
     ? "mt-8 grid gap-4 sm:grid-cols-3" : "mt-8 grid gap-4 sm:grid-cols-2";
   const field = g.field;
   groups.forEach(gr => {
-    const sample = state.engine.productsIn(state.collection)
-      .find(p => p[field] === gr.value && p.type === "door");
+    const doors = state.engine.productsIn(state.collection).filter(p => p[field] === gr.value && p.type === "door");
+    const sample = doors.find(p => photoFor(modelKeyOf(p))) || doors[0];
     host.appendChild(gateCard(gr.label, gr.blurb, gr.count, gr.noun, sample, () => chooseGroup(gr.value)));
   });
   showGate(g.title, g.blurb, "You can change collection at any time from the header.",

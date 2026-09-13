@@ -24,11 +24,13 @@ the same five, so nothing changed.
 Until now the `ironGrilleDesigns` were all knotty alder's, so a mahogany
 grille door offered no design at all. Twenty-six mahogany entries now exist,
 one per design per lite style, each with the infix the catalog prints (the
-same as its knotty alder namesake) and the knotty alder photograph standing in
-for the mahogany one — the grille pattern is what the picture is for, and the
-compressed catalog PDF on file stops at page 33. Each entry records the sizes
-its caption prints, and the configurator greys a design in a size it is not
-made in (Saltillo and Southampton at 6'8", say).
+same as its knotty alder namesake) and its own photograph off the mahogany
+page (2026-09-13: the fuller mahogany PDF the dealer had uploaded carries
+pages 34–41; each page is a 2×2 of pictures captioned by row, matched by
+position and filed through `tools/hand-file-photos.py` — see
+`photography.md`). Each entry records the sizes its caption prints, and the
+configurator greys a design in a size it is not made in (Saltillo and
+Southampton at 6'8", say).
 
 **The 3680 on pages 38–39.** Avignon, Barcelona, Sienna, Southampton and
 Whitney each print a `3680` number (`M34AVIC3680`), but the sheet prices the

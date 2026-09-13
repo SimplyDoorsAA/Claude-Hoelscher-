@@ -7,7 +7,7 @@ import path from 'node:path'; import url from 'node:url';
 const ROOT=path.resolve(url.fileURLToPath(import.meta.url),'../..');
 const OUT=process.env.SHOT_DIR||path.join(ROOT,'.test-output');
 fs.mkdirSync(OUT,{recursive:true});
-const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json'};
+const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json','.woff2':'font/woff2','.css':'text/css'};
 const srv=http.createServer((q,r)=>{const p=decodeURIComponent(q.url.split('?')[0]);
   const f=ROOT+(p.endsWith('/')?p+'index.html':p); let b=null;
   try{b=fs.readFileSync(f);}catch(e){r.writeHead(404);r.end('');return;}

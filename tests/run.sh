@@ -1,6 +1,5 @@
 #!/bin/sh
 # Every suite, in order of how long it takes. Run from anywhere.
-#   TAILWIND_CSS=/path/tw.css  faithful screenshots (optional)
 #   SHOT_DIR=/path             where screenshots land (default .test-output/)
 set -e
 here=$(cd "$(dirname "$0")" && pwd)

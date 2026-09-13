@@ -6,7 +6,13 @@
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 9,
       "image": "/Im3",
-      "why": "the sidelite photograph is too narrow for the extractor and its numbers sit under the door beside it"
+      "why": "the sidelite photograph is too narrow for the extractor and its numbers sit under the door beside it; cut from its black ground (the door itself is Ebony, so it is not whitened)",
+      "crop": [
+        20,
+        0,
+        70,
+        525
+      ]
     },
     {
       "model": "3 Lite Circle Lite RM",
@@ -27,7 +33,8 @@
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 14,
       "image": "/Im2",
-      "why": "a double-door photograph is wider than the extractor allows for a door"
+      "why": "a double-door photograph is wider than the extractor allows for a door",
+      "whiten": true
     },
     {
       "model": "2 Lite 1 Panel Sidelite RM",
@@ -54,7 +61,8 @@
         0,
         136,
         520
-      ]
+      ],
+      "whiten": true
     },
     {
       "model": "3 Lite 1 Panel Sidelite NRM",
@@ -75,14 +83,16 @@
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 18,
       "image": "/Im2",
-      "why": "a double-door photograph is wider than the extractor allows; straight muntins under the arch"
+      "why": "a double-door photograph is wider than the extractor allows; straight muntins under the arch",
+      "whiten": true
     },
     {
       "model": "6 Lite Curved RM *(Knockdown Kit Components)*",
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 18,
       "image": "/Im3",
-      "why": "a double-door photograph is wider than the extractor allows; the curved muntins are the curved panel door"
+      "why": "a double-door photograph is wider than the extractor allows; the curved muntins are the curved panel door",
+      "whiten": true
     },
     {
       "model": "7 Lite 2 Panel RM",
@@ -124,21 +134,24 @@
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 28,
       "image": "/Im4",
-      "why": "the flat-glass door, open for glass, its number printed below the sidelite column"
+      "why": "the flat-glass door, open for glass, its number printed below the sidelite column",
+      "whiten": true
     },
     {
       "model": "Full Sidelite - Flat Glass",
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 28,
       "image": "/Im5",
-      "why": "the Full sidelite, open for glass; the page shows one sidelite for flat and decorative both"
+      "why": "the Full sidelite, open for glass; the page shows one sidelite for flat and decorative both",
+      "whiten": true
     },
     {
       "model": "Full Sidelite - Decorative Glass",
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 28,
       "image": "/Im5",
-      "why": "the same sidelite photograph the page shows beside \"Available Decorative Glass\""
+      "why": "the same sidelite photograph the page shows beside \"Available Decorative Glass\"",
+      "whiten": true
     },
     {
       "model": "3/4 Lite - Decorative Glass",
@@ -152,42 +165,48 @@
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 29,
       "image": "/Im4",
-      "why": "the flat-glass door, open for glass; the sheet prints one number for it and the grille door"
+      "why": "the flat-glass door, open for glass; the sheet prints one number for it and the grille door",
+      "whiten": true
     },
     {
       "model": "3/4 Sidelite - Flat Glass",
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 29,
       "image": "/Im5",
-      "why": "the 3/4 sidelite, open for glass; one sidelite photograph for flat and decorative"
+      "why": "the 3/4 sidelite, open for glass; one sidelite photograph for flat and decorative",
+      "whiten": true
     },
     {
       "model": "3/4 Sidelite - Decorative Glass",
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 29,
       "image": "/Im5",
-      "why": "the same sidelite photograph the page shows beside \"Available Decorative Glass\""
+      "why": "the same sidelite photograph the page shows beside \"Available Decorative Glass\"",
+      "whiten": true
     },
     {
       "model": "2/3 Lite - Flat Glass",
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 30,
       "image": "/Im2",
-      "why": "the flat-glass door, open for glass; its number is printed across the page"
+      "why": "the flat-glass door, open for glass; its number is printed across the page",
+      "whiten": true
     },
     {
       "model": "2/3 Sidelite - Flat Glass",
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 30,
       "image": "/Im3",
-      "why": "the 2/3 sidelite, open for glass; one sidelite photograph for flat and decorative"
+      "why": "the 2/3 sidelite, open for glass; one sidelite photograph for flat and decorative",
+      "whiten": true
     },
     {
       "model": "2/3 Sidelite - Decorative Glass",
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 30,
       "image": "/Im3",
-      "why": "the same sidelite photograph the page shows beside \"Available Decorative Glass\""
+      "why": "the same sidelite photograph the page shows beside \"Available Decorative Glass\"",
+      "whiten": true
     },
     {
       "model": "2/3 Arch Lite - Decorative Glass",
@@ -201,32 +220,33 @@
       "pdf": "79d5f9d9-Compressed.pdf",
       "page": 31,
       "image": "/Im2",
-      "why": "the page prints one number for the flat, decorative and grille arch doors; open for glass"
+      "why": "the page prints one number for the flat, decorative and grille arch doors; open for glass",
+      "whiten": true
     },
     {
       "model": "3/4 Lite Iron Grille",
-      "pdf": "79d5f9d9-Compressed.pdf",
-      "page": 32,
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 25,
       "image": "/Im1",
-      "why": "page 32 photographs the 3/4 Lite with the Whitney grille and matching sidelites; the door cut out of that picture",
+      "why": "catalog page 32 photographs the 3/4 Lite with the Whitney grille and matching sidelites; the door cut out of that picture, from the fuller mahogany PDF where the page is sharper",
       "crop": [
-        110,
+        156,
         0,
-        270,
-        518
+        378,
+        720
       ]
     },
     {
       "model": "3/4 Lite Sidelite Iron Grille",
-      "pdf": "79d5f9d9-Compressed.pdf",
-      "page": 32,
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 25,
       "image": "/Im1",
-      "why": "the left sidelite cut out of the same page-32 photograph",
+      "why": "the left sidelite cut out of the same page-32 photograph, from the fuller mahogany PDF",
       "crop": [
-        4,
+        6,
         0,
-        68,
-        518
+        92,
+        720
       ]
     },
     {
@@ -336,6 +356,279 @@
       "page": 5,
       "image": "/Im10",
       "why": "the swatch sits directly above its caption on the stain-options page; matched by position"
+    },
+    {
+      "model": "2/3 Lite Sidelite Iron Grille",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 29,
+      "image": "/Im3",
+      "crop": [
+        6,
+        0,
+        88,
+        726
+      ],
+      "why": "catalog page 37 photographs the 2/3 Lite with the Avignon grille and matching sidelites under \"Grille Sidelites\"; the left sidelite cut out of it"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "2/3 Arch Lite",
+      "name": "Cordoba",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 27,
+      "image": "/Im1",
+      "why": "catalog page 35: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "2/3 Arch Lite",
+      "name": "Santiago",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 27,
+      "image": "/Im2",
+      "why": "catalog page 35: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "2/3 Arch Lite",
+      "name": "Sienna",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 27,
+      "image": "/Im3",
+      "why": "catalog page 35: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "2/3 Arch Lite",
+      "name": "Whitney",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 27,
+      "image": "/Im4",
+      "why": "catalog page 35: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "2/3 Lite",
+      "name": "Avignon",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 28,
+      "image": "/Im0",
+      "why": "catalog page 36: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "2/3 Lite",
+      "name": "Barcelona",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 28,
+      "image": "/Im1",
+      "why": "catalog page 36: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "2/3 Lite",
+      "name": "Cordoba",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 28,
+      "image": "/Im2",
+      "why": "catalog page 36: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "2/3 Lite",
+      "name": "Santiago",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 28,
+      "image": "/Im3",
+      "why": "catalog page 36: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "2/3 Lite",
+      "name": "Sienna",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 29,
+      "image": "/Im0",
+      "why": "catalog page 37: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "2/3 Lite",
+      "name": "Whitney",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 29,
+      "image": "/Im1",
+      "why": "catalog page 37: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "name": "Avignon",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 30,
+      "image": "/Im0",
+      "why": "catalog page 38: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "name": "Barcelona",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 30,
+      "image": "/Im1",
+      "why": "catalog page 38: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "name": "Cordoba",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 30,
+      "image": "/Im3",
+      "why": "catalog page 38: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "name": "Saltillo",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 30,
+      "image": "/Im2",
+      "why": "catalog page 38: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "name": "Santiago",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 31,
+      "image": "/Im0",
+      "why": "catalog page 39: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "name": "Sienna",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 31,
+      "image": "/Im1",
+      "why": "catalog page 39: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "name": "Southampton",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 31,
+      "image": "/Im2",
+      "why": "catalog page 39: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "name": "Whitney",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 31,
+      "image": "/Im3",
+      "why": "catalog page 39: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "name": "Avignon",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 32,
+      "image": "/Im0",
+      "why": "catalog page 40: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "name": "Balfour",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 32,
+      "image": "/Im1",
+      "why": "catalog page 40: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "name": "Cordoba",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 32,
+      "image": "/Im2",
+      "why": "catalog page 40: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "name": "Hammond",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 32,
+      "image": "/Im3",
+      "why": "catalog page 40: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "name": "Santiago",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 33,
+      "image": "/Im0",
+      "why": "catalog page 41: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "name": "Saltillo",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 33,
+      "image": "/Im1",
+      "why": "catalog page 41: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "name": "Sienna",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 33,
+      "image": "/Im2",
+      "why": "catalog page 41: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "grille",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "name": "Southampton",
+      "pdf": "5456e602-Joel_mahogany.pdf",
+      "page": 33,
+      "image": "/Im3",
+      "why": "catalog page 41: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
     }
   ]
 }

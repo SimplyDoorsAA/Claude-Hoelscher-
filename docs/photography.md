@@ -53,9 +53,33 @@ with the Whitney grille and matching sidelites. The manifest marks these
 match was checked against the page, so it outranks a part-number match for the
 same model.
 
-With that, every mahogany card shows a catalog photograph: 62 the model's own,
-6 (the other grille doors and sidelites) a grille-design picture, which is a
-true picture of that door. Nothing in the mahogany line draws a silhouette.
+With that, every mahogany card shows a catalog photograph: 63 the model's own,
+5 (the 2/3 Arch, 2/3 and Full Lite grille doors and the two Full grille
+sidelites) a grille-design picture, which is a true picture of that door.
+Nothing in the mahogany line draws a silhouette.
+
+**The mahogany grille pages.** The compressed catalog PDF stops at page 33,
+but a fuller mahogany PDF the dealer had uploaded (`Joel_mahogany.pdf`)
+carries pages 34–41, and page 32 sharper. Each grille page is a 2×2 of
+photographs with the design names printed as a row of captions above each row
+of pictures, so the match is by position, left caption to left picture; the
+26 mahogany designs now carry their own photograph
+(`quoter/assets/designs/grille-mahogany-*.webp`, `kind: "grille"` in the
+list) instead of the knotty alder namesake's, and the catalog's `photo` field
+points at it. The 3/4 Lite grille door and sidelite are re-cut from the
+sharper page 32, and the 2/3 Lite grille sidelite is cut from page 37's
+"Grille Sidelites" photograph.
+
+**Black glass.** The catalog photographs an "open for glass" door with the
+opening black, and shoots the double-door kits on a black ground. The dealer
+found the black jarring on a card, so those fourteen pictures (the flat-glass
+doors and sidelites, the decorative sidelites that share their photograph, the
+three double-door kits and one sidelite cut from a black ground) are
+`whiten`ed as they are filed: every connected run of near-black pixels large
+enough to be a pane or a background (at least a hundredth of the picture, so
+a shadow in a dark panel is left alone) becomes the pale glass tone the other
+photographs show, with a one-pixel feather. The Ebony contemporary sidelite,
+whose door is itself black, is cut from its ground but not whitened.
 
 **Stains.** Page 5 prints the six stains as swatches, one chart for mahogany
 and one for knotty alder. Both charts are filed the same way (matched by
@@ -71,9 +95,11 @@ and the sheet's "Full Sidelite Iron Grille", named without "Lite", is read as
 the Full Lite's sidelite like its twin, so it shows the same picture and asks
 the same designs.
 
-`tests/mahogany-photos.test.mjs` pins all of it: the thirty entries and their
-files, the 68 cards with no silhouette, the page-32 cut, the six swatches on a
-prefinished door of each line, and the grille sidelite reaching a price.
+`tests/mahogany-photos.test.mjs` pins all of it: the thirty-one door entries
+and the twenty-six grille entries with their files, the whitened fourteen, the
+68 cards with no silhouette, the page-32 and page-37 cuts, a pale pane where
+the black was, the six swatches on a prefinished door of each line, and the
+grille sidelite reaching a price.
 
 ## What the catalogs we hold cannot supply
 
@@ -82,10 +108,8 @@ Missing: nothing needed for the doors we price.
 
 Of the 18 with no picture, 5 are sidelites and 13 are doors. The reasons:
 
-- **Mahogany iron-grille pages (34-41)** are not in the compressed catalog PDF
-  on file (it stops at page 33), so the mahogany grille designs carry their
-  knotty alder namesake's photograph — the grille pattern is the same. The 3/4
-  Lite grille door and sidelite have a mahogany picture, cut from page 32.
+- **Mahogany iron-grille pages (34-41)** are in the fuller mahogany PDF only;
+  their 26 design photographs are filed by hand from it (above).
 - **Circle Top 2 Panel V-Grooved** is photographed on catalog page 52 but the
   page prints no part numbers for it, so nothing ties the photo to the model.
 - **Knotty alder page 51's speakeasy photographs** cannot be filed because that

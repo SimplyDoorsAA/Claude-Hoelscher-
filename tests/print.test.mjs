@@ -9,8 +9,8 @@ import path from 'node:path'; import url from 'node:url';
 import { createEngine, formatCents, roundCents } from '../packages/pricing-engine/index.js';
 
 const ROOT=path.resolve(url.fileURLToPath(import.meta.url),'../..');
-const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json',
-            '.webp':'image/webp','.png':'image/png','.css':'text/css'};
+const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json','.woff2':'font/woff2','.css':'text/css',
+            '.webp':'image/webp','.png':'image/png'};
 const srv=http.createServer((q,r)=>{
   const p=decodeURIComponent(q.url.split('?')[0]);
   const f=ROOT+(p.endsWith('/')?p+'index.html':p);
@@ -34,8 +34,6 @@ page.on('pageerror',e=>errs.push('PAGEERROR: '+e.message));
 page.on('console',m=>{if(m.type()==='error'&&!/favicon|Failed to load resource/i.test(m.text()))errs.push(m.text());});
 // The fallback stylesheet is what a print looks like when the CDN is down, and
 // the document must be identical either way, so the CDN is blocked outright.
-await page.route('https://cdn.tailwindcss.com*',r=>r.abort());
-await page.route('https://fonts.googleapis.com/**',r=>r.abort());
 // window.print() would block the run; count the calls instead.
 await page.addInitScript(()=>{window.__printed=0;window.print=()=>{window.__printed++;};});
 
@@ -117,6 +115,21 @@ const pd=await page.evaluate(()=>{
           mark:!!doc.querySelector('.pd-mark')};
 });
 ok('the estimate prints with its terms behind it', pd.pages===2, pd.pages+' pages');
+/* the customer sees what they are buying: a picture beside every door line,
+   a small one beside each sidelite, and print waits until each has decoded */
+const pics=await page.evaluate(()=>{
+  const doc=document.querySelector('#printDoc');
+  const rows=[...doc.querySelectorAll('table.pd-t tbody tr')];
+  return {rows:rows.length,
+          withArt:rows.filter(r=>r.querySelector('.pd-art img, .pd-art svg')).length,
+          imgs:[...doc.querySelectorAll('.pd-art img')].map(i=>i.getAttribute('src')),
+          minis:[...doc.querySelectorAll('.pd-mini img, .pd-mini svg')].length,
+          ready:[...doc.querySelectorAll('img')].every(i=>i.complete&&i.naturalWidth>0)};
+});
+ok('every door line on the estimate carries the door\'s picture', pics.withArt===q.lineCount && pics.imgs.length===q.lineCount, JSON.stringify(pics.imgs));
+ok('the picture is the catalog photograph of that door', pics.imgs.every(u=>/assets\/(doors|designs)\/.+\.webp$/.test(u)), pics.imgs.join(' | '));
+ok('and the sidelite pair beside it has its own small picture', pics.minis===1, String(pics.minis));
+ok('every picture had decoded before the print dialog opened', pics.ready);
 ok('and carries the letterhead', pd.mark);
 ok('every terms section prints', pd.terms===est.terms.sections.length,
    pd.terms+' of '+est.terms.sections.length);
@@ -183,6 +196,10 @@ const od=await page.evaluate(()=>{
           text:doc.textContent};
 });
 ok('the order sheet is one page, with no terms', od.pages===1, od.pages+' pages');
+const opics=await page.evaluate(()=>{const doc=document.querySelector('#printDoc');
+  return {art:doc.querySelectorAll('table.pd-t tbody tr .pd-art img').length, minis:doc.querySelectorAll('.pd-mini img').length,
+          ready:[...doc.querySelectorAll('img')].every(i=>i.complete&&i.naturalWidth>0)};});
+ok('the order sheet shows Hoelscher the same pictures beside the part numbers', opics.art===q.lineCount && opics.minis===1 && opics.ready, JSON.stringify(opics));
 const ofind=l=>{const r=od.lines.find(x=>x[0].startsWith(l)); return r?r[1]:null;};
 ok('order sheet doors and accessories equal the engine line cost',
    ofind('Doors & accessories')===formatCents(q.lineCostCents),
