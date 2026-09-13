@@ -797,14 +797,30 @@ def main(argv):
         im.save(path, 'WEBP', quality=WEBP_QUALITY, method=6)
         total += os.path.getsize(path)
 
+    source = {k: f'{v[0]} p{v[1]} {v[2]}' for k, v in sorted(found.items()) if k in files}
+    # Photographs matched by eye (tools/hand-file-photos.py) are kept as they
+    # are: a hand match was checked against the page, so it outranks a
+    # part-number match for the same model.
+    hand = {}
+    try:
+        old = json.load(open(os.path.join(OUT, 'manifest.json')))
+        for k in old.get('handFiled', {}):
+            if k in old.get('models', {}):
+                files[k] = old['models'][k]
+                source[k] = old.get('source', {}).get(k, 'filed by hand')
+                hand[k] = True
+    except (OSError, ValueError):
+        pass
     manifest = {
         'note': 'Door photography extracted from the Hoelscher catalogs by '
                 'tools/extract-door-images.py. Keyed by model, the way a card is. '
                 'source says which catalog page each photo came off, so a match '
-                'can be checked against the original.',
+                'can be checked against the original. handFiled marks the ones '
+                'matched by eye through tools/hand-file-photos.py.',
         'sharedAcrossSkins': shared,
         'models': files,
-        'source': {k: f'{v[0]} p{v[1]} {v[2]}' for k, v in sorted(found.items()) if k in files},
+        'source': source,
+        'handFiled': hand,
     }
     if not dry:
         with open(os.path.join(OUT, 'manifest.json'), 'w') as f:

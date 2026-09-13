@@ -73,6 +73,9 @@ jobs:
       - name: Mahogany iron grilles, and the grille number grammar
         run: node tests/legacy-grilles.test.mjs
 
+      - name: Mahogany photography, every card and the stain chart
+        run: node tests/mahogany-photos.test.mjs
+
       - name: Quoter under load
         run: node tests/stress-ui.mjs
 
