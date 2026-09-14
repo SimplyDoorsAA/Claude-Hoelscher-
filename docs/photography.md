@@ -132,9 +132,11 @@ is the dealer's upload, named in the entry.
 Pecos, Dartmouth, San Jacinto and Medina are photographed as the glass alone,
 while Columbia is a knotty alder door, and Blanco and Brazos are mahogany
 doors. The dealer chose glass to glass (2026-09-13), so a door's tile is the
-pane alone: cut from the knotty alder Columbia photograph, from the
-page-30 Brazos photograph (the only Brazos picture on file, so it is soft at
-tile size), and from the arch door in the dealer's Blanco composite
+pane alone: cut from the knotty alder Columbia photograph, from the dealer's
+screen capture of page 30 of the 2026 hardwood catalog for Brazos (the door
+on that page is filed as the 2/3 Lite decorative door's own picture and as
+the Brazos preview, replacing the compressed PDF's soft one), and from the
+arch door in the dealer's Blanco composite
 (`pane` on the manifest entry). The doors in the middle of the dealer's
 Blanco and Pecos composites are filed too (`doors["2/3 Arch"]`), so choosing
 either on the 2/3 Arch Lite previews the mahogany door glazed with it; a

@@ -809,16 +809,14 @@
     {
       "kind": "decorativePane",
       "name": "Brazos",
-      "pdf": "79d5f9d9-Compressed.pdf",
-      "page": 30,
-      "image": "/Im0",
       "crop": [
-        48,
-        37,
-        150,
-        329
+        181,
+        589,
+        542,
+        1407
       ],
-      "why": "the pane cut out of the page-30 photograph of the 2/3 Lite glazed with Brazos; the only Brazos picture on file, so it is soft at tile size"
+      "why": "the pane cut out of the door; the dealer sent a screen capture of page 30 of the 2026 hardwood catalog (2/3 Lite Raised Moulding - Decorative Glass, Glass Shown: Brazos, Stain Shown: Red Oak) 2026-09-14, far sharper than the compressed PDF",
+      "upload": "5b8cd5b6-image.jpg"
     },
     {
       "kind": "decorativePane",
@@ -857,6 +855,30 @@
         1439
       ],
       "why": "the door in the middle of the dealer's \"Pecos 2/3 Arch with Sidelites\" picture: the mahogany 2/3 Arch Lite glazed with Pecos, for the preview"
+    },
+    {
+      "model": "2/3 Lite - Decorative Glass",
+      "upload": "5b8cd5b6-image.jpg",
+      "crop": [
+        63,
+        488,
+        629,
+        1928
+      ],
+      "why": "the door cut out of the page; the dealer sent a screen capture of page 30 of the 2026 hardwood catalog (2/3 Lite Raised Moulding - Decorative Glass, Glass Shown: Brazos, Stain Shown: Red Oak) 2026-09-14, far sharper than the compressed PDF"
+    },
+    {
+      "kind": "decorativeDoor",
+      "name": "Brazos",
+      "style": "2/3",
+      "upload": "5b8cd5b6-image.jpg",
+      "crop": [
+        63,
+        488,
+        629,
+        1928
+      ],
+      "why": "the same door, filed as the 2/3 Lite glazed with Brazos for the preview; the dealer sent a screen capture of page 30 of the 2026 hardwood catalog (2/3 Lite Raised Moulding - Decorative Glass, Glass Shown: Brazos, Stain Shown: Red Oak) 2026-09-14, far sharper than the compressed PDF"
     }
   ]
 }

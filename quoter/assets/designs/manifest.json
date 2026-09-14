@@ -110,10 +110,16 @@
     },
     "Brazos": {
       "basis": "caption",
+      "doorSource": {
+        "2/3": "dealer upload 5b8cd5b6-image.jpg crop [63, 488, 629, 1928] (filed by hand: the same door, filed as the 2/3 Lite glazed with Brazos for the preview; the dealer sent a screen capture of page 30 of the 2026 hardwood catalog (2/3 Lite Raised Moulding - Decorative Glass, Glass Shown: Brazos, Stain Shown: Red Oak) 2026-09-14, far sharper than the compressed PDF)"
+      },
+      "doors": {
+        "2/3": "glass-brazos-2-3-door.webp"
+      },
       "file": "glass-brazos.webp",
       "handFiled": true,
       "pane": "glass-brazos-pane.webp",
-      "paneSource": "79d5f9d9-Compressed.pdf p30 /Im0 crop [48, 37, 150, 329] (filed by hand: the pane cut out of the page-30 photograph of the 2/3 Lite glazed with Brazos; the only Brazos picture on file, so it is soft at tile size)",
+      "paneSource": "dealer upload 5b8cd5b6-image.jpg crop [181, 589, 542, 1407] (filed by hand: the pane cut out of the door; the dealer sent a screen capture of page 30 of the 2026 hardwood catalog (2/3 Lite Raised Moulding - Decorative Glass, Glass Shown: Brazos, Stain Shown: Red Oak) 2026-09-14, far sharper than the compressed PDF)",
       "source": "79d5f9d9-Compressed.pdf p30 /Im0 (the door card's own photograph, Glass Shown: Brazos; filed by hand)"
     },
     "Columbia": {
