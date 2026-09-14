@@ -752,17 +752,29 @@ function completeSku(product, glazing, handing, shelf, caming, grille) {
   }
   return withShelf(sku, product, shelf);
 }
-/* The shelf is the last thing on the number, after the glass and the hand. */
+/* The shelf is the last thing on the number, after the glass and the hand.
+   Two sheets write it two ways. Mahogany leaves it off the number and adds an
+   S for the shelf (MCM--3080 → MCMCBLE3080S). Knotty alder prints a trailing
+   placeholder for it (KACM--3068-), so that slot is filled rather than
+   appended to — with the S, or with nothing at all. Only a pattern confirmed
+   against a real catalog page is filled (skuPlaceholders.dentilShelf); any
+   other trailing character still reads as incomplete and is flagged. */
 function withShelf(sku, product, shelf) {
-  if (!shelf) return sku;
   const r = dentilShelfRuleFor(product);
-  return r && r.suffix ? sku + r.suffix : sku;
+  if (!r) return sku;
+  const raw = String((product && product.sku) || "");
+  const slot = ((state.engine.catalog.skuPlaceholders || {}).dentilShelf || [])
+    .find(x => rxTest(x.appliesToSkuPattern, raw));
+  if (slot && /-$/.test(sku))
+    return sku.replace(/-$/, (slot.codes && slot.codes[shelf ? "yes" : "no"]) || "");
+  if (!shelf) return sku;
+  return r.suffix ? sku + r.suffix : sku;
 }
-/* Eight rows carry a second placeholder the glass code does not fill — the
-   six mahogany "Lite Narrow LH/RH" and the two knotty alder Craftsman. Nobody
-   knows yet what Hoelscher expects in it, so a part number that still holds one
-   is never printed as though it were complete: the order sheet says so where
-   the order is actually placed. */
+/* Six rows carry a second placeholder the glass code does not fill — the
+   mahogany "Lite Narrow LH/RH", whose trailing pair is the handing. Where a
+   trailing placeholder has not been identified against a catalog page, the
+   part number is never printed as though it were complete: the order sheet
+   says so where the order is actually placed. */
 const skuIsIncomplete = sku => /-/.test(String(sku || ""));
 /* The part numbers one line actually puts on the order. A pair is two mirrored
    leaves, so a handed door is ordered twice — once left, once right — and the

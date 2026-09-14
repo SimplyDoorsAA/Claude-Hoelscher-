@@ -97,12 +97,13 @@ carries `vendorConfirmed: true` as of 2026-09-11.
 
 ## Still open
 
-- **`KACM--3068-` / `KACM--3080-`** (Knotty Alder Craftsman, not Contemporary,
-  but the same class of problem). The leading `(--)` is glass and the P.42 rule
-  fills it. The **trailing single `-`** is an unidentified one-character
-  placeholder. It is not guessed at: the order sheet refuses to treat the
-  number as final and prints the reason. Both doors are unsellable until
-  Hoelscher is asked.
+- ~~**`KACM--3068-` / `KACM--3080-`** (Knotty Alder Craftsman, not
+  Contemporary, but the same class of problem). The leading `(--)` is glass and
+  the P.42 rule fills it. The **trailing single `-`** is an unidentified
+  one-character placeholder.~~ **Closed 2026-09-14.** Catalog page 45 prints
+  the Craftsman numbers against a Shelf column, so the trailing character is
+  the dentil shelf: `S` with it, nothing without. Both doors order cleanly.
+  See `docs/knotty-alder-craftsman-shelf.md`.
 - **Casing and 1×4 trim have no `2880` row.** A 2'8" × 8'0" door prehangs
   correctly — the prehung price is on the door row — but no trim adder exists
   for that size. Same gap at 2668, 2680 and 2868.

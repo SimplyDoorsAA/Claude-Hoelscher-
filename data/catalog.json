@@ -22220,6 +22220,19 @@
         "example": "MCABLAP3068"
       }
     ],
+    "dentilShelf": [
+      {
+        "id": "knotty-alder-craftsman-shelf",
+        "appliesToSkuPattern": "^KACM--\\d{4}-$",
+        "codes": {
+          "yes": "S",
+          "no": ""
+        },
+        "confirmedBy": "dealer's capture of catalog page 45, 2026-09-14",
+        "evidence": "2026 hardwood catalog page 45, Knotty Alder True Divided Lite, Craftsman: the part numbers are printed against a Shelf column — KACMCBLE3068S Shelf: Yes, KACMCBLE3068 Shelf: No, KACMCBLE3080S Yes, KACMCBLE3080 No. CBLE is the Clear Bevel Low-E code filling the sheet's leading (--), which leaves the trailing single dash of KACM--3068- as the shelf slot: S with the shelf, nothing without. The sheet prices one row per size, so the shelf costs nothing, as on the mahogany Craftsman.",
+        "example": "KACMCBLE3068S"
+      }
+    ],
     "speakeasyGlass": [
       {
         "id": "speakeasy-glass-insert",
