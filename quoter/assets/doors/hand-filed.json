@@ -629,6 +629,256 @@
       "page": 33,
       "image": "/Im3",
       "why": "catalog page 41: each grille page is a 2x2 of photographs with the design names printed as a row of captions above each row of pictures; matched by position, left caption to left picture"
+    },
+    {
+      "kind": "decorativeSidelite",
+      "name": "Blanco",
+      "style": "2/3",
+      "upload": "4b51144e-image.jpg",
+      "crop": [
+        27,
+        506,
+        287,
+        1500
+      ],
+      "why": "the dealer supplied Hoelscher's \"Blanco 2/3 Arch with Sidelites\" picture 2026-09-13: door in the middle, its sidelites either side; the left sidelite is cut out"
+    },
+    {
+      "kind": "decorativeSidelite",
+      "name": "Pecos",
+      "style": "2/3",
+      "upload": "250008ac-image.jpg",
+      "crop": [
+        0,
+        492,
+        255,
+        1451
+      ],
+      "why": "the dealer supplied Hoelscher's \"Pecos 2/3 Arch with Sidelites\" picture 2026-09-13: door in the middle, its sidelites either side; the left sidelite is cut out"
+    },
+    {
+      "kind": "decorativeSidelite",
+      "name": "Imperial",
+      "style": "2/3",
+      "upload": "763157cb-image.jpg",
+      "crop": [
+        2,
+        462,
+        231,
+        1336
+      ],
+      "why": "the dealer supplied Hoelscher's \"Imperial 2/3 Oval with Sidelites\" picture 2026-09-13: door in the middle, its sidelites either side; the left sidelite is cut out",
+      "unpriced": "the sheet prices no Imperial glass and no oval door; on file for the dealer, offered nowhere"
+    },
+    {
+      "kind": "decorativeSidelite",
+      "name": "Austin",
+      "style": "Full",
+      "upload": "afc8c533-image.jpg",
+      "crop": [
+        13,
+        419,
+        237,
+        1322
+      ],
+      "why": "the dealer supplied Hoelscher's \"Austin Full Oval with Sidelites\" picture 2026-09-13: door in the middle, its sidelites either side; the left sidelite is cut out",
+      "unpriced": "the sheet prices no Austin glass and no oval door; on file for the dealer, offered nowhere"
+    },
+    {
+      "kind": "decorativeSidelite",
+      "name": "Blanco",
+      "style": "3/4",
+      "upload": "eeeac908-image.jpg",
+      "crop": [
+        31,
+        576,
+        275,
+        1771
+      ],
+      "why": "the dealer supplied Hoelscher's \"Blanco Deluxe Oval with Blanco 3/4 Sidelites\" picture 2026-09-13: door in the middle, its sidelites either side; the left sidelite is cut out",
+      "unpriced": "the sheet lists Columbia, Medina, Pecos and San Jacinto on the 3/4 sidelite, not Blanco; on file for the dealer, offered nowhere"
+    },
+    {
+      "kind": "grilleSidelite",
+      "line": "mahogany",
+      "style": "Full Lite",
+      "name": "Cordoba",
+      "upload": "b54bca66-image.jpg",
+      "crop": [
+        10,
+        461,
+        238,
+        1358
+      ],
+      "why": "the dealer supplied Hoelscher's \"Cordoba Full Lite with Sidelites\" picture 2026-09-13: door in the middle, its matching sidelites either side; the left sidelite is cut out"
+    },
+    {
+      "kind": "grilleSidelite",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "name": "Whitney",
+      "upload": "1a7f3613-image.jpg",
+      "crop": [
+        6,
+        372,
+        200,
+        1340
+      ],
+      "why": "the dealer supplied Hoelscher's \"Whitney 3/4 Lite with Sidelites\" picture 2026-09-13: door in the middle, its matching sidelites either side; the left sidelite is cut out; a second Whitney picture on reeded glass was supplied too and is not filed, the water-glass one being the cleaner cut"
+    },
+    {
+      "kind": "grilleSidelite",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "name": "Santiago",
+      "upload": "c08669c9-image.jpg",
+      "crop": [
+        47,
+        452,
+        274,
+        1340
+      ],
+      "why": "the dealer supplied Hoelscher's \"Santiago 3/4 Lite with Sidelites\" picture 2026-09-13: door in the middle, its matching sidelites either side; the left sidelite is cut out"
+    },
+    {
+      "kind": "grilleSidelite",
+      "line": "mahogany",
+      "style": "3/4 Lite",
+      "name": "Sienna",
+      "upload": "1acd40fd-image.jpg",
+      "crop": [
+        48,
+        441,
+        273,
+        1321
+      ],
+      "why": "the dealer supplied Hoelscher's \"Sienna 3/4 Lite with Sidelites\" picture 2026-09-13: door in the middle, its matching sidelites either side; the left sidelite is cut out"
+    },
+    {
+      "kind": "grilleSidelite",
+      "line": "mahogany",
+      "style": "2/3 Lite",
+      "name": "Avignon",
+      "upload": "caeccbb9-image.jpg",
+      "crop": [
+        63,
+        432,
+        257,
+        1320
+      ],
+      "why": "the dealer supplied Hoelscher's \"Avignon 2/3 Lite with Sidelites\" picture 2026-09-13: door in the middle, its matching sidelites either side; the left sidelite is cut out"
+    },
+    {
+      "kind": "caming",
+      "name": "Patina",
+      "upload": "e21c7062-image.jpg",
+      "crop": [
+        1480,
+        108,
+        1934,
+        569
+      ],
+      "why": "the dealer supplied Hoelscher's \"Caming Options\" strip 2026-09-13: two swatches captioned Patina and Zinc, matched by caption"
+    },
+    {
+      "kind": "caming",
+      "name": "Zinc",
+      "upload": "e21c7062-image.jpg",
+      "crop": [
+        2017,
+        108,
+        2471,
+        569
+      ],
+      "why": "the dealer supplied Hoelscher's \"Caming Options\" strip 2026-09-13: two swatches captioned Patina and Zinc, matched by caption"
+    },
+    {
+      "kind": "decorativePane",
+      "name": "Columbia",
+      "pdf": "f80a4145-HoelscherWood_Doors.pdf",
+      "page": 5,
+      "image": "/Im0",
+      "crop": [
+        114,
+        100,
+        300,
+        800
+      ],
+      "why": "the gallery compares glass to glass (dealer, 2026-09-13): the pane cut out of the knotty alder door the wood catalog photographs glazed with Columbia"
+    },
+    {
+      "kind": "decorativePane",
+      "name": "Brazos",
+      "crop": [
+        181,
+        589,
+        542,
+        1407
+      ],
+      "why": "the pane cut out of the door; the dealer sent a screen capture of page 30 of the 2026 hardwood catalog (2/3 Lite Raised Moulding - Decorative Glass, Glass Shown: Brazos, Stain Shown: Red Oak) 2026-09-14, far sharper than the compressed PDF",
+      "upload": "5b8cd5b6-image.jpg"
+    },
+    {
+      "kind": "decorativePane",
+      "name": "Blanco",
+      "upload": "4b51144e-image.jpg",
+      "crop": [
+        436,
+        333,
+        742,
+        994
+      ],
+      "why": "the arch pane cut out of the door in the dealer's \"Blanco 2/3 Arch with Sidelites\" picture"
+    },
+    {
+      "kind": "decorativeDoor",
+      "name": "Blanco",
+      "style": "2/3 Arch",
+      "upload": "4b51144e-image.jpg",
+      "crop": [
+        292,
+        224,
+        874,
+        1473
+      ],
+      "why": "the door in the middle of the dealer's \"Blanco 2/3 Arch with Sidelites\" picture: the mahogany 2/3 Arch Lite glazed with Blanco, for the preview"
+    },
+    {
+      "kind": "decorativeDoor",
+      "name": "Pecos",
+      "style": "2/3 Arch",
+      "upload": "250008ac-image.jpg",
+      "crop": [
+        260,
+        188,
+        842,
+        1439
+      ],
+      "why": "the door in the middle of the dealer's \"Pecos 2/3 Arch with Sidelites\" picture: the mahogany 2/3 Arch Lite glazed with Pecos, for the preview"
+    },
+    {
+      "model": "2/3 Lite - Decorative Glass",
+      "upload": "5b8cd5b6-image.jpg",
+      "crop": [
+        63,
+        488,
+        629,
+        1928
+      ],
+      "why": "the door cut out of the page; the dealer sent a screen capture of page 30 of the 2026 hardwood catalog (2/3 Lite Raised Moulding - Decorative Glass, Glass Shown: Brazos, Stain Shown: Red Oak) 2026-09-14, far sharper than the compressed PDF"
+    },
+    {
+      "kind": "decorativeDoor",
+      "name": "Brazos",
+      "style": "2/3",
+      "upload": "5b8cd5b6-image.jpg",
+      "crop": [
+        63,
+        488,
+        629,
+        1928
+      ],
+      "why": "the same door, filed as the 2/3 Lite glazed with Brazos for the preview; the dealer sent a screen capture of page 30 of the 2026 hardwood catalog (2/3 Lite Raised Moulding - Decorative Glass, Glass Shown: Brazos, Stain Shown: Red Oak) 2026-09-14, far sharper than the compressed PDF"
     }
   ]
 }

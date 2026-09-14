@@ -43,8 +43,8 @@ const keyOf=p=>{const d=String(p.description||'').trim(); const c=p.size&&p.size
 const models=[...new Set(cat.woodProducts.filter(p=>p.line==='mahogany').map(keyOf))];
 const photoDoors=hand.entries.filter(e=>!e.kind);
 const grilles=hand.entries.filter(e=>e.kind==='grille');
-ok('thirty-one mahogany photographs are matched by eye, each with the page, the image and why',
-   photoDoors.length===31 && photoDoors.every(e=>e.pdf&&e.page&&e.image&&e.why&&e.model), String(photoDoors.length));
+ok('thirty-two mahogany photographs are matched by eye, each with its source (a catalog page and image, or the dealer\'s upload) and why',
+   photoDoors.length===32 && photoDoors.every(e=>((e.pdf&&e.page&&e.image)||e.upload)&&e.why&&e.model), String(photoDoors.length));
 ok('and the twenty-six mahogany grille designs, each from its own catalog page',
    grilles.length===26 && grilles.every(e=>e.line==='mahogany'&&e.pdf&&e.page&&e.image&&e.why), String(grilles.length));
 const designs=JSON.parse(fs.readFileSync(ROOT+'/quoter/assets/designs/manifest.json','utf8'));

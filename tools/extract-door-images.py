@@ -605,10 +605,17 @@ def extract_designs(pdfs, dry):
     if os.path.exists(mpath):
         with open(mpath) as f:
             kept = json.load(f)
-        for group in ('grilles', 'decorativeGlass', 'accessories'):
+        for group in ('grilles', 'decorativeGlass', 'accessories', 'caming'):
             for k, v in kept.get(group, {}).items():
                 if v.get('handFiled'):
                     out.setdefault(group, {}).setdefault(k, v)
+                # The sidelite pictures the dealer supplied hang off entries
+                # this extraction rebuilds from the PDF; keep them attached.
+                rec = out.get(group, {}).get(k)
+                if rec is not None and rec is not v:
+                    for f in ('sidelites', 'sideliteSource', 'unpriced', 'sideliteFile', 'pane', 'paneSource', 'doors', 'doorSource'):
+                        if f in v and f not in rec:
+                            rec[f] = v[f]
     if not dry:
         with open(mpath, 'w') as f:
             json.dump({'note': 'Iron grille designs, decorative glass and speakeasy '

@@ -108,6 +108,54 @@ and the twenty-six grille entries with their files, the whitened fourteen, the
 the black was, the six swatches on a prefinished door of each line, and the
 grille sidelite reaching a price.
 
+## Supplied by the dealer — sidelites and caming, 2026-09-13
+
+The catalogs photograph a grille or decorative-glass door once per design and
+never the sidelite made to match it, so a grille sidelite's gallery showed the
+door. The dealer supplied twelve of Hoelscher's "door with sidelites"
+composites (door in the middle, its sidelites either side) and the "Caming
+Options" strip. The left sidelite is cut out of each composite by a crop box
+written into `hand-filed.json`, so a rerun reproduces it; the source file
+is the dealer's upload, named in the entry.
+
+| Picture | Filed as | Used |
+|---|---|---|
+| Cordoba Full Lite | `ironGrilleDesigns` Full Lite Cordoba, `sidelitePhoto` | the Full grille sidelite's tile, preview and quote picture |
+| Whitney, Santiago, Sienna 3/4 Lite | 3/4 Lite designs, `sidelitePhoto` | the 3/4 grille sidelite, likewise |
+| Avignon 2/3 Lite | 2/3 Lite Avignon, `sidelitePhoto` | the 2/3 grille sidelite |
+| Blanco 2/3 Arch, Pecos 2/3 Arch | `decorativeGlass` Blanco / Pecos → `sidelites["2/3"]` | the 2/3 decorative sidelite glazed with that glass |
+| Caming Options | `caming` Patina / Zinc | swatches on the Caming question |
+| Imperial 2/3 Oval, Austin Full Oval | `decorativeGlass` Imperial / Austin, `unpriced` | nowhere: the sheet prices no oval door and no Imperial or Austin glass |
+| Blanco Deluxe Oval with Blanco 3/4 sidelites | Blanco `sidelites["3/4"]`, `unpriced` | nowhere: the sheet lists Columbia, Medina, Pecos and San Jacinto on the 3/4 sidelite, not Blanco |
+
+**Glass to glass.** The decorative galleries had mixed two kinds of picture:
+Pecos, Dartmouth, San Jacinto and Medina are photographed as the glass alone,
+while Columbia is a knotty alder door, and Blanco and Brazos are mahogany
+doors. The dealer chose glass to glass (2026-09-13), so a door's tile is the
+pane alone: cut from the knotty alder Columbia photograph, from the dealer's
+screen capture of page 30 of the 2026 hardwood catalog for Brazos (the door
+on that page is filed as the 2/3 Lite decorative door's own picture and as
+the Brazos preview, replacing the compressed PDF's soft one), and from the
+arch door in the dealer's Blanco composite
+(`pane` on the manifest entry). The doors in the middle of the dealer's
+Blanco and Pecos composites are filed too (`doors["2/3 Arch"]`), so choosing
+either on the 2/3 Arch Lite previews the mahogany door glazed with it; a
+glass with no such door previews the pane, as its tile did, rather than a
+door of another wood. A sidelite's tiles stay sidelite to sidelite, with the
+pane where no sidelite picture exists.
+
+A second Whitney composite, on reeded glass, was supplied too; the water-glass
+one cuts cleaner and is the one filed. The three unpriced pictures are on
+file so the dealer can decide whether to ask Hoelscher for those
+combinations; the quoter offers nothing from them.
+
+A sidelite's picture is now chosen the same way a door's is, one step truer:
+the sidelite matching the chosen grille, or the sidelite glazed with the
+chosen decorative glass, ahead of its generic catalog photograph. A door's
+pictures are unchanged. The knotty alder sidelites, and the mahogany designs
+with no sidelite picture yet (Balfour, Barcelona, Hammond, Saltillo,
+Southampton, and Cordoba on the 3/4 and 2/3), still show the door.
+
 ## What the catalogs we hold cannot supply
 
 Catalog pages held: wood 5-41 and 42-59, plus the 2025 fiberglass catalog.

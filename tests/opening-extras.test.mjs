@@ -216,10 +216,12 @@ ok('the fiberglass speakeasy cards the dealer does not sell are gone',
 ok('but the rows stay in the catalogue for reference',
    catalog.fiberglassProducts.some(p=>/w\/ ?Speakeasy/i.test(p.description||'')));
 
-/* ---- a part number with a placeholder nobody can fill ---- */
-/* The dealer's own print showed KACMCBLE3080- going onto an order sheet with a
-   trailing placeholder still in it. That number reaches Hoelscher, so the sheet
-   has to say it is incomplete rather than print it as though it were not. */
+/* ---- the trailing placeholder on the knotty alder Craftsman is the shelf ----
+   The dealer's own print once showed KACMCBLE3080- going onto an order sheet
+   with the trailing placeholder still in it. Catalog page 45 identifies it:
+   the Craftsman numbers are printed against a Shelf column, KACMCBLE3068S for
+   Shelf Yes and KACMCBLE3068 for Shelf No. The slot is filled from the shelf
+   answer now, so both doors order cleanly and nothing is flagged. */
 await page.evaluate(()=>{try{localStorage.clear();}catch(e){}});
 await page.goto(BASE+'/quoter/');
 await page.waitForSelector('#lineGate:not(.hidden)',{timeout:30000});
@@ -228,19 +230,42 @@ await page.waitForTimeout(700);
 await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/^Knotty Alder/.test(n.textContent.trim())).click();});
 await page.waitForSelector('#catalog article',{timeout:30000});
 const craft=catalog.woodProducts.find(p=>/-$/.test(p.sku||'')&&/Craftsman/.test(p.description||''));
-ok('the catalogue still prints a Craftsman number with a trailing placeholder',
+ok('the sheet still prints the Craftsman row with a trailing placeholder',
    !!craft, craft?craft.sku:'none');
-await open('KA Craftsman',{Size:"3'0\" x 8'0\"",Finish:'Unfinished',Opening:'Single door',
-  Handing:'Left hand',Swing:'Inswing','Jamb depth':'4-9/16'});
-await page.$$eval('#detail button',ns=>{const b=ns.find(x=>x.textContent.trim()==='Add to quote');if(b)b.click();});
-await page.waitForTimeout(600);
-await page.fill('#job_customer','Placeholder Test'); await page.waitForTimeout(150);
-await page.click('#printOrder'); await page.waitForTimeout(500);
-const order=await page.evaluate(()=>document.querySelector('#printDoc').textContent);
-ok('the order sheet warns that the number holds a placeholder',
-   /placeholder/i.test(order), (order.match(/[^.]*placeholder[^.]*\./i)||['not warned'])[0].trim().slice(0,110));
-ok('and names the number it applies to',
-   /KACM\w*-/.test(order), (order.match(/KACM\S*/)||['none'])[0]);
+const shelfSlot=((catalog.skuPlaceholders||{}).dentilShelf||[])
+  .find(x=>new RegExp(x.appliesToSkuPattern).test(craft?craft.sku:''));
+ok('and the catalogue identifies that slot as the shelf, with page 45 as the evidence',
+   !!shelfSlot && shelfSlot.codes.yes==='S' && shelfSlot.codes.no==='' &&
+   /KACMCBLE3068S/.test(shelfSlot.evidence) && /KACMCBLE3068\b/.test(shelfSlot.evidence) &&
+   /page 45/.test(shelfSlot.evidence), shelfSlot?shelfSlot.example:'no rule');
+const craftOrder=async want=>{
+  await page.evaluate(()=>{try{localStorage.clear();}catch(e){}});
+  await page.goto(BASE+'/quoter/');
+  await page.waitForSelector('#lineGate:not(.hidden)',{timeout:30000});
+  await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/^Wood/.test(n.textContent.trim())).click();});
+  await page.waitForTimeout(700);
+  await page.$$eval('#lineChoices button',ns=>{ns.find(n=>/^Knotty Alder/.test(n.textContent.trim())).click();});
+  await page.waitForSelector('#catalog article',{timeout:30000});
+  await open('KA Craftsman',{Glass:'Clear Bevel Low E',Size:"3'0\" x 6'8\"",Finish:'Unfinished',
+    'Dentil shelf':want,Opening:'Single door',Handing:'Left hand',Swing:'Inswing','Jamb depth':'4-9/16'});
+  await page.$$eval('#detail button',ns=>{const b=ns.find(x=>x.textContent.trim()==='Add to quote');if(b)b.click();});
+  await page.waitForTimeout(600);
+  await page.fill('#job_customer','Craftsman '+want); await page.waitForTimeout(150);
+  await page.click('#printOrder'); await page.waitForTimeout(500);
+  return page.evaluate(()=>document.querySelector('#printDoc').textContent);
+};
+const withShelfOrder=await craftOrder('With shelf');
+ok('a Craftsman ordered with the shelf prints KACMCBLE3068S, as page 45 does',
+   /KACMCBLE3068S/.test(withShelfOrder), (withShelfOrder.match(/KACM\S*/)||['none'])[0]);
+ok('and nothing is flagged as incomplete',
+   !/placeholder/i.test(withShelfOrder) && !/KACM\w*-/.test(withShelfOrder),
+   (withShelfOrder.match(/[^.]*placeholder[^.]*\./i)||['not flagged'])[0].trim().slice(0,110));
+const noShelfOrder=await craftOrder('No shelf');
+ok('without the shelf the trailing slot closes up: KACMCBLE3068',
+   /KACMCBLE3068(?!S)/.test(noShelfOrder) && !/placeholder/i.test(noShelfOrder),
+   (noShelfOrder.match(/KACM\S*/)||['none'])[0]);
+ok('so neither knotty alder Craftsman row is unsellable any more',
+   catalog.woodProducts.filter(p=>/^KACM--\d{4}-$/.test(p.sku||'')).length===2);
 
 /* ---- the trailing placeholder is handing ----
    The dealer supplied catalog page 10's numbers in full: M3GPWNSR2880L and

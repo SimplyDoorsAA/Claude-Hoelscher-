@@ -54,6 +54,7 @@ page.on('console',m=>{if(m.type()==='error'&&!/favicon|Failed to load resource/i
 page.on('requestfailed',q=>{ if(!/ERR_ABORTED/.test((q.failure()||{}).errorText||'')) errs.push('REQFAIL '+q.url()); });
 page.on('response',r=>{ if(r.status()>=400) errs.push(r.status()+' '+r.url()); });
 
+await page.addInitScript(()=>{window.print=()=>{};});
 await page.goto(BASE+'/quoter/'); await page.evaluate(()=>{try{localStorage.clear();}catch(e){}});
 await page.goto(BASE+'/quoter/');
 await page.waitForSelector('#lineGate:not(.hidden)',{timeout:30000});
@@ -204,6 +205,88 @@ const ph=await page.$eval('#detail .gallery',n=>({cols:getComputedStyle(n).gridT
 ok('two across on a phone, and no sideways scroll', ph.cols===2 && !ph.over, JSON.stringify(ph));
 ok('each still a real picture, not a thumbnail', ph.w>=150 && ph.h>=250, Math.round(ph.w)+'x'+Math.round(ph.h));
 await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+/* --- the sidelite pictures the dealer supplied, 2026-09-13 ----------------- */
+await page.setViewportSize({width:1024,height:1100}); await page.waitForTimeout(200);
+const dz=JSON.parse(fs.readFileSync(ROOT+'/quoter/assets/designs/manifest.json','utf8'));
+const slDesigns=grille.filter(g=>g.sidelitePhoto);
+ok('five mahogany grille designs carry the matching sidelite\'s picture: Cordoba Full, Whitney, Santiago and Sienna 3/4, Avignon 2/3',
+   slDesigns.length===5 && slDesigns.every(g=>g.line==='mahogany' && fs.existsSync(ROOT+'/quoter/assets/designs/'+g.sidelitePhoto)) &&
+   ['Full Lite-Cordoba','3/4 Lite-Whitney','3/4 Lite-Santiago','3/4 Lite-Sienna','2/3 Lite-Avignon'].every(k=>slDesigns.some(g=>g.style+'-'+g.name===k)),
+   slDesigns.map(g=>g.style+' '+g.name).join(' | '));
+ok('and the designs manifest records each beside the design, filed by hand',
+   slDesigns.every(g=>(dz.grilles['mahogany-'+g.style+'-'+g.name]||{}).sideliteFile===g.sidelitePhoto && dz.grilles['mahogany-'+g.style+'-'+g.name].handFiled));
+ok('Blanco and Pecos carry a 2/3 sidelite picture', ['Blanco','Pecos'].every(n=>(dz.decorativeGlass[n].sidelites||{})['2/3'] && fs.existsSync(ROOT+'/quoter/assets/designs/'+dz.decorativeGlass[n].sidelites['2/3'])));
+ok('Imperial, Austin and Blanco 3/4 are on file but marked unpriced, and neither Imperial nor Austin is a glass the sheet names',
+   dz.decorativeGlass.Imperial && dz.decorativeGlass.Imperial.unpriced['2/3'] && !dz.decorativeGlass.Imperial.file &&
+   dz.decorativeGlass.Austin && dz.decorativeGlass.Austin.unpriced.Full && !dz.decorativeGlass.Austin.file &&
+   dz.decorativeGlass.Blanco.unpriced['3/4'] && !(cat.decorativeGlassDesigns||[]).some(d=>/^(Imperial|Austin)$/.test(d.name)));
+ok('the two caming swatches are on file', ['Patina','Zinc'].every(n=>dz.caming[n] && fs.existsSync(ROOT+'/quoter/assets/designs/'+dz.caming[n].file)));
+
+const tileSrcs=()=>page.$$eval('#detail .gallery .tile',ns=>ns.map(t=>[t.querySelector('.optlabel').textContent, decodeURIComponent((t.querySelector('.ph img')||{}).getAttribute?.('src')||'')]));
+await open('Full Lite Sidelite Iron Grille');
+const fsl=Object.fromEntries(await tileSrcs());
+ok('a grille sidelite\'s gallery shows the sidelite itself where one is on file: Cordoba', /grille-mahogany-full-lite-cordoba-sidelite\.webp$/.test(fsl.Cordoba||''), fsl.Cordoba);
+ok('and the door for the designs with no sidelite picture yet', /grille-mahogany-full-lite-avignon\.webp$/.test(fsl.Avignon||''), fsl.Avignon);
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await open('3/4 Lite Sidelite Iron Grille');
+const s34=Object.fromEntries(await tileSrcs());
+ok('the 3/4 grille sidelite shows Whitney, Santiago and Sienna as sidelites', ['whitney','santiago','sienna'].every(n=>new RegExp('grille-mahogany-3-4-lite-'+n+'-sidelite\\.webp$').test(s34[n[0].toUpperCase()+n.slice(1)]||'')), JSON.stringify(s34));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await open('3/4 Lite Iron Grille');
+const d34=Object.fromEntries(await tileSrcs());
+ok('while the door\'s own gallery still shows the doors', /grille-mahogany-3-4-lite-whitney\.webp$/.test(d34.Whitney||''), d34.Whitney);
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+await open('2/3 Sidelite - Decorative Glass');
+const dsl=Object.fromEntries(await tileSrcs());
+ok('the 2/3 decorative sidelite shows the Pecos sidelite, and Brazos as the glass', /glass-pecos-2-3-sidelite\.webp$/.test(dsl.Pecos||'') && /glass-brazos-pane\.webp$/.test(dsl.Brazos||''), JSON.stringify(dsl));
+await pick('Glass','Pecos');
+const pv=await page.$eval('#detail .preview img',n=>decodeURIComponent(n.getAttribute('src')));
+ok('choosing Pecos previews that sidelite', /glass-pecos-2-3-sidelite\.webp$/.test(pv), pv);
+const cam=await page.$$eval('#detail .steprow .opt .camingswatch img',ns=>ns.map(i=>decodeURIComponent(i.getAttribute('src'))));
+ok('and the caming question shows the two swatches, Patina and Zinc', cam.length===2 && /caming-patina\.webp$/.test(cam[0]) && /caming-zinc\.webp$/.test(cam[1]), cam.join(' '));
+ok('the gallery never offers Imperial, Austin or a Blanco 3/4 sidelite', Object.keys(dsl).join()==='Brazos,Pecos');
+
+/* --- glass to glass: a door's tiles are the panes alone ------------------- */
+ok('Columbia, Blanco and Brazos carry a pane cut from their door photographs; the glasses photographed alone need none',
+   ['Columbia','Blanco','Brazos'].every(n=>dz.decorativeGlass[n].pane && fs.existsSync(ROOT+'/quoter/assets/designs/'+dz.decorativeGlass[n].pane)) &&
+   ['Pecos','Dartmouth','San Jacinto','Medina'].every(n=>!dz.decorativeGlass[n].pane), Object.keys(dz.decorativeGlass).filter(n=>dz.decorativeGlass[n].pane).join(' | '));
+ok('and Blanco and Pecos carry the mahogany 2/3 Arch door glazed with them, from the dealer\'s pictures',
+   ['Blanco','Pecos'].every(n=>(dz.decorativeGlass[n].doors||{})['2/3 Arch'] && fs.existsSync(ROOT+'/quoter/assets/designs/'+dz.decorativeGlass[n].doors['2/3 Arch'])));
+await open('Full Lite - Decorative Glass');
+const fdec=Object.fromEntries(await tileSrcs());
+ok('the Full Lite decorative gallery compares glass to glass: Columbia is its pane, not a knotty alder door', /glass-columbia-pane\.webp$/.test(fdec.Columbia||'') && /glass-pecos\.webp$/.test(fdec.Pecos||'') && /glass-dartmouth\.webp$/.test(fdec.Dartmouth||''), JSON.stringify(fdec));
+await pick('Glass','Columbia');
+const cpv=await page.$eval('#detail .preview img',n=>decodeURIComponent(n.getAttribute('src')));
+ok('and choosing Columbia previews the Columbia pane, not the knotty alder door', /glass-columbia-pane\.webp$/.test(cpv), cpv);
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await open('2/3 Arch Lite - Decorative Glass');
+const adec=Object.fromEntries(await tileSrcs());
+ok('the 2/3 Arch gallery shows the Pecos glass and the Blanco arch pane', /glass-pecos\.webp$/.test(adec.Pecos||'') && /glass-blanco-pane\.webp$/.test(adec.Blanco||''), JSON.stringify(adec));
+await pick('Glass','Pecos');
+const apv=await page.$eval('#detail .preview img',n=>decodeURIComponent(n.getAttribute('src')));
+ok('and choosing Pecos previews the mahogany arch door glazed with Pecos, from the dealer\'s picture', /glass-pecos-2-3-arch-door\.webp$/.test(apv), apv);
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await open('Full Lite Sidelite Iron Grille');
+const fslSub=await page.$$eval('#detail .gallery .tile',ns=>ns.map(t=>[t.querySelector('.optlabel').textContent,(t.querySelector('.optsub')||{}).textContent||'']));
+ok('a grille sidelite\'s tile that shows the door says so, and the Cordoba sidelite tile does not', fslSub.some(([n,s])=>n==='Avignon'&&/shown on the door/.test(s)) && fslSub.some(([n,s])=>n==='Cordoba'&&!/shown on the door/.test(s)), JSON.stringify(fslSub));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await page.fill('#q','Decorative'); await page.waitForTimeout(600);
+const badgePos=await page.$$eval('#catalog article',ns=>ns.slice(0,4).map(a=>{const b=a.querySelector('.designbadge'), s=a.querySelector('.designstrip'); if(!b||!s) return null; const rb=b.getBoundingClientRect(), rs=s.getBoundingClientRect(); return {overlap: rb.bottom>rs.top && rb.right>rs.left && rb.left<rs.right, top: rb.top < rs.top};}).filter(Boolean));
+ok('the design badge sits clear of the three-picture strip on every card', badgePos.length>0 && badgePos.every(p=>!p.overlap && p.top), JSON.stringify(badgePos));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+/* a door and its grille sidelite on the order sheet */
+await open('3/4 Lite Iron Grille');
+await pick('Grille design','Whitney'); await pick('Size',"3'0\" x 6'8\""); await pick('Glass','Clear Low E'); await pick('Finish','Unfinished'); await pick('Opening','Single + 1 sidelite');
+await pick('Sidelite','3/4 Lite Sidelite Iron Grille'); await pick('Handing','Left'); await pick('Swing','Inswing'); await pick('Jamb depth','4-9/16');
+await page.$eval('#detail button.bg-forest',n=>n.click()); await page.waitForTimeout(500);
+await page.fill('#job_customer','Sidelite pictures'); await page.waitForTimeout(150);
+await page.click('#printOrder'); await page.waitForTimeout(800);
+const docImgs=await page.$$eval('#printDoc img',ns=>ns.map(i=>i.className+' '+decodeURIComponent(i.getAttribute('src'))));
+ok('the order sheet shows the Whitney door and, beside it, the Whitney sidelite',
+   docImgs.some(s=>/^pd-artimg .*grille-mahogany-3-4-lite-whitney\.webp$/.test(s)) && docImgs.some(s=>/^pd-miniimg .*grille-mahogany-3-4-lite-whitney-sidelite\.webp$/.test(s)), docImgs.join(' | '));
 
 ok('no console, page or request errors', errs.length===0, errs.slice(0,3).join(' | '));
 report();

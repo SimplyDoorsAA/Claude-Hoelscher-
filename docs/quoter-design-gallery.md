@@ -61,6 +61,23 @@ heading). The glass swatches behind a grille grew from 36 to 56 px.
   knotty alder 3/4 Lite RM flat door has no picture yet) the card falls back
   to what it showed before, and still carries the badge.
 
+## Sidelites, since the same afternoon
+
+The dealer supplied Hoelscher's "door with sidelites" pictures for five
+grille designs and two decorative glasses, and the caming strip
+(`docs/photography.md`, "Supplied by the dealer"). A grille or decorative
+sidelite's gallery now shows the sidelite itself where one is on file and
+the door otherwise; the preview, the quote drawer and both printed documents
+follow; and the Caming question shows the Patina and Zinc swatches.
+
+Later the same evening, from the dealer's screenshots of the live site: the
+card's design badge moved to the top-right corner, where it no longer
+collides with the three-picture strip on a narrow sidelite card; a grille
+sidelite's tile that shows the door says "shown on the door"; and a
+decorative door's gallery compares glass to glass, every tile the pane
+alone, with the preview showing a door glazed with the chosen glass where
+the dealer's pictures supply one (`docs/photography.md`, "Glass to glass").
+
 ## What did not change
 
 - The rules: which designs a door offers, which sizes each is made in, the
@@ -76,7 +93,7 @@ heading). The glass swatches behind a grille grew from 36 to 56 px.
 
 ## Verification
 
-`tests/design-gallery.test.mjs`, 41 checks: the card rule (plain-glass
+`tests/design-gallery.test.mjs`, 63 checks: the card rule (plain-glass
 twin, badge, three-design strip, none on a flat door), the gallery (full
 width, no preview column, eight tiles with photographs and magnifiers, three
 across, tile size, names and sizes under each), the lightbox (opens the

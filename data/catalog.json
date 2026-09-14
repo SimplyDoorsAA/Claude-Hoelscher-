@@ -21133,7 +21133,8 @@
       "nameBasis": "caption",
       "notes": "Mahogany catalog page 36. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
       "id": "fb6a1da8a4",
-      "photo": "grille-mahogany-2-3-lite-avignon.webp"
+      "photo": "grille-mahogany-2-3-lite-avignon.webp",
+      "sidelitePhoto": "grille-mahogany-2-3-lite-avignon-sidelite.webp"
     },
     {
       "name": "Barcelona",
@@ -21343,7 +21344,8 @@
       "nameBasis": "caption",
       "notes": "Mahogany catalog page 39. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
       "id": "d5fdb35d1f",
-      "photo": "grille-mahogany-3-4-lite-santiago.webp"
+      "photo": "grille-mahogany-3-4-lite-santiago.webp",
+      "sidelitePhoto": "grille-mahogany-3-4-lite-santiago-sidelite.webp"
     },
     {
       "name": "Sienna",
@@ -21366,7 +21368,8 @@
       "nameBasis": "caption",
       "notes": "Mahogany catalog page 39. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12. The page prints a 3680 number too, but the sheet prices no 3/4 Lite Iron Grille in 3680, so that size is not offered; on the Hoelscher list.",
       "id": "91caa8a20d",
-      "photo": "grille-mahogany-3-4-lite-sienna.webp"
+      "photo": "grille-mahogany-3-4-lite-sienna.webp",
+      "sidelitePhoto": "grille-mahogany-3-4-lite-sienna-sidelite.webp"
     },
     {
       "name": "Southampton",
@@ -21410,7 +21413,8 @@
       "nameBasis": "caption",
       "notes": "Mahogany catalog page 39. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12. The page prints a 3680 number too, but the sheet prices no 3/4 Lite Iron Grille in 3680, so that size is not offered; on the Hoelscher list.",
       "id": "82e41aed83",
-      "photo": "grille-mahogany-3-4-lite-whitney.webp"
+      "photo": "grille-mahogany-3-4-lite-whitney.webp",
+      "sidelitePhoto": "grille-mahogany-3-4-lite-whitney-sidelite.webp"
     },
     {
       "name": "Avignon",
@@ -21467,7 +21471,8 @@
       "nameBasis": "caption",
       "notes": "Mahogany catalog page 40. The grille is the same pattern the knotty alder pages photograph, so the knotty alder picture stands in until the mahogany page is extracted. Walked with the dealer 2026-09-12.",
       "id": "547b872097",
-      "photo": "grille-mahogany-full-lite-cordoba.webp"
+      "photo": "grille-mahogany-full-lite-cordoba.webp",
+      "sidelitePhoto": "grille-mahogany-full-lite-cordoba-sidelite.webp"
     },
     {
       "name": "Hammond",
@@ -22213,6 +22218,19 @@
         "confirmedBy": "dealer, 2026-09-12",
         "evidence": "Catalog page 25 lists the numbers in full beside the caming: MCABLAP3068 Patina, MCABLAZ3068 Zinc. The placeholder after the design infix BLA is the caming letter, not a glass code.",
         "example": "MCABLAP3068"
+      }
+    ],
+    "dentilShelf": [
+      {
+        "id": "knotty-alder-craftsman-shelf",
+        "appliesToSkuPattern": "^KACM--\\d{4}-$",
+        "codes": {
+          "yes": "S",
+          "no": ""
+        },
+        "confirmedBy": "dealer's capture of catalog page 45, 2026-09-14",
+        "evidence": "2026 hardwood catalog page 45, Knotty Alder True Divided Lite, Craftsman: the part numbers are printed against a Shelf column — KACMCBLE3068S Shelf: Yes, KACMCBLE3068 Shelf: No, KACMCBLE3080S Yes, KACMCBLE3080 No. CBLE is the Clear Bevel Low-E code filling the sheet's leading (--), which leaves the trailing single dash of KACM--3068- as the shelf slot: S with the shelf, nothing without. The sheet prices one row per size, so the shelf costs nothing, as on the mahogany Craftsman.",
+        "example": "KACMCBLE3068S"
       }
     ],
     "speakeasyGlass": [
