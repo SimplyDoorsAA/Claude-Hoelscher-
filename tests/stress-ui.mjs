@@ -389,6 +389,108 @@ ok('the page itself never scrolls sideways on a phone',
    await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1));
 await page.screenshot({path:OUT+'/s3-mobile-config.png'});
 
+/* --- the price and the Add button stay under the thumb on a phone -------
+   The questions run well past the fold, so reaching Add used to mean
+   scrolling the whole sheet. The bar is pinned to the foot of the sheet
+   while the answers scroll behind it. */
+const finish=async()=>{
+  for(let i=0;i<24;i++){
+    const can=await page.$$eval('#detail button',
+      ns=>!!ns.find(x=>x.textContent.trim()==='Add to quote'&&!x.disabled)).catch(()=>false);
+    if(can) return true;
+    const picked=await page.$$eval('#detail .steprow',rows=>{
+      for(let i=rows.length-1;i>=0;i--){
+        const b=rows[i].querySelector('button.opt:not([disabled])[aria-pressed="false"]');
+        if(b){b.click();return true;} } return false;}).catch(()=>false);
+    if(!picked) return false;
+    await page.waitForTimeout(240);
+  }
+  return false;
+};
+ok('the phone sheet can be answered through to a price', await finish());
+const pinned=async()=>page.evaluate(()=>{
+  const bar=document.querySelector('#detail .addbar');
+  if(!bar) return null;
+  const r=bar.getBoundingClientRect();
+  return {h:Math.round(r.height), bottom:Math.round(r.bottom), vh:window.innerHeight,
+          onScreen:r.top<window.innerHeight&&r.bottom>0,
+          price:/\$[\d,]+\.\d\d/.test(bar.textContent),
+          add:!!bar.querySelector('#addBarBtn')};
+});
+const atFoot=await pinned();
+ok('a price and an Add button are pinned to the foot of the phone sheet',
+   !!atFoot && atFoot.onScreen && atFoot.price && atFoot.add, JSON.stringify(atFoot));
+ok('and the bar sits at the bottom edge of the viewport',
+   atFoot.bottom<=atFoot.vh+2 && atFoot.bottom>=atFoot.vh-2, atFoot.bottom+' vs '+atFoot.vh);
+// Scroll the sheet back to its first question: the bar must not go with it.
+await page.$eval('#detail',n=>{n.scrollTop=0;}); await page.waitForTimeout(300);
+const atTop=await pinned();
+ok('and it stays there when the answers scroll behind it',
+   atTop.onScreen && atTop.bottom<=atTop.vh+2, JSON.stringify(atTop));
+// The pinned button and the one in the block below must do the same thing.
+const before=Number(await page.textContent('#quoteCount'));
+await page.click('#addBarBtn'); await page.waitForTimeout(800);
+ok('tapping the pinned button puts the door on the quote',
+   Number(await page.textContent('#quoteCount'))>before,
+   before+' -> '+(await page.textContent('#quoteCount')));
+ok('the desktop quote strip stays off a phone, which has its own bar',
+   !(await page.isVisible('#quoteStrip')) && (await page.isVisible('#mobileBar')));
+await page.screenshot({path:OUT+'/s5-phone-addbar.png'});
+
+/* --- the running quote, above the catalogue on a desktop ---------------- */
+await page.click('#closeQuote').catch(()=>{}); await page.waitForTimeout(300);
+await page.setViewportSize({width:1440,height:900}); await page.waitForTimeout(700);
+ok('the pinned phone bar is not shown on a desktop, where the sheet fits',
+   !(await page.isVisible('#detail .addbar')));
+await page.keyboard.press('Escape'); await page.waitForTimeout(400);
+ok('the quote strip is shown once the quote has lines', await page.isVisible('#quoteStrip'));
+const stripTxt=(await page.textContent('#quoteStrip')).replace(/\s+/g,' ').trim();
+const drawerTotal=(await page.$eval('#quoteTotals .font-display.text-2xl',n=>n.textContent)).trim();
+ok('and its total is the drawer total, to the cent',
+   stripTxt.includes(drawerTotal), stripTxt+'  vs drawer '+drawerTotal);
+ok('it names the tier the prices are at',
+   /Retail pricing|Builder pricing|your cost/.test(stripTxt), stripTxt);
+// It rides inside the sticky filter bar, so it survives scrolling the catalogue.
+await page.evaluate(()=>window.scrollTo(0,1200)); await page.waitForTimeout(400);
+ok('and it stays on screen as the catalogue scrolls', await page.evaluate(()=>{
+  const r=document.querySelector('#quoteStrip').getBoundingClientRect();
+  return r.top>=0 && r.bottom<=window.innerHeight;}));
+await page.evaluate(()=>window.scrollTo(0,0)); await page.waitForTimeout(300);
+await page.click('#stripOpen'); await page.waitForTimeout(500);
+ok('Open quote on the strip opens the drawer',
+   (await page.getAttribute('#drawer','data-open'))==='true');
+await page.click('#closeQuote'); await page.waitForTimeout(400);
+
+/* The job details live in the drawer, and the strip can be reached without
+   ever opening it. An unnamed quote must not print an estimate addressed to
+   nobody — and spend a quote number doing it. */
+await page.fill('#job_customer',''); await page.waitForTimeout(300);
+ok('an unnamed quote offers to name itself rather than to print',
+   (await page.textContent('#stripPrint')).trim()==='Name this quote',
+   (await page.textContent('#stripPrint')).trim());
+await page.evaluate(()=>{document.querySelector('#printDoc').textContent='';});
+await page.click('#stripPrint'); await page.waitForTimeout(500);
+ok('and pressing it opens the drawer at the customer field, printing nothing',
+   (await page.getAttribute('#drawer','data-open'))==='true' &&
+   (await page.evaluate(()=>document.activeElement.id))==='job_customer' &&
+   (await page.evaluate(()=>document.querySelector('#printDoc').textContent.trim()))==='',
+   await page.evaluate(()=>document.activeElement.id));
+await page.fill('#job_customer','Strip Test'); await page.waitForTimeout(400);
+await page.click('#closeQuote'); await page.waitForTimeout(400);
+ok('once it is named the button prints',
+   (await page.textContent('#stripPrint')).trim()==='Print quote',
+   (await page.textContent('#stripPrint')).trim());
+await page.click('#stripPrint'); await page.waitForTimeout(900);
+ok('and printing from the strip produces the same estimate the drawer does',
+   await page.evaluate(()=>/SD-\d+/.test(document.querySelector('#printDoc').textContent) &&
+                           /Customer Signature/.test(document.querySelector('#printDoc').textContent)));
+await page.screenshot({path:OUT+'/s6-quote-strip.png'});
+await page.click('#quoteTotals button:has-text("Clear")').catch(()=>{});
+await page.click('#openQuote').catch(()=>{}); await page.waitForTimeout(300);
+await page.click('#quoteTotals button:has-text("Clear")').catch(()=>{}); await page.waitForTimeout(500);
+await page.click('#closeQuote').catch(()=>{}); await page.waitForTimeout(400);
+ok('and it goes away again when the quote is cleared', !(await page.isVisible('#quoteStrip')));
+
 /* ------------------- a third line, and the header chip -------------------
    With two lines the chip means "the other one" and goes straight there. The
    catalogue is split by vendor price sheet, so a third sheet makes a third
