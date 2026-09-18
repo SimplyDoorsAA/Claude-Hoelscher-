@@ -71,6 +71,44 @@ ok('the published catalog has no page reference left in a glass field',
    issues.glassErr===0, String(issues.glassErr));
 ok('and otherwise validates clean', issues.errors===0, String(issues.errors));
 
+/* A price update is done with the cost line showing, and the grid is driven
+   from the keyboard: Enter walks down the column, Ctrl+Arrow across it, and
+   focusing a price selects it so the new figure types straight over the old.
+   Showing the cost line used to take all three away from every money cell. */
+await page.click('button[role="tab"]:has-text("Wood Products")');
+await page.waitForTimeout(600);
+const moneySel = '.pane.active td.g-unf input.money';
+const wiredWithCost = async () => {
+  await page.$eval(moneySel, n => n.focus());
+  const before = await page.evaluate(() => {
+    const a = document.activeElement;
+    return { r: a.dataset.r, c: a.dataset.c, selected: a.selectionStart === 0 && a.selectionEnd === a.value.length };
+  });
+  await page.keyboard.press('Enter');
+  const after = await page.evaluate(() => {
+    const a = document.activeElement;
+    return { r: a.dataset.r, c: a.dataset.c };
+  });
+  return { before, after };
+};
+const plain = await wiredWithCost();
+ok('Enter walks down a price column', plain.after.r === String(Number(plain.before.r) + 1) &&
+   plain.after.c === plain.before.c, plain.before.r + ',' + plain.before.c + ' -> ' + plain.after.r + ',' + plain.after.c);
+ok('and focusing a price selects it', plain.before.selected === true, String(plain.before.selected));
+
+await page.click('#btnCost');
+await page.waitForTimeout(500);
+ok('the cost line is showing', await page.isVisible('.pane.active span.costline'));
+const withCost = await wiredWithCost();
+ok('Enter still walks down the column with the cost line showing',
+   withCost.after.r === String(Number(withCost.before.r) + 1) && withCost.after.c === withCost.before.c,
+   withCost.before.r + ',' + withCost.before.c + ' -> ' + withCost.after.r + ',' + withCost.after.c);
+ok('and a price is still selected on focus', withCost.before.selected === true, String(withCost.before.selected));
+await page.click('#btnCost');
+await page.waitForTimeout(400);
+await page.click('button[role="tab"]:has-text("Pricing Rules")');
+await page.waitForTimeout(400);
+
 // nothing may look modified on a clean load
 const dirty=await page.textContent('body');
 ok('a clean load reports no unsaved changes', !/unsaved|modified/i.test(
