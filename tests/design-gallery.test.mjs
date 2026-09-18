@@ -288,6 +288,63 @@ const docImgs=await page.$$eval('#printDoc img',ns=>ns.map(i=>i.className+' '+de
 ok('the order sheet shows the Whitney door and, beside it, the Whitney sidelite',
    docImgs.some(s=>/^pd-artimg .*grille-mahogany-3-4-lite-whitney\.webp$/.test(s)) && docImgs.some(s=>/^pd-miniimg .*grille-mahogany-3-4-lite-whitney-sidelite\.webp$/.test(s)), docImgs.join(' | '));
 
+/* ------------------------- the dialogs keep the keyboard -----------------
+   The gallery, the drawer and the lightbox are modal. Tab used to walk
+   straight out of the open sheet and into the catalogue behind it, so a
+   keyboard user carried on answering questions they could no longer see. */
+const inDialog = sel => page.evaluate(s => {
+  const d = document.querySelector(s), a = document.activeElement;
+  return !!d && d.contains(a);
+}, sel);
+const tabAround = async (sel, n) => {
+  for (let i = 0; i < n; i++) { await page.keyboard.press('Tab'); await page.waitForTimeout(40); }
+  return inDialog(sel);
+};
+
+// The drawer is left open by the order-sheet checks above.
+await page.click('#closeQuote').catch(()=>{});
+await page.waitForTimeout(300);
+await page.click('#clearFilters').catch(()=>{});
+await page.waitForTimeout(300);
+/* Opened the way a person opens it — the card button is focused, then
+   pressed — so there is somewhere real to hand the keyboard back to. */
+await page.fill('#q','3/4 Lite Iron Grille'); await page.waitForTimeout(500);
+await page.$$eval('#catalog article',(ns,n)=>{
+  const a=ns.find(a=>a.querySelector('h3').textContent.trim()===n);
+  const btn=a.querySelector('button'); btn.focus(); btn.click();
+},'3/4 Lite Iron Grille');
+await page.waitForSelector('#detail:not(.hidden)'); await page.waitForTimeout(600);
+ok('opening the sheet puts the keyboard inside it', await inDialog('#detail'));
+ok('and forty tabs never take it out again', await tabAround('#detail', 40));
+ok('shift-tab stays inside too', await (async () => {
+  for (let i = 0; i < 25; i++) { await page.keyboard.down('Shift'); await page.keyboard.press('Tab'); await page.keyboard.up('Shift'); await page.waitForTimeout(40); }
+  return inDialog('#detail');
+})());
+
+/* The sheet redraws on every answer, which destroys the button that had
+   focus. The next Tab has to land back in the sheet, not on the page under it. */
+await pick('Grille design','Whitney');
+await page.keyboard.press('Tab'); await page.waitForTimeout(80);
+ok('answering a question and tabbing again stays in the sheet', await inDialog('#detail'));
+
+await page.$eval('#detail .tile .zoombtn, #detail .preview .zoombtn', n=>n.click());
+await page.waitForTimeout(300);
+ok('the lightbox takes the keyboard from the sheet', await inDialog('#lightbox'));
+ok('and holds it', await tabAround('#lightbox', 12));
+await page.keyboard.press('Escape'); await page.waitForTimeout(250);
+ok('closing the lightbox hands the keyboard back to the sheet', await inDialog('#detail'));
+
+await page.keyboard.press('Escape'); await page.waitForTimeout(250);
+ok('and closing the sheet hands it back to the catalogue',
+   await page.evaluate(()=> !!document.activeElement.closest('#catalog article')));
+
+await page.click('#openQuote'); await page.waitForTimeout(400);
+ok('the quote drawer takes the keyboard', await inDialog('#drawer'));
+ok('and holds it', await tabAround('#drawer', 30));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+ok('and hands it back to the button that opened it',
+   await page.evaluate(()=> document.activeElement.id === 'openQuote'));
+
 ok('no console, page or request errors', errs.length===0, errs.slice(0,3).join(' | '));
 report();
 await b.close(); srv.close();

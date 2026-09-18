@@ -244,6 +244,37 @@ const again=await page.evaluate(()=>(document.querySelector('#printDoc').textCon
 ok('a quote keeps its number until the quote is cleared', again===first,
    'SD-'+first+' then SD-'+again);
 
+/* Labor is the one figure on a signed document that the office types by hand.
+   Text the parser cannot read used to come back as zero, so a fat-fingered
+   "1500.555" printed a job total short by the whole labor figure with nothing
+   on screen to say so. */
+await page.click('#openQuote').catch(()=>{});
+await page.waitForTimeout(200);
+const laborState = async text => {
+  await page.fill('#job_labor', text);
+  await page.waitForTimeout(220);
+  return page.evaluate(() => ({
+    flagged: document.querySelector('#job_labor').classList.contains('bad'),
+    warned: /does not read as a money amount/.test(document.querySelector('#quoteTotals').textContent),
+    shown: (document.querySelector('#quoteTotals').textContent.match(/Labor(\$[\d,]+\.\d\d)/) || [])[1] || null
+  }));
+};
+const labOk = await laborState('1500.50');
+ok('a labor figure the parser reads is not flagged', !labOk.flagged && !labOk.warned, JSON.stringify(labOk));
+ok('and the drawer echoes it to the cent', labOk.shown === '$1,500.50', String(labOk.shown));
+const labBad = await laborState('1500.555');
+ok('a labor figure the parser cannot read marks the field', labBad.flagged, JSON.stringify(labBad));
+ok('and says so in the drawer rather than billing nothing in silence', labBad.warned, JSON.stringify(labBad));
+ok('while the figure it would bill is shown as the zero it is',
+   labBad.shown === '$0.00', String(labBad.shown));
+const words = await laborState('fifteen hundred');
+ok('words in the labor field are caught the same way', words.flagged && words.warned, JSON.stringify(words));
+const cleared = await laborState('');
+ok('and an empty labor field is not an error', !cleared.flagged && !cleared.warned, JSON.stringify(cleared));
+await page.fill('#job_labor', '1500.00'); await page.waitForTimeout(220);
+await page.click('#closeQuote').catch(()=>{});
+await page.waitForTimeout(200);
+
 ok('no console or page errors', !errs.length, errs.slice(0,3).join(' | '));
 
 console.log(T.join('\n'));

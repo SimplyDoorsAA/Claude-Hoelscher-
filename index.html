@@ -1155,6 +1155,14 @@ function buildCell(kind, row, col, r, c){
   const input = el("input",{ type:"text", class:"cell", dataset:{r:String(r), c:String(c)},
                              autocomplete:"off", spellcheck:"false" });
   if(col.listId){ input.setAttribute("list", col.listId); }
+  /* Wired here rather than at the foot of this function: the money branch
+     returns early when the cost line is showing, and wiring it at the end
+     left every price cell without Enter/arrow navigation in exactly the mode
+     a price update is done in. */
+  input.addEventListener("keydown", gridKeys);
+  if(col.kind==="money" || col.kind==="number"){
+    input.addEventListener("focus", ()=> setTimeout(()=>{ try{ input.select(); }catch(e){} }, 0));
+  }
 
   if(col.kind==="money"){
     input.classList.add("money");
@@ -1235,10 +1243,6 @@ function buildCell(kind, row, col, r, c){
     if(col.required && input.value.trim()==="") input.classList.add("bad");
   }
 
-  input.addEventListener("keydown", gridKeys);
-  if(col.kind==="money" || col.kind==="number"){
-    input.addEventListener("focus", ()=> setTimeout(()=>{ try{ input.select(); }catch(e){} }, 0));
-  }
   td.appendChild(input);
   return td;
 }

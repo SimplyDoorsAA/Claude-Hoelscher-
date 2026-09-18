@@ -389,6 +389,74 @@ ok('the page itself never scrolls sideways on a phone',
    await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1));
 await page.screenshot({path:OUT+'/s3-mobile-config.png'});
 
+/* ------------------- a third line, and the header chip -------------------
+   With two lines the chip means "the other one" and goes straight there. The
+   catalogue is split by vendor price sheet, so a third sheet makes a third
+   line on its own — and then there is no "the other one" to go to. The chip
+   used to jump to whichever the catalogue listed first, silently. It should
+   ask instead, the same way the app asked on the first screen. */
+const three = JSON.parse(JSON.stringify(cat));
+three.steelProducts = cat.woodProducts.filter(p => p.type === 'door').slice(0, 6)
+  .map((p, i) => Object.assign({}, p, {
+    id: 'steeltest' + i, sku: 'ST' + i + (p.sku || ''), line: 'steel',
+    description: p.description.replace(/^(\d{4,5}[A-Z]?\s+)?/, '$1Steel ')
+  }));
+const p3 = await (await b.newContext({viewport:{width:1500,height:1000}})).newPage();
+const errs3 = [];
+p3.on('pageerror', e => errs3.push(e.message));
+p3.on('console', m => { if (m.type()==='error' && !/Failed to load resource/.test(m.text())) errs3.push(m.text()); });
+await p3.route('**/data/catalog.json', r =>
+  r.fulfill({status:200, contentType:'application/json', body: JSON.stringify(three)}));
+await p3.goto(BASE + '/quoter/');
+await p3.waitForSelector('#lineGate:not(.hidden)', {timeout:30000});
+const gateTitles = () => p3.$$eval('#lineChoices h3', ns => ns.map(n => n.textContent.trim()));
+ok('a third price sheet becomes a third line on the opening screen',
+   (await gateTitles()).length === 3, (await gateTitles()).join(' | '));
+
+await p3.click('#lineChoices button:has-text("Wood")'); await p3.waitForTimeout(500);
+await p3.click('#lineChoices button:has-text("Mahogany")'); await p3.waitForTimeout(900);
+await p3.waitForSelector('#catalog article', {timeout:30000});
+await p3.$eval('#catalog article button', n => n.click()); await p3.waitForTimeout(600);
+/* Answer whatever this door happens to ask — which door it is does not matter
+   here, only that the quote ends up holding one from the wood line. */
+for (let i = 0; i < 20; i++) {
+  const add = await p3.$$eval('#detail button',
+    ns => { const b = ns.find(x => x.textContent.trim() === 'Add to quote' && !x.disabled);
+            if (!b) return false; b.click(); return true; }).catch(() => false);
+  if (add) break;
+  // The answered steps stay on the sheet, so it is the LAST block that holds
+  // the question still open.
+  const picked = await p3.$$eval('#detail .steprow',
+    rows => { for (let i = rows.length - 1; i >= 0; i--) {
+      const b = rows[i].querySelector('button.opt:not([disabled])[aria-pressed="false"]');
+      if (b) { b.click(); return true; } } return false; }).catch(() => false);
+  if (!picked) break;
+  await p3.waitForTimeout(260);
+}
+await p3.waitForTimeout(600);
+// Whatever happened above, nothing modal may be left over the header.
+await p3.keyboard.press('Escape'); await p3.waitForTimeout(250);
+await p3.keyboard.press('Escape'); await p3.waitForTimeout(350);
+const held = await p3.textContent('#quoteCount');
+ok('a wood door is on the quote', Number(held) > 0, held);
+
+await p3.click('#lineChip'); await p3.waitForTimeout(500);
+ok('the chip still asks about the quote before leaving the line',
+   await p3.isVisible('text=Start fresh'));
+ok('and does not name a line it cannot know the dealer wants',
+   await p3.isVisible('text=Switch line?'),
+   (await p3.textContent('[role="dialog"] h3').catch(()=>'')) || '');
+await p3.click('button:has-text("Keep them")'); await p3.waitForTimeout(700);
+ok('it puts the three choices back up rather than jumping to the first',
+   (await p3.isVisible('#lineGate')) && (await gateTitles()).length === 3,
+   (await gateTitles()).join(' | '));
+await p3.click('#lineChoices button:has-text("Fiberglass")'); await p3.waitForTimeout(1200);
+const chipNow = (await p3.textContent('#lineChipLabel')).trim();
+ok('and the line the dealer picked is the one shown', chipNow === 'Fiberglass', chipNow || '(blank)');
+const heldNow = await p3.textContent('#quoteCount');
+ok('with the wood door still on the quote', heldNow === held, heldNow + ' vs ' + held);
+ok('no console or page errors on the three-line catalogue', errs3.length === 0, errs3.slice(0,2).join(' | '));
+
 ok('no console or page errors', errs.length===0, errs.slice(0,2).join(' | '));
 console.log(T.join('\n'));
 console.log('\n'+T.filter(t=>t.startsWith('PASS')).length+' passed, '+T.filter(t=>t.startsWith('FAIL')).length+' failed');
