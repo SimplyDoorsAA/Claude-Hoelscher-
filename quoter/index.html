@@ -84,6 +84,17 @@
   input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
   input[type=number]{ -moz-appearance:textfield; }
   .safe-b { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  /* The quote strip is a desktop thing: on a phone #mobileBar already pins the
+     count and the total to the foot of the screen, and two running totals on
+     one small screen is noise rather than help. */
+  #quoteStrip { display: none; }
+  @media (min-width: 768px) { #quoteStrip[data-on="true"] { display: flex; } }
+  /* The price and the button that acts on it, pinned to the foot of the detail
+     sheet while the answers scroll behind — a phone sheet runs well past the
+     fold, and reaching the Add button meant scrolling the whole way down. The
+     sheet is the scroll container, so this sticks inside it. */
+  .addbar { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px)); }
+  @media (min-width: 768px) { .addbar { display: none; } }
 
   /* ------------------------------ printing -------------------------------
      The app is a browsing tool; a quote is a document. Rather than trying to
@@ -282,6 +293,12 @@
       <button id="clearFilters" type="button" class="rounded-lg px-3 py-2 text-sm text-ink-mute hover:text-ink hover:bg-paper-rail">Clear</button>
       <span id="resultCount" class="tnum ml-auto text-xs text-ink-mute"></span>
     </div>
+    <!-- The running quote, on the desktop. It rides inside the filter bar so it
+         inherits that bar's sticky offset rather than needing one of its own,
+         which would have to be recomputed every time the header wraps. The
+         phone has #mobileBar pinned to the foot of the screen instead. -->
+    <div id="quoteStrip" data-on="false"
+      class="mt-2 items-center gap-3 rounded-lg border border-brass/40 bg-brass-pale px-3 py-2"></div>
   </div>
 </section>
 
@@ -2756,6 +2773,32 @@ function renderDetail() {
       "Includes " + formatCents(line.freightCents) +
       " prehang charge per opening. Crate & shipping is banded on the whole order and added in the quote."));
     body.appendChild(foot);
+
+    /* On a phone the questions run well past the fold, so the two things a
+       thumb reaches for — the price and the button that acts on it — are
+       pinned to the foot of the sheet while the answers scroll behind. The
+       block above keeps the specification, the quantity and the freight note;
+       this repeats nothing else. Desktop hides it: the whole sheet fits. */
+    const bar = el("div",
+      "addbar sticky bottom-0 z-10 -mx-5 -mb-5 mt-1 flex items-center gap-3 border-t border-paper-line bg-paper-card/95 px-5 pt-3 backdrop-blur sm:-mx-6 sm:-mb-6 sm:px-6");
+    const barPrice = el("div", "min-w-0 flex-1");
+    barPrice.appendChild(el("p", "text-[10px] uppercase tracking-widest text-ink-faint",
+      isCost() ? "Unit cost" : "Unit price"));
+    barPrice.appendChild(el("p", "tnum font-display text-2xl leading-none",
+      formatCents(isCost() ? line.unitCostCents : line.unitSellCents)));
+    if (d.qty > 1) barPrice.appendChild(el("p", "tnum mt-0.5 text-[11px] text-ink-mute",
+      d.qty + " \u00d7 \u2014 " + formatCents(isCost() ? line.totalCostCents : line.totalSellCents)));
+    bar.appendChild(barPrice);
+    const barAdd = el("button",
+      "shrink-0 rounded-xl bg-forest px-5 py-3 text-sm font-medium text-white hover:bg-forest-deep disabled:opacity-40",
+      "Add to quote");
+    barAdd.type = "button";
+    barAdd.id = "addBarBtn";
+    barAdd.disabled = line.notOffered;
+    // One code path for adding, so the two buttons can never disagree.
+    barAdd.addEventListener("click", () => add.click());
+    bar.appendChild(barAdd);
+    body.appendChild(bar);
   } else {
     body.appendChild(el("p", "mt-auto rounded-xl bg-paper-rail p-4 text-sm text-ink-mute",
       "Answer the questions above to see pricing."));
@@ -3203,11 +3246,15 @@ function speakeasyExtrasBlock(product, draft) {
       const shown = (acc && acc.shape) || shapes[0] || extra.name;
       const qty = acc ? acc.qty : 0;
 
-      const row = el("div", "flex items-center gap-3 rounded-lg border border-paper-line bg-paper-card p-2");
+      /* On a phone the picture, the name, the shape buttons and the stepper do
+         not fit one 350px line: the name truncated to "1-5/16…" and its price
+         wrapped into a six-line sliver. The row wraps instead, and the two
+         controls travel together so they land on the second line as a pair. */
+      const row = el("div", "flex flex-wrap items-center gap-2 rounded-lg border border-paper-line bg-paper-card p-2");
       const art = designThumb(shown, "h-10 w-10");
       if (art) row.appendChild(art);
 
-      const words = el("div", "min-w-0 flex-1");
+      const words = el("div", "min-w-[9rem] flex-1");
       words.appendChild(el("p", "truncate text-sm", h.description || h.sku));
       const priced = state.engine.priceLine({
         productId: product.id, finish: draft.finish, config: draft.config, qty: 1,
@@ -3228,6 +3275,7 @@ function speakeasyExtrasBlock(product, draft) {
         renderDetail();
       };
 
+      const controls = el("div", "ml-auto flex shrink-0 items-center gap-2");
       if (shapes.length > 1) {
         const pick = el("div", "flex shrink-0 gap-1");
         shapes.forEach(name => {
@@ -3244,7 +3292,7 @@ function speakeasyExtrasBlock(product, draft) {
           });
           pick.appendChild(b);
         });
-        row.appendChild(pick);
+        controls.appendChild(pick);
       }
 
       const step = el("div", "flex shrink-0 items-center gap-1");
@@ -3258,7 +3306,8 @@ function speakeasyExtrasBlock(product, draft) {
       inc.setAttribute("aria-label", "One more " + (h.description || h.sku));
       inc.addEventListener("click", () => setQty(qty + 1));
       step.append(dec, n, inc);
-      row.appendChild(step);
+      controls.appendChild(step);
+      row.appendChild(controls);
       list.appendChild(row);
     });
   });
@@ -3894,6 +3943,8 @@ function renderJobPanel() {
       saveJob();
       // Labor moves the printed job total, which the drawer footer echoes.
       if (f.key === "labor") { markLabor(inp); renderTotals(pricedQuote()); }
+      // Naming the job is what turns the strip's button into a print button.
+      if (f.key === "customer") renderQuoteStrip(pricedQuote());
     });
     lab.appendChild(inp);
     form.appendChild(lab);
@@ -3912,6 +3963,7 @@ function renderQuote() {
   $("#mobileCount").textContent = String(q.unitCount);
   $("#mobileTotal").textContent = formatCents(isCost() ? q.totalCostCents : q.grandTotalSellCents);
   $("#mobileBar").classList.toggle("hidden", q.lineCount === 0);
+  renderQuoteStrip(q);
   const dm = $("#drawerMode");
   dm.textContent = isCost() ? "Cost view" : "Customer";
   dm.setAttribute("aria-pressed", String(isCost()));
@@ -3996,6 +4048,65 @@ function renderQuote() {
   });
 
   renderTotals(q);
+}
+
+/* The running quote, above the catalogue, once there is one. A sales person
+   working through a list of openings should not have to open the drawer to
+   see where the job stands, and on a desktop there is room to say it. */
+function renderQuoteStrip(q) {
+  const host = $("#quoteStrip");
+  if (!host) return;
+  host.dataset.on = String(q.lineCount > 0);
+  host.textContent = "";
+  if (!q.lineCount) return;
+
+  const words = el("div", "min-w-0 flex-1 truncate text-xs text-ink-soft");
+  words.textContent = q.unitCount + " unit" + (q.unitCount === 1 ? "" : "s") +
+    " \u00b7 " + q.lineCount + " line" + (q.lineCount === 1 ? "" : "s") +
+    " \u00b7 " + (isCost() ? "your cost" : titleize(q.marginTier || "") + " pricing");
+  host.appendChild(words);
+
+  if (q.unavailableCount) host.appendChild(el("span",
+    "shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[11px] text-red-800",
+    q.unavailableCount + " not offered"));
+
+  host.appendChild(el("span", "tnum shrink-0 font-display text-xl leading-none",
+    formatCents(isCost() ? q.totalCostCents : q.grandTotalSellCents)));
+
+  const open = el("button",
+    "shrink-0 rounded-lg border border-brass/50 px-3 py-1.5 text-xs font-medium text-brass-deep hover:bg-brass-pale",
+    "Open quote");
+  open.type = "button";
+  open.id = "stripOpen";
+  open.addEventListener("click", openDrawer);
+  host.appendChild(open);
+
+  /* Printing from here is the same call the drawer makes, so a quote number is
+     spent the same way and there is one route in with two doors on it.
+     The job details live in the drawer, though, and this button can be reached
+     without ever opening it — so an unnamed quote opens the drawer at the
+     customer field rather than printing an estimate addressed to nobody and
+     spending a number on it. */
+  if (canPrint()) {
+    const named = !!String(state.job.customer || "").trim();
+    const print = el("button",
+      "shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium " + (named
+        ? "bg-forest text-white hover:bg-forest-deep"
+        : "border border-brass/50 text-brass-deep hover:bg-brass-pale"),
+      named ? "Print quote" : "Name this quote");
+    print.type = "button";
+    print.id = "stripPrint";
+    print.title = named
+      ? "The customer estimate, with terms and a signature block"
+      : "The estimate is printed with the customer's name on it \u2014 fill in the job details first";
+    print.addEventListener("click", () => {
+      if (named) { printDocument("quote"); return; }
+      openDrawer();
+      const field = $("#job_customer");
+      if (field) { field.focus(); field.select(); }
+    });
+    host.appendChild(print);
+  }
 }
 
 function renderTotals(q) {

@@ -177,6 +177,7 @@ you commit anything.
 | `docs/quoter-design-gallery.md` | The design gallery: plain-glass cards, the design asked first as full-size pictures, the lightbox |
 | `docs/knotty-alder-craftsman-shelf.md` | Catalog page 45: the trailing dash on the two Craftsman rows is the dentil shelf, so both doors order |
 | `docs/review-2026-09-18.md` | Full read of both apps: what holds up, the four fixes, and what was raised rather than changed |
+| `docs/quoter-quote-at-a-glance.md` | The price and Add button pinned on a phone, and the running quote above the catalogue on a desktop |
 | `tests/design-gallery.test.mjs` | Drives the gallery: the card rule, the tiles, the lightbox, the sheet after the choice, the phone layout, the sidelite pictures and caming swatches |
 | `quoter/assets/stains/` | The stain charts off catalog page 5, one per wood line |
 | `docs/photography.md` | Which models have a picture, which borrow one, which were matched by eye, and what is still missing |
@@ -200,7 +201,7 @@ npm run audit                        # data contracts and cross-references only
 sh tools/build-css.sh                # recompile quoter/assets/tw.css after editing quoter/index.html
 ```
 
-652 checks across the seventeen suites, plus the two audits, and the same set
+669 checks across the seventeen suites, plus the two audits, and the same set
 CI runs on every pull request. The browser suites
 drive real Chromium through Playwright, found in `node_modules`, image-wide, or
 wherever `PLAYWRIGHT_MODULE` points — whichever exists. Each serves the repo on
